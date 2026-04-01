@@ -1,0 +1,90 @@
+{
+  "theme": "dark",
+  "archetype": "Archetype 4: Swiss & High-Contrast",
+  "design_philosophy": "Tactical Minimalism for the Creator Economy. A command-center feel mixing high-density data clarity with emotional, high-contrast visual tension.",
+  "colors": {
+    "background": "#0A0A0A",
+    "surface": "#141414",
+    "surface_hover": "#1E1E1E",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A1A1AA",
+    "text_muted": "#71717A",
+    "primary_accent": "#FF3B30",
+    "secondary_accent": "#FFCC00",
+    "data_blue": "#007AFF",
+    "border": "rgba(255, 255, 255, 0.1)",
+    "border_hover": "rgba(255, 255, 255, 0.25)"
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk",
+    "body_font": "IBM Plex Sans",
+    "mono_font": "JetBrains Mono",
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-black",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm",
+      "overline": "text-xs uppercase tracking-[0.2em] font-semibold"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Mode B: THE 'CONTROL ROOM' GRID for Dashboard. High density, structural clarity.",
+    "container_padding": "p-6 md:p-8",
+    "grid_dashboard": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6",
+    "border_radius": "rounded-md",
+    "alignment": "Left-aligned for all dense content, paragraphs, and tabular data. Optical alignment prioritized over geometric."
+  },
+  "surfaces_and_micro_themes": {
+    "cards": "Flat background, 1px solid border (border-white/10), no soft shadows. Sharp and structural.",
+    "headers": "Crystal Glass: bg-[#0A0A0A]/60 backdrop-blur-xl border-b border-white/10.",
+    "interactive_elements": "Slight lift (-translate-y-1) on hover, border color darkens/brightens to border-white/30. Text color must be explicitly set on hover."
+  },
+  "components": {
+    "strategy": "Shadcn UI heavily customized to remove the default Vercel look. Use HTML/Tailwind for marketing hero.",
+    "buttons": "Sharp corners or max 8px radius. High contrast. Primary: bg-[#FF3B30] text-white hover:bg-[#FF3B30]/90. Secondary: border border-white/20 hover:bg-white/10.",
+    "forms": "Inputs with flat backgrounds, 1px border. Focus states must have higher contrast (ring-2 ring-white/30).",
+    "tables": "Dense. border-collapse. Bottom borders on rows only. Hover states on rows.",
+    "charts": "Recharts/Shadcn charts. Use primary_accent, secondary_accent, and data_blue for data series. No full-area gradients, use clean lines."
+  },
+  "motion_and_interactions": {
+    "hover_states": "Crisp transitions. transition-all duration-200 ease-in-out.",
+    "focus_states": "Accessibility first. High contrast focus rings.",
+    "page_transitions": "Staggered entrance animations for dashboard lists using framer-motion."
+  },
+  "media_and_assets": {
+    "icon_library": "@phosphor-icons/react",
+    "image_urls": {
+      "hero_background": {
+        "url": "https://images.pexels.com/photos/196652/pexels-photo-196652.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Energetic dark concert crowd for marketing hero section."
+      },
+      "artist_profile_placeholder": {
+        "url": "https://images.pexels.com/photos/5749200/pexels-photo-5749200.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Music producer in studio - use as default avatar or profile header background."
+      },
+      "album_art_placeholder": {
+        "url": "https://images.unsplash.com/photo-1655931546470-7b2e167b5fef?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwyfHxtdXNpYyUyMHByb2R1Y2VyJTIwc3R1ZGlvJTIwZGFya3xlbnwwfHx8fDE3NzUwODE2Mjh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Headphones on keyboard - placeholder for release cover art."
+      },
+      "marketing_feature_1": {
+        "url": "https://images.unsplash.com/photo-1765224747184-05d35f23859a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwyfHxsaXZlJTIwY29uY2VydCUyMGNyb3dkJTIwZGFya3xlbnwwfHx8fDE3NzUwODE2Mjh8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Hands raised concert - use for the 'Distribution & Audience' feature section."
+      }
+    }
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure minimum 4.5:1 for normal text.",
+    "testing": "All interactive elements MUST include data-testid attribute (e.g., data-testid='upload-release-button')."
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the dark theme and high-contrast color palette.",
+    "Do not use Inter, Roboto, or generic sans-serif fonts for headings. Use Cabinet Grotesk.",
+    "Do not use purple or teal. Rely on Signal Red (#FF3B30) and pure white/greys.",
+    "Use JetBrains Mono for all ISRC, UPC, financial figures, and royalty numbers.",
+    "Dashboard cards should not have soft shadows; use a 1px solid border with a flat background.",
+    "Install and use @phosphor-icons/react for icons.",
+    "Implement the UI using Shadcn components but strip the default rounded soft look to match the 'Tactical Minimalism' geometry."
+  ]
+}
