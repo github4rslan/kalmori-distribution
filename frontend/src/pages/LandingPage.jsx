@@ -1,196 +1,324 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { MusicNotes, ChartLineUp, Globe, Wallet, Play, ArrowRight, Check, List, X, SpotifyLogo, AppleLogo, YoutubeLogo } from '@phosphor-icons/react';
-
-const AnimatedLogo = () => (
-  <div className="flex flex-col items-center">
-    <span className="text-2xl font-black tracking-[4px] gradient-text">KALMORI</span>
-    <div className="gradient-underline mt-1" />
-  </div>
-);
-
-const AnimatedTagline = () => <span className="text-sm font-semibold tracking-wider gradient-text-red">Your Music, Your Way</span>;
-
-const TypewriterText = ({ text, delay = 0, className = '' }) => {
-  const [displayText, setDisplayText] = useState('');
-  useEffect(() => {
-    let timeout, index = 0;
-    const startTyping = () => {
-      if (index < text.length) { setDisplayText(text.substring(0, index + 1)); index++; timeout = setTimeout(startTyping, 80); }
-      else { timeout = setTimeout(startDeleting, 3000); }
-    };
-    const startDeleting = () => {
-      if (index > 0) { index--; setDisplayText(text.substring(0, index)); timeout = setTimeout(startDeleting, 40); }
-      else { timeout = setTimeout(startTyping, 500); }
-    };
-    timeout = setTimeout(startTyping, delay);
-    return () => clearTimeout(timeout);
-  }, [text, delay]);
-  return <span className={className}>{displayText}<span className="cursor text-[#7C4DFF]">|</span></span>;
-};
-
-const GradientText = ({ children, className = '' }) => <span className={`gradient-text ${className}`}>{children}</span>;
+import { MusicNotes, ChartLineUp, Globe, Wallet, Play, ArrowRight, Check, List, X, ArrowUp, User, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, AmazonLogo } from '@phosphor-icons/react';
 
 const LandingPage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const heroImages = ['https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260', 'https://images.pexels.com/photos/1644616/pexels-photo-1644616.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260'];
+  const [typedText, setTypedText] = useState('');
+  const fullText = "Get your music on Spotify, Apple Music, TikTok, YouTube, Tidal and more. Keep 100% ownership of your music and stay in control of your career.";
   
-  useEffect(() => { const i = setInterval(() => setCurrentSlide((p) => (p + 1) % heroImages.length), 30000); return () => clearInterval(i); }, [heroImages.length]);
+  const heroImages = [
+    'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260',
+    'https://images.pexels.com/photos/1644616/pexels-photo-1644616.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260'
+  ];
   
-  const platforms = [{ name: 'Spotify', color: '#1DB954' }, { name: 'Apple Music', color: '#fff' }, { name: 'YouTube', color: '#FF0000' }, { name: 'TikTok', color: '#fff' }, { name: 'Amazon', color: '#FF9900' }, { name: 'Deezer', color: '#FF0092' }];
-  const features = [{ icon: <Globe className="w-6 h-6" />, title: "150+ Platforms", desc: "Global distribution" }, { icon: <Wallet className="w-6 h-6" />, title: "100% Royalties", desc: "Keep all earnings" }, { icon: <ChartLineUp className="w-6 h-6" />, title: "Real-Time Analytics", desc: "Track performance" }, { icon: <MusicNotes className="w-6 h-6" />, title: "Free ISRC/UPC", desc: "Codes included" }];
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentSlide((p) => (p + 1) % heroImages.length), 30000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  // Typewriter effect
+  useEffect(() => {
+    let i = 0;
+    const typeInterval = setInterval(() => {
+      if (i < fullText.length) {
+        setTypedText(fullText.substring(0, i + 1));
+        i++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 30);
+    return () => clearInterval(typeInterval);
+  }, []);
+
+  const platforms = [
+    { name: 'Spotify', icon: <SpotifyLogo className="w-8 h-8" weight="fill" style={{ color: '#1DB954' }} /> },
+    { name: 'Apple Music', icon: <AppleLogo className="w-8 h-8" weight="fill" style={{ color: '#fff' }} /> },
+    { name: 'YouTube', icon: <YoutubeLogo className="w-8 h-8" weight="fill" style={{ color: '#FF0000' }} /> },
+    { name: 'TikTok', icon: <TiktokLogo className="w-8 h-8" weight="fill" style={{ color: '#fff' }} /> },
+    { name: 'Amazon', icon: <AmazonLogo className="w-8 h-8" weight="fill" style={{ color: '#FF9900' }} /> },
+    { name: 'Deezer', icon: <MusicNotes className="w-8 h-8" weight="fill" style={{ color: '#FF0092' }} /> },
+  ];
+
+  const whyChooseFeatures = [
+    "Unlimited music distribution worldwide",
+    "Direct access to 150+ digital stores",
+    "Detailed sales data to guide your strategy",
+    "Keep 100% of your royalties",
+    "Free ISRC & UPC codes included"
+  ];
+
+  const analyticsFeatures = [
+    "Stream & download tracking",
+    "Revenue analytics",
+    "Audience demographics",
+    "Growth insights"
+  ];
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-white/5">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button onClick={() => setMenuOpen(true)} className="p-2 lg:hidden"><List className="w-6 h-6" /></button>
-          <Link to="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0"><AnimatedLogo /></Link>
+          <button onClick={() => setMenuOpen(true)} className="p-2 lg:hidden text-white">
+            <List className="w-6 h-6" />
+          </button>
+          
+          <Link to="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 flex flex-col items-center">
+            <span className="text-2xl font-black tracking-[4px]" style={{ color: '#E040FB' }}>KALMORI</span>
+            <div className="w-12 h-[3px] rounded mt-0.5" style={{ background: 'linear-gradient(90deg, #E040FB, #FF4081)' }} />
+          </Link>
+          
           <div className="hidden lg:flex items-center gap-8">
             <a href="#pricing" className="text-sm text-gray-400 hover:text-white">Pricing</a>
             <a href="#platforms" className="text-sm text-gray-400 hover:text-white">Platforms</a>
             <a href="#features" className="text-sm text-gray-400 hover:text-white">Features</a>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login"><Button variant="ghost" className="text-white hover:bg-white/10 hidden sm:flex" data-testid="nav-login-btn">Sign In</Button></Link>
-            <Link to="/register"><button className="btn-animated px-4 py-2 rounded-full text-sm font-semibold text-white" data-testid="nav-signup-btn">Get Started</button></Link>
-          </div>
+          
+          <Link to="/login" className="p-2">
+            <div className="w-10 h-10 rounded-full border-2 flex items-center justify-center" style={{ borderColor: '#E040FB' }}>
+              <User className="w-5 h-5" style={{ color: '#E040FB' }} />
+            </div>
+          </Link>
         </div>
       </header>
 
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="fixed inset-0 z-[60]">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMenuOpen(false)} />
+          <div className="absolute inset-0 bg-black/80" onClick={() => setMenuOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-[85%] max-w-[320px] bg-[#0a0a0a] border-r border-white/10">
             <div className="p-5 border-b border-white/10 flex items-center justify-between">
-              <span className="text-xl font-bold tracking-[3px] gradient-text">KALMORI</span>
+              <span className="text-xl font-bold tracking-[3px]" style={{ color: '#E040FB' }}>KALMORI</span>
               <button onClick={() => setMenuOpen(false)} className="p-2"><X className="w-6 h-6" /></button>
             </div>
-            <div className="px-5 py-3"><AnimatedTagline /></div>
-            <div className="h-[2px] gradient-bg mx-5 mb-4" />
             <nav className="p-5 space-y-4">
-              <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white hover:text-[#7C4DFF]"><MusicNotes className="w-5 h-5" /> Home</Link>
-              <Link to="/releases" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white hover:text-[#7C4DFF]"><Play className="w-5 h-5" /> My Releases</Link>
-              <a href="#pricing" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white hover:text-[#7C4DFF]"><Wallet className="w-5 h-5" /> Pricing</a>
+              <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white"><MusicNotes className="w-5 h-5" /> Home</Link>
+              <Link to="/releases" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white"><Play className="w-5 h-5" /> My Releases</Link>
+              <a href="#pricing" onClick={() => setMenuOpen(false)} className="flex items-center gap-4 py-3 text-white"><Wallet className="w-5 h-5" /> Pricing</a>
               <div className="border-t border-white/10 my-4" />
-              <Link to="/login" onClick={() => setMenuOpen(false)}><button className="w-full btn-animated py-3 rounded-lg text-white font-semibold">Sign In</button></Link>
-              <Link to="/register" onClick={() => setMenuOpen(false)}><button className="w-full border border-[#7C4DFF] py-3 rounded-lg text-[#7C4DFF] font-semibold mt-3">Create Account</button></Link>
+              <Link to="/login"><button className="w-full py-3 rounded-full text-white font-semibold" style={{ background: 'linear-gradient(135deg, #7C4DFF, #E040FB)' }}>Sign In</button></Link>
+              <Link to="/register"><button className="w-full border py-3 rounded-full font-semibold mt-3" style={{ borderColor: '#E040FB', color: '#E040FB' }}>Create Account</button></Link>
             </nav>
-            <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-white/10"><p className="text-xs text-gray-500 text-center">© 2026 Kalmori. All rights reserved.</p></div>
           </div>
         </div>
       )}
 
-      <section className="relative h-screen pt-16 overflow-hidden">
-        <div className="absolute inset-0 transition-opacity duration-1000" style={{ backgroundImage: `url(${heroImages[currentSlide]})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="hero-gradient absolute inset-0" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-end pb-24 px-6 text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-2"><GradientText>G.O.A.T</GradientText> In</h1>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6"><TypewriterText text="Music Distribution" delay={1000} /></h2>
-          <p className="text-gray-400 max-w-xl mb-8 text-sm sm:text-base">Get your music on Spotify, Apple Music, TikTok, YouTube, Tidal and more. Keep 100% ownership.</p>
-          <Link to="/register"><button className="btn-red px-8 py-4 rounded text-white font-bold text-sm tracking-wider" data-testid="hero-cta-btn">DISTRIBUTE MY MUSIC ONLINE</button></Link>
+      {/* Hero Section */}
+      <section className="relative min-h-screen pt-16 overflow-hidden">
+        <div className="absolute inset-0" style={{ backgroundImage: `url(${heroImages[currentSlide]})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,1) 100%)' }} />
+        
+        <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-4">
+            <span style={{ color: '#E040FB' }}>G.O.A.T</span> In<br />
+            <span style={{ color: '#E040FB' }}>Music Distribution</span>
+          </h1>
+          <p className="text-gray-300 max-w-lg mb-8 text-sm sm:text-base leading-relaxed">
+            {typedText}<span className="animate-pulse" style={{ color: '#E040FB' }}>|</span>
+          </p>
+          <Link to="/register">
+            <button className="px-8 py-4 rounded-full text-white font-bold text-sm tracking-wider flex items-center gap-3" style={{ background: '#E040FB' }} data-testid="hero-cta-btn">
+              DISTRIBUTE MY MUSIC ONLINE <ArrowRight className="w-5 h-5" />
+            </button>
+          </Link>
+          
+          {/* Slide Dots */}
           <div className="absolute bottom-8 right-8 flex gap-2">
-            {heroImages.map((_, i) => <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all ${currentSlide === i ? 'w-6 bg-[#7C4DFF]' : 'w-2.5 bg-gray-600'}`} />)}
+            {heroImages.map((_, i) => (
+              <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all ${currentSlide === i ? 'w-6' : 'w-2.5 bg-gray-600'}`} style={currentSlide === i ? { background: '#7C4DFF' } : {}} />
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="section-dark py-16 px-6 text-center border-b border-white/10">
-        <p className="text-xs font-bold text-[#E53935] tracking-[2px] mb-3">UNLIMITED DISTRIBUTION</p>
-        <h3 className="text-2xl sm:text-3xl font-bold mb-2">Unlimited Distribution Starting at</h3>
-        <p className="text-5xl font-black text-[#FFD700] my-4">$20/Year</p>
-        <p className="text-gray-400 max-w-md mx-auto mb-6 text-sm">Increase the reach of your music across popular streaming platforms.</p>
-        <Link to="/register" className="inline-flex items-center gap-2 text-[#E53935] font-bold text-sm">VIEW PRICING <ArrowRight className="w-4 h-4" /></Link>
+      {/* Unlimited Distribution Section */}
+      <section className="py-16 px-6 text-center bg-black relative">
+        <p className="text-xs font-bold tracking-[3px] mb-3" style={{ color: '#E53935' }}>UNLIMITED DISTRIBUTION</p>
+        <h3 className="text-2xl sm:text-3xl font-bold mb-2">
+          <span style={{ color: '#E040FB' }}>Unlimited Distribution</span><br />
+          <span className="text-white">Starting at</span>
+        </h3>
+        <p className="my-4">
+          <span className="text-5xl font-black" style={{ color: '#FFD700' }}>$20</span>
+          <span className="text-white text-lg">/Year</span>
+        </p>
+        <p className="text-gray-400 max-w-md mx-auto mb-6 text-sm">
+          Increase the reach of your music across the most popular streaming platforms worldwide. One payment, 1-year distribution.
+        </p>
+        <a href="#pricing" className="inline-flex items-center gap-2 font-bold text-sm" style={{ color: '#E53935' }}>
+          VIEW PRICING <ArrowRight className="w-4 h-4" />
+        </a>
+        
+        {/* Floating Action Button */}
+        <button className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40" style={{ background: 'linear-gradient(135deg, #7C4DFF, #9C27B0)' }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <ArrowUp className="w-6 h-6 text-white" />
+        </button>
       </section>
 
-      <section id="platforms" className="py-16 px-6 text-center max-w-3xl mx-auto">
-        <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">AVAILABLE EVERYWHERE</p>
-        <h3 className="text-2xl sm:text-3xl font-bold mb-8">Distribute to 150+ Platforms</h3>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-8">
-          {platforms.map((p, i) => (
-            <div key={i} className="platform-card text-center">
-              <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-white/5 flex items-center justify-center">
-                {p.name === 'Spotify' && <SpotifyLogo className="w-5 h-5" style={{ color: p.color }} />}
-                {p.name === 'Apple Music' && <AppleLogo className="w-5 h-5" style={{ color: p.color }} />}
-                {p.name === 'YouTube' && <YoutubeLogo className="w-5 h-5" style={{ color: p.color }} />}
-                {!['Spotify', 'Apple Music', 'YouTube'].includes(p.name) && <MusicNotes className="w-5 h-5" style={{ color: p.color }} />}
-              </div>
-              <p className="text-xs text-gray-400">{p.name}</p>
-            </div>
-          ))}
-        </div>
-        <Link to="/register" className="inline-flex items-center gap-2 text-[#E53935] font-bold text-sm">VIEW ALL 150+ STORES <ArrowRight className="w-4 h-4" /></Link>
-      </section>
-
-      <section id="features" className="section-dark py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-xs font-bold text-[#E53935] tracking-[2px] mb-3">WHY CHOOSE US</p>
-            <h3 className="text-2xl sm:text-3xl font-bold">Why Choose <GradientText>Kalmori</GradientText></h3>
-            <p className="text-gray-400 text-sm mt-2">Best Choice of Music Distribution Companies</p>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {features.map((f, i) => (
-              <div key={i} className="card-kalmori p-6 text-center animate-fadeInUp" style={{ animationDelay: `${i * 0.1}s` }}>
-                <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br from-[#7C4DFF]/20 to-[#E040FB]/20 flex items-center justify-center text-[#7C4DFF]">{f.icon}</div>
-                <h4 className="font-bold mb-1">{f.title}</h4>
-                <p className="text-xs text-gray-400">{f.desc}</p>
+      {/* Platforms Section */}
+      <section id="platforms" className="py-16 px-6 text-center bg-black">
+        <div className="max-w-3xl mx-auto">
+          {/* Video placeholder */}
+          <div className="w-full aspect-video bg-[#111] rounded-3xl mb-8" />
+          
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            {platforms.map((p, i) => (
+              <div key={i} className="bg-[#111] border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center hover:border-white/30 transition-colors">
+                {p.icon}
+                <p className="text-xs text-gray-400 mt-2">{p.name}</p>
               </div>
             ))}
           </div>
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-4 h-4 text-[#4CAF50]" /> Unlimited music distribution worldwide</div>
-            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-4 h-4 text-[#4CAF50]" /> Direct access to 150+ digital stores</div>
-            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-4 h-4 text-[#4CAF50]" /> Keep 100% of your royalties</div>
+          
+          <Link to="/register">
+            <button className="px-8 py-4 rounded-full text-white font-bold text-sm tracking-wider flex items-center gap-3 mx-auto" style={{ background: '#E040FB' }}>
+              VIEW ALL 150+ STORES <ArrowRight className="w-5 h-5" />
+            </button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Global Reach Section */}
+      <section className="py-16 px-6 text-center bg-black">
+        <div className="max-w-3xl mx-auto">
+          <div className="w-full aspect-video mb-8 rounded-2xl overflow-hidden" style={{ backgroundImage: 'url(https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+          
+          <p className="text-xs font-bold tracking-[3px] mb-3" style={{ color: '#E040FB' }}>GLOBAL REACH</p>
+          <h3 className="text-2xl sm:text-3xl font-bold mb-4">
+            Get Your Music<br />
+            <span style={{ color: '#FFD700' }}>Everywhere</span>
+          </h3>
+          <p className="text-gray-400 max-w-md mx-auto mb-6 text-sm">
+            We distribute your music to every major streaming platform including Spotify, Apple Music, Amazon Music, YouTube Music, TikTok, Instagram, and 150+ more stores worldwide.
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-5 h-5" style={{ color: '#E040FB' }} /> All major streaming platforms</div>
+            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-5 h-5" style={{ color: '#E040FB' }} /> Social media platforms</div>
+            <div className="flex items-center gap-3 text-sm text-gray-300"><Check className="w-5 h-5" style={{ color: '#E040FB' }} /> Digital download stores</div>
           </div>
         </div>
       </section>
 
-      <section id="pricing" className="py-16 px-6">
+      {/* Need Beats Section */}
+      <section className="py-8 px-6">
+        <div className="max-w-xl mx-auto rounded-3xl p-8 text-center" style={{ background: 'linear-gradient(180deg, #9C27B0 0%, #E040FB 100%)' }}>
+          <MusicNotes className="w-12 h-12 text-white mx-auto mb-4" />
+          <h3 className="text-2xl font-bold text-white mb-4">Need Beats or<br />Instrumentals?</h3>
+          <p className="text-white/80 text-sm mb-6">
+            Can't make your own beats? No problem! Get professional instrumentals with full rights or lease options.
+          </p>
+          <div className="flex flex-col items-start gap-3 mb-6 text-left max-w-xs mx-auto">
+            <div className="flex items-center gap-3 text-white"><Check className="w-5 h-5" /> Exclusive Rights Available</div>
+            <div className="flex items-center gap-3 text-white"><Check className="w-5 h-5" /> Affordable Lease Options</div>
+            <div className="flex items-center gap-3 text-white"><Check className="w-5 h-5" /> All Genres: Hip-Hop, R&B, Afrobeats, Dancehall</div>
+            <div className="flex items-center gap-3 text-white"><Check className="w-5 h-5" /> Custom Beats on Request</div>
+          </div>
+          <button className="bg-white px-8 py-3 rounded-full font-bold text-sm flex items-center gap-2 mx-auto" style={{ color: '#9C27B0' }}>
+            REQUEST A BEAT <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section id="features" className="py-16 px-6 text-center bg-black">
+        <div className="max-w-xl mx-auto">
+          <p className="text-xs font-bold tracking-[3px] mb-3 text-gray-400">WHY CHOOSE US</p>
+          <h3 className="text-2xl sm:text-3xl font-bold mb-2">
+            Why <span style={{ color: '#E040FB' }}>Choose Kalmori</span>
+          </h3>
+          <p className="mb-8">
+            <span style={{ color: '#E53935' }}>Best Choice</span>
+            <span className="text-white"> of Music Distribution Companies</span>
+          </p>
+          
+          <div className="flex flex-col items-start gap-4 mb-8 text-left">
+            {whyChooseFeatures.map((feature, i) => (
+              <div key={i} className="flex items-center gap-3 text-gray-300">
+                <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#E53935' }} /> {feature}
+              </div>
+            ))}
+          </div>
+          
+          <button className="px-8 py-4 rounded-full text-white font-bold text-sm tracking-wider flex items-center gap-3 mx-auto" style={{ background: '#E040FB' }}>
+            ALL OUR SERVICES <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      </section>
+
+      {/* Analytics Section */}
+      <section className="py-16 px-6 text-center bg-[#0a0a0a]">
+        <div className="max-w-xl mx-auto">
+          <p className="text-xs font-bold tracking-[3px] mb-3" style={{ color: '#E040FB' }}>TRACK YOUR SUCCESS</p>
+          <h3 className="text-2xl sm:text-3xl font-bold mb-4">
+            Real-Time<br />
+            <span style={{ color: '#FFD700' }}>Analytics</span>
+          </h3>
+          <p className="text-gray-400 max-w-md mx-auto mb-6 text-sm">
+            Monitor your streams, downloads, and earnings across all platforms. Get insights into your audience demographics and track your growth over time.
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            {analyticsFeatures.map((feature, i) => (
+              <div key={i} className="flex items-center gap-3 text-sm text-gray-300">
+                <Check className="w-5 h-5" style={{ color: '#E040FB' }} /> {feature}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-16 px-6 bg-black">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">PRICING</p>
+          <p className="text-xs font-bold tracking-[3px] mb-3" style={{ color: '#E040FB' }}>PRICING</p>
           <h3 className="text-2xl sm:text-3xl font-bold mb-2">Simple, Transparent Pricing</h3>
           <p className="text-gray-400 text-sm mb-12">Choose the plan that works best for you</p>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="card-kalmori p-6">
-              <div className="bg-[#E53935] text-xs font-bold py-1 px-3 rounded-full inline-block mb-4">UNLIMITED</div>
+            <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
+              <div className="text-xs font-bold py-1 px-3 rounded-full inline-block mb-4" style={{ background: '#E53935', color: '#fff' }}>UNLIMITED</div>
               <h4 className="text-lg font-bold mb-1">Single</h4>
               <p className="text-3xl font-black mb-1">$20<span className="text-sm font-normal text-gray-400">/year</span></p>
               <p className="text-xs text-gray-400 mb-4">Up to 3 tracks - 100% royalties</p>
-              <Link to="/register"><button className="w-full btn-red py-3 rounded-lg text-sm font-semibold" data-testid="pricing-single-btn">Get Started</button></Link>
+              <Link to="/register"><button className="w-full py-3 rounded-full text-sm font-semibold" style={{ background: '#E040FB', color: '#fff' }}>Get Started</button></Link>
             </div>
-            <div className="card-kalmori p-6 pricing-highlight">
+            
+            <div className="bg-[#111] border-2 rounded-2xl p-6 relative" style={{ borderColor: '#FFD700' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold py-1 px-4 rounded-full" style={{ background: '#FFD700', color: '#000' }}>BEST DEAL</div>
               <h4 className="text-lg font-bold mb-1 mt-4">Album</h4>
               <p className="text-3xl font-black mb-1">$75<span className="text-sm font-normal text-gray-400">/year</span></p>
               <p className="text-xs text-gray-400 mb-4">7+ tracks - 100% royalties</p>
-              <Link to="/register"><button className="w-full btn-animated py-3 rounded-lg text-sm font-semibold text-white" data-testid="pricing-album-btn">Get Started</button></Link>
+              <Link to="/register"><button className="w-full py-3 rounded-full text-sm font-semibold" style={{ background: 'linear-gradient(135deg, #7C4DFF, #E040FB)', color: '#fff' }}>Get Started</button></Link>
             </div>
-            <div className="card-kalmori p-6">
+            
+            <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
               <div className="bg-gray-600 text-xs font-bold py-1 px-3 rounded-full inline-block mb-4">FREE</div>
               <h4 className="text-lg font-bold mb-1">Start Free</h4>
               <p className="text-3xl font-black mb-1">$0</p>
               <p className="text-xs text-gray-400 mb-4">15-20% revenue share</p>
-              <Link to="/register"><button className="w-full border border-white/20 py-3 rounded-lg text-sm font-semibold hover:bg-white/5" data-testid="pricing-free-btn">Start Free</button></Link>
+              <Link to="/register"><button className="w-full border border-white/20 py-3 rounded-full text-sm font-semibold hover:bg-white/5">Start Free</button></Link>
             </div>
-          </div>
-          <div className="mt-8 flex items-center justify-center gap-4 p-5 rounded-2xl bg-[#111] border border-[#E040FB]/20">
-            <MusicNotes className="w-10 h-10 text-[#E040FB]" />
-            <div className="text-left"><h4 className="font-bold">Built for Young Artists & Producers</h4><p className="text-sm text-gray-400">Start your music career with $0 upfront.</p></div>
           </div>
         </div>
       </section>
 
-      <section className="py-20 px-6 text-center bg-gradient-to-br from-[#7C4DFF]/20 via-[#E040FB]/10 to-[#FF4081]/20">
+      {/* CTA Section */}
+      <section className="py-20 px-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(124,77,255,0.2), rgba(224,64,251,0.1))' }}>
         <h3 className="text-3xl sm:text-4xl font-black mb-4">Ready to Start Your<br />Journey?</h3>
         <p className="text-gray-400 mb-8 text-sm">Join thousands of artists distributing their music worldwide with Kalmori.</p>
-        <Link to="/register"><button className="bg-white text-[#E53935] px-8 py-4 rounded font-bold text-sm tracking-wider inline-flex items-center gap-2" data-testid="cta-signup-btn">GET STARTED FREE <ArrowRight className="w-4 h-4" /></button></Link>
+        <Link to="/register">
+          <button className="bg-white px-8 py-4 rounded-full font-bold text-sm tracking-wider inline-flex items-center gap-2" style={{ color: '#E53935' }}>
+            GET STARTED FREE <ArrowRight className="w-4 h-4" />
+          </button>
+        </Link>
       </section>
 
-      <footer className="py-12 px-6 border-t border-white/10">
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-white/10 bg-black">
         <div className="max-w-6xl mx-auto text-center">
-          <span className="text-xl font-bold tracking-[3px] text-[#E53935]">KALMORI</span>
+          <span className="text-xl font-bold tracking-[3px]" style={{ color: '#E53935' }}>KALMORI</span>
           <p className="text-gray-400 text-sm mt-2 mb-6">Your Music, Your Way</p>
           <div className="flex flex-wrap justify-center gap-6 mb-6">
             <a href="#" className="text-sm text-gray-400 hover:text-white">Terms</a>
