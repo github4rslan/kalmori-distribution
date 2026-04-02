@@ -22,8 +22,39 @@ const PublicLayout = ({ children }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isDashboardSubPage = user && location.pathname !== '/dashboard' && location.pathname !== '/' &&
-    ['/releases', '/analytics', '/wallet', '/settings'].some(p => location.pathname.startsWith(p));
+  const isHomePage = location.pathname === '/';
+
+  // Page title mapping for back button header
+  const pageTitles = {
+    '/pricing': 'Pricing',
+    '/leasing': 'Leasing',
+    '/promoting': 'Promotion',
+    '/publishing': 'Publishing',
+    '/services': 'Our Services',
+    '/about': 'About Us',
+    '/contact': 'Contact / Support',
+    '/stores': 'Stores',
+    '/terms': 'Terms & Conditions',
+    '/privacy': 'Privacy Policy',
+    '/login': 'Sign In',
+    '/register': 'Create Account',
+    '/reset-password': 'Reset Password',
+    '/dashboard': 'Dashboard',
+    '/releases': 'My Releases',
+    '/releases/new': 'New Release',
+    '/analytics': 'Analytics',
+    '/wallet': 'Wallet',
+    '/settings': 'Settings',
+    '/spotify-canvas': 'Spotify Canvas',
+    '/content-id': 'Content ID',
+    '/instrumentals': 'Instrumentals',
+  };
+
+  const getPageTitle = () => {
+    if (pageTitles[location.pathname]) return pageTitles[location.pathname];
+    if (location.pathname.startsWith('/releases/')) return 'Release Details';
+    return 'Back';
+  };
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -91,22 +122,25 @@ const PublicLayout = ({ children }) => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]" data-testid="public-header">
         <div className="flex items-center justify-between px-4 py-3">
-          {isDashboardSubPage ? (
-            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 p-1 min-w-[44px] min-h-[44px]" data-testid="back-to-dashboard">
-              <ArrowLeft className="w-6 h-6 text-[#E040FB]" />
-              <span className="text-white text-sm font-medium">Dashboard</span>
-            </button>
-          ) : (
+          {isHomePage ? (
             <button onClick={() => setMenuOpen(true)} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center" data-testid="menu-toggle">
               <List className="w-6 h-6 text-white" />
             </button>
+          ) : (
+            <button onClick={() => navigate(-1)} className="flex items-center gap-1 p-1 min-w-[44px] min-h-[44px]" data-testid="back-button">
+              <ArrowLeft className="w-6 h-6 text-white" />
+            </button>
           )}
 
-          {/* KALMORI logo with neon glow */}
-          <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center" style={{ pointerEvents: 'none' }}>
-            <span className="text-[24px] font-extrabold tracking-[4px] text-[#E040FB] pointer-events-auto" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
-            <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF] pointer-events-auto" />
-          </button>
+          {/* KALMORI logo / Page title centered */}
+          {isHomePage ? (
+            <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center" style={{ pointerEvents: 'none' }}>
+              <span className="text-[24px] font-extrabold tracking-[4px] text-[#E040FB] pointer-events-auto" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
+              <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF] pointer-events-auto" />
+            </button>
+          ) : (
+            <span className="absolute left-0 right-0 text-center text-white text-[16px] font-bold pointer-events-none">{getPageTitle()}</span>
+          )}
 
           <div className="flex items-center gap-2 z-20">
             {user && (
@@ -114,17 +148,19 @@ const PublicLayout = ({ children }) => {
                 <ShoppingCart className="w-6 h-6 text-[#E040FB]" />
               </button>
             )}
-            {isDashboardSubPage ? (
+            {isHomePage ? (
+              user ? (
+                <button onClick={() => navigate('/settings')} className="p-1" data-testid="header-profile-btn">
+                  <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                </button>
+              ) : (
+                <button onClick={() => navigate('/login')} className="p-1" data-testid="header-account-btn">
+                  <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                </button>
+              )
+            ) : (
               <button onClick={() => setMenuOpen(true)} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-end" data-testid="menu-toggle-right">
                 <List className="w-6 h-6 text-white" />
-              </button>
-            ) : user ? (
-              <button onClick={() => navigate('/settings')} className="p-1" data-testid="header-profile-btn">
-                <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
-              </button>
-            ) : (
-              <button onClick={() => navigate('/login')} className="p-1" data-testid="header-account-btn">
-                <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
               </button>
             )}
           </div>

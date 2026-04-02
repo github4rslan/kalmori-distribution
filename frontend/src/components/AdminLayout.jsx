@@ -88,16 +88,22 @@ const AdminLayout = ({ children }) => {
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-lg border-b border-white/10">
           <div className="px-6 py-4 flex items-center justify-between">
-            <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
+            <div className="flex items-center gap-3">
+              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="admin-back-btn"><ArrowLeft className="w-6 h-6" /></button>
+              <span className="lg:hidden text-white text-[16px] font-bold">
+                {location.pathname === '/admin' ? 'Overview' : location.pathname === '/admin/submissions' ? 'Submissions' : location.pathname === '/admin/users' ? 'Users' : 'Admin'}
+              </span>
+            </div>
             <div className="flex-1" />
             <div className="flex items-center gap-3">
+              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
               <Link to="/admin/submissions" className="relative p-2 hover:bg-white/5 rounded-lg transition-colors" data-testid="admin-notification-bell">
                 <Bell className="w-5 h-5 text-gray-400" />
                 {pendingCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#E53935] rounded-full flex items-center justify-center text-[10px] font-bold text-white animate-pulse" data-testid="pending-count">{pendingCount}</span>
                 )}
               </Link>
-              <span className="text-xs px-3 py-1 bg-[#E53935]/10 text-[#E53935] rounded-full font-semibold uppercase tracking-wider">Admin Panel</span>
+              <span className="text-xs px-3 py-1 bg-[#E53935]/10 text-[#E53935] rounded-full font-semibold uppercase tracking-wider hidden sm:inline">Admin Panel</span>
             </div>
           </div>
         </header>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft } from '@phosphor-icons/react';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -76,10 +76,16 @@ const DashboardLayout = ({ children }) => {
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-lg border-b border-white/10">
           <div className="px-6 py-4 flex items-center justify-between">
-            <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
+            <div className="flex items-center gap-3">
+              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-6 h-6" /></button>
+              <span className="lg:hidden text-white text-[16px] font-bold">
+                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
+              </span>
+            </div>
             <div className="flex-1" />
             <div className="flex items-center gap-4">
-              <span className="text-xs px-3 py-1 bg-[#FFD700]/10 text-[#FFD700] rounded-full font-semibold uppercase tracking-wider">{user?.plan || 'Free'}</span>
+              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
+              <span className="text-xs px-3 py-1 bg-[#FFD700]/10 text-[#FFD700] rounded-full font-semibold uppercase tracking-wider hidden sm:inline">{user?.plan || 'Free'}</span>
               <Link to="/releases/new">
                 <button className="btn-animated px-4 py-2 rounded-full text-sm font-semibold text-white flex items-center gap-2" data-testid="new-release-btn">
                   <Plus className="w-4 h-4" /> New Release
