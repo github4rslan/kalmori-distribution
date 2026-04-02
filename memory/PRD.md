@@ -1,150 +1,103 @@
-# TuneDrop / Kalmori - Product Requirements Document
+# Kalmori - TuneCore Clone PRD
 
-## Overview
-TuneCore clone / high-volume digital content aggregator for musicians. React Web App matching "Kalmori" React Native design.
-
-## Tech Stack
-Frontend: React + Tailwind + Shadcn/UI | Backend: FastAPI + Motor + MongoDB | Auth: JWT (cookies+Bearer) + Google OAuth | Payments: Stripe + PayPal | Storage: Emergent Object Storage | AI: OpenAI GPT-4o (Emergent LLM Key) | Email: Resend
+## Original Problem Statement
+Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians. Core requirements include Authentication, Subscriptions (Stripe/PayPal), Object Storage for high-res files, AI Features, Artist/User management, Release/Track uploads (with a Wizard), Distribution store management, and a Beat/Instrumental catalog for leasing and purchasing. The frontend must match the user's existing "Kalmori" React Native Expo app UI with a dark, premium aesthetic.
 
 ## Architecture
-```
-/app/backend/
-├── server.py            # Core routes (auth, releases, tracks, admin, wallet, analytics, AI, payments)
-├── kalmori_routes.py    # GitHub routes (CMS, Cart, Credits, Social, Testimonials, Theme, etc.)
-├── routes/
-│   ├── ai_routes.py     # AI features (metadata, descriptions, insights)
-│   ├── email_routes.py  # Password reset, email notifications
-│   ├── paypal_routes.py # PayPal payment integration
-│   └── content_routes.py # Spotify Canvas + YouTube Content ID
-└── tests/
+- **Frontend**: React + Tailwind CSS + Shadcn/UI + Recharts
+- **Backend**: FastAPI (modularized: server.py + core.py + /routes/)
+- **Database**: MongoDB
+- **Storage**: Emergent Object Storage
+- **Payments**: Stripe + PayPal
+- **Auth**: JWT (Cookie + Bearer) + Google Social Login + reCAPTCHA v2
+- **AI**: OpenAI via Emergent LLM Key
 
-/app/frontend/src/
-├── App.js               # Routes, AuthContext, CartProvider
-├── services/api.js      # Centralized API service (port of mobile api.ts)
-├── context/CartContext.jsx
-├── components/          # PublicLayout, DashboardLayout, AdminLayout, GlobalFooter
-└── pages/               # 20+ pages
-```
+## Completed Features
 
-## ALL Completed Features
+### Phase 1 - Core Platform (Complete)
+- [x] JWT + Google Auth with reCAPTCHA v2 registration
+- [x] User/Artist management (Legal Name, Stage Name, Country)
+- [x] Admin Dashboard with role-based access
+- [x] Dark premium UI matching Kalmori mobile app
+- [x] Responsive design (mobile + desktop)
+- [x] Back navigation on all pages
 
-### Core Platform
-- [x] JWT dual auth (cookies + Bearer token) + Google OAuth + inactivity timeout
-- [x] Extended user profile (user_role, country, state, town, post_code)
-- [x] Release CRUD with cover art upload, Track CRUD with audio upload
-- [x] Distribution to 150+ stores (simulated), Distribution status tracking
-- [x] Stripe payment processing + webhooks
-- [x] Wallet system (balance, earnings, withdrawals)
-- [x] Notifications system, Subscription plans
-- [x] Admin dashboard (stats, submissions review, user management)
-- [x] Ingestion/Review engine (pending → approved → distributed)
-- [x] Split payments (track-level royalty splits)
+### Phase 2 - Content & Distribution (Complete)
+- [x] 5-step Release Wizard (metadata, tracks, stores, pricing, review)
+- [x] Track upload with Object Storage
+- [x] Distribution store management
+- [x] Spotify Canvas & Content ID pages
+- [x] Release detail & management pages
 
-### Kalmori GitHub Merge
-- [x] CMS (slides, pricing, legal pages, full page editor, instrumentals)
-- [x] Shopping Cart (CRUD + Stripe checkout)
-- [x] Credits system, Payment Methods (PayPal/bank + set-default)
-- [x] Social features (follow/unfollow, followers/following lists)
-- [x] Testimonials (CRUD + admin approval), Theme settings
-- [x] Promotion Orders, Instrumental Requests (with email notifications)
-- [x] Stats, Genres, Transactions, Streaming Analytics endpoints
-- [x] Video serving, reCAPTCHA, Public releases
+### Phase 3 - Commerce & Payments (Complete)
+- [x] Subscription plans (Free/Rising Star/Pro/Label) with Stripe checkout
+- [x] Subscription upgrade/downgrade flows
+- [x] Beat/Instrumental catalog with CRUD + Object Storage
+- [x] Admin Beat Manager (upload, edit, delete beats)
+- [x] Featured Beats carousel on Landing Page
+- [x] Beat Purchase Checkout (Stripe) with 4 license tiers
+- [x] Beat download delivery after purchase
+- [x] "My Purchases" page with download buttons
+- [x] Wallet system
 
-### AI Features [Apr 2, 2026]
-- [x] AI metadata suggestions (genre, mood, tags, BPM via GPT-4o)
-- [x] AI-generated release descriptions
-- [x] AI analytics insights (strategic recommendations)
+### Phase 4 - Analytics & Insights (Complete)
+- [x] Real-time Streaming Data Ingestion (simulated DSP data from 8 platforms, 14 countries)
+- [x] Analytics Overview with real charts (Streams Over Time, Revenue Over Time)
+- [x] Platform Breakdown (Spotify, Apple Music, YouTube Music, Amazon Music, TikTok, Tidal, Deezer, SoundCloud)
+- [x] Live Streaming Feed tab showing recent events with platform colors & country flags
+- [x] AI-powered analytics insights
+- [x] Trending This Week analytics on Dashboard
+- [x] Audience Map tab
 
-### Advanced Analytics Dashboard [Apr 2, 2026]
-- [x] Overview tab (streams/revenue charts, stats cards)
-- [x] Audience Map tab (world map visualization, top countries)
-- [x] TikTok UGC tab (sound usage tracking, trend direction)
-- [x] Platforms tab (pie chart, platform details with revenue)
-- [x] "Get AI Insights" button for strategic recommendations
+### Phase 5 - Notifications & Communication (Complete)
+- [x] Push Notifications system (notification bell with unread count in header)
+- [x] Notification dropdown panel with mark-read functionality
+- [x] Polling for new notifications (30s interval)
+- [x] Email receipt structure (Resend integration ready - MOCKED without API key)
+- [x] Beat purchase receipt email templates
+- [x] Subscription receipt email templates
 
-### PayPal Integration [Apr 2, 2026]
-- [x] PayPal config endpoint
-- [x] Create/capture PayPal orders (sandbox simulation when no keys)
-- [x] Order status tracking
+### Phase 6 - Backend Architecture (Complete)
+- [x] Backend modularization (server.py → core.py + /routes/)
+- [x] Reduced server.py from 1686 to ~1000 lines
+- [x] Shared Pydantic models in core.py
+- [x] Route modules: ai_routes, email_routes, paypal_routes, content_routes, beats_routes
 
-### Email Notifications & Password Reset [Apr 2, 2026]
-- [x] Forgot password (send reset link via Resend)
-- [x] Reset password (verify token + update password)
-- [x] Change password (authenticated)
-- [x] Email templates for release approved/rejected, payment received
-- [x] Reset Password page at /reset-password
-- [x] "Forgot your password?" link on login page
+## Key DB Collections
+- `users`: {email, password_hash, role, artist_name, plan}
+- `releases`: {title, status, tracks, artist_id}
+- `tracks`: {title, audio_url}
+- `beats`: {title, genre, bpm, key, mood, audio_url, cover_url, prices}
+- `beat_purchases`: {user_id, beat_id, license_type, amount, payment_status, session_id}
+- `stream_events`: {artist_id, release_id, platform, country, revenue, timestamp}
+- `notifications`: {user_id, message, read, created_at}
+- `receipts`: {user_id, email, type, amount, details}
+- `wallets`: {user_id, balance}
 
-### Spotify Canvas [Apr 2, 2026]
-- [x] Canvas specs display (format, resolution, duration)
-- [x] Create canvas per release
-- [x] Upload MP4 video to Object Storage (max 20MB, 9:16)
-- [x] Submit for Spotify review
-- [x] Canvas management page with status tracking
+## Key API Endpoints
+- Auth: `/api/auth/register`, `/api/auth/login`, `/api/auth/me`
+- Beats: `/api/beats` (CRUD), `/api/beats/{id}/stream`
+- Purchases: `/api/purchases`, `/api/purchases/{id}/download`, `/api/purchases/verify/{session_id}`
+- Payments: `/api/payments/create-subscription-checkout`, `/api/payments/create-beat-checkout`
+- Analytics: `/api/analytics/overview`, `/api/analytics/chart-data`, `/api/analytics/platform-breakdown`, `/api/analytics/live-feed`
+- Notifications: `/api/notifications`, `/api/notifications/unread-count`, `/api/notifications/read-all`
+- Releases: `/api/releases`, Release Wizard flow
 
-### YouTube Content ID [Apr 2, 2026]
-- [x] Register releases for Content ID
-- [x] Asset ID generation
-- [x] Policy management (monetize/track/block)
-- [x] How-it-works explainer
-- [x] Content ID management page
+## 3rd Party Integrations
+- Stripe (Payments) — System Environment Key
+- PayPal (Payments) — User API Key
+- Google reCAPTCHA v2 — User-provided keys
+- OpenAI (AI Features) — Emergent LLM Key
+- Emergent Object Storage — Emergent Integrations
+- Emergent Google Auth — Emergent Integrations
+- Resend (Email) — MOCKED (ready for user's RESEND_API_KEY)
 
-### Backend Modularization [Apr 2, 2026]
-- [x] server.py reduced from 1686 → 772 lines (54% reduction)
-- [x] Shared models/helpers extracted to core.py (285 lines)
-- [x] All API endpoints preserved, zero regressions (iteration 14: 100%)
+## Remaining Backlog
 
-### Admin Beat Manager [Apr 2, 2026]
-- [x] Admin Beat Manager page at /admin/beats with full CRUD
-- [x] Create/edit beats with title, genre, BPM, key, mood, pricing modal
-- [x] Upload audio files and cover art per beat via Object Storage
-- [x] Play count tracking, audio/cover upload status indicators
-- [x] Delete beats with confirmation
-- [x] Non-admin users redirected to dashboard
+### P2 (Medium Priority)
+- [ ] Complete Resend API configuration (needs user's RESEND_API_KEY for actual dispatch)
 
-### Beat Catalog API [Apr 2, 2026]
-- [x] Full CRUD beats API (/api/beats) with Object Storage audio uploads
-- [x] Instrumentals page fetches real beats from database
-- [x] Demo beats seeded on startup (6 beats across genres)
-- [x] Admin-only beat management (create/update/delete/upload audio)
-
-### Login/Register Redesign [Apr 2, 2026]
-- [x] Login page: TuneCore-style centered layout with purple-pink gradient background
-- [x] Registration page: All mobile app fields (legal name, stage name, country picker, state, town, post code, artist/producer role toggle, terms checkbox)
-- [x] Password show/hide toggle, confirm password validation
-
-### Landing Page TuneCore Redesign [Apr 2, 2026]
-- [x] TuneCore "Letter Layout" typography-forward design applied
-- [x] KALMORI animated logo preserved in pink/purple
-- [x] All original content sections preserved
-- [x] "Need Beats or Instrumentals?" section restored with matching design
-
-### Beat Audio Previews [Apr 2, 2026]
-- [x] Beat catalog on Instrumentals/Leasing page
-- [x] Play/pause toggle with animated waveform bars
-- [x] Genre, BPM, key, mood, duration display
-- [x] 6 demo beats (Trap, R&B, Hip-Hop, Afrobeats, Gospel, Pop)
-
-### Backend Modularization [Apr 2, 2026]
-- [x] New routes in /app/backend/routes/ (ai, email, paypal, content)
-- [x] Centralized API service on frontend
-
-### Frontend Pages (20+)
-Landing, Login, Register, ResetPassword, Dashboard, Releases, ReleaseDetail, CreateRelease, Analytics, Wallet, Settings, SpotifyCanvas, ContentId, Admin, AdminSubmissions, AdminUsers, Pricing, Services, About, Contact, Promoting, Publishing, Stores, Instrumentals, Terms, Privacy
-
-## MOCKED Integrations (require API keys to go live)
-- PayPal: SANDBOX SIMULATION mode (set PAYPAL_CLIENT_ID + PAYPAL_CLIENT_SECRET in .env)
-- Resend Email: SKIPPED when no API key (set RESEND_API_KEY in .env)
-
-## Testing
-- iteration_7: 100% (27/27) - Kalmori routes merge
-- iteration_8: 100% (16/16) - Auth & service layer
-- iteration_9: 100% (28/28) - api.ts port
-- iteration_10: 93% backend + 100% frontend - All new features
-- iteration_11: 100% (11/11) - Back buttons, Object Storage, Stripe
-- iteration_12: 100% (16/16) - Beats API, Login/Register redesign
-- iteration_13: 100% (17/17) - Admin Beat Manager
-- iteration_14: 100% (23/23) - Backend modularization regression
-- iteration_15: 100% (16/16) - Subscriptions, Featured Beats, Pricing
-- iteration_16: 100% (18/18) - reCAPTCHA, Trending, Payment callbacks
-- iteration_17: 100% (20/20) - Beat purchase, Email receipts, Release Wizard
+### P3 (Low Priority)
+- [ ] Artist Collaboration features (invite collaborators, shared royalty splits)
+- [ ] Real DSP data ingestion (replace simulated data with actual API feeds)
+- [ ] Advanced push notification preferences
