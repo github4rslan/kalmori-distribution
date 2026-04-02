@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { MusicNote, Lightning, ShieldCheck, Headset, Check, Star, PaperPlaneTilt, Play, Pause, SpeakerHigh } from '@phosphor-icons/react';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const licenseTiers = [
   { id: 'basic_lease', name: 'Basic Lease', price: 29.99, desc: 'Perfect for demos and mixtapes', features: ['MP3 File (320kbps)', 'Up to 5,000 streams', 'Non-exclusive license', 'Credit required'], color: '#7C4DFF' },
@@ -21,18 +24,9 @@ const whyItems = [
 const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const moods = ['Energetic/Hype', 'Chill/Laid-back', 'Dark/Moody', 'Emotional/Sad', 'Happy/Uplifting', 'Romantic', 'Aggressive', 'Party/Club'];
 
-const DEMO_BEATS = [
-  { id: 1, title: 'Midnight Drip', genre: 'Trap', bpm: 140, key: 'Cm', duration: '3:24', mood: 'Dark' },
-  { id: 2, title: 'Golden Hour', genre: 'R&B/Soul', bpm: 85, key: 'Eb', duration: '3:45', mood: 'Chill' },
-  { id: 3, title: 'City Lights', genre: 'Hip-Hop', bpm: 92, key: 'Am', duration: '2:58', mood: 'Energetic' },
-  { id: 4, title: 'Lagos Nights', genre: 'Afrobeats', bpm: 105, key: 'F#m', duration: '3:12', mood: 'Party' },
-  { id: 5, title: 'Sunday Morning', genre: 'Gospel', bpm: 78, key: 'G', duration: '4:01', mood: 'Uplifting' },
-  { id: 6, title: 'Neon Dreams', genre: 'Pop', bpm: 120, key: 'Dm', duration: '3:33', mood: 'Happy' },
-];
-
-const BeatPreview = ({ beat, isPlaying, onToggle }) => (
+const BeatPreview = ({ beat, isPlaying, onToggle, audioRef }) => (
   <div className="flex items-center gap-4 bg-[#1a1a1a] rounded-2xl p-4 transition-all hover:bg-[#222]" data-testid={`beat-${beat.id}`}>
-    <button onClick={() => onToggle(beat.id)}
+    <button onClick={() => onToggle(beat)}
       className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
       style={{ backgroundColor: isPlaying ? '#E040FB' : '#333' }}
       data-testid={`play-beat-${beat.id}`}>
@@ -54,7 +48,7 @@ const BeatPreview = ({ beat, isPlaying, onToggle }) => (
       </div>
     )}
     <div className="flex items-center gap-3 text-xs text-gray-400">
-      <span>{beat.duration}</span>
+      <span>{beat.duration || '--:--'}</span>
       <span className="px-2 py-0.5 rounded-full bg-white/5">{beat.mood}</span>
     </div>
   </div>
@@ -68,10 +62,55 @@ export default function InstrumentalsPage() {
   const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
   const [submitted, setSubmitted] = useState(false);
   const [playingBeat, setPlayingBeat] = useState(null);
+  const [beats, setBeats] = useState([]);
+  const [loadingBeats, setLoadingBeats] = useState(true);
+  const audioRef = useRef(null);
 
-  const toggleBeat = (beatId) => {
-    setPlayingBeat(prev => prev === beatId ? null : beatId);
+  useEffect(() => {
+    fetchBeats();
+  }, []);
+
+  const fetchBeats = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/beats`);
+      setBeats(res.data.beats || []);
+    } catch (err) {
+      console.error('Failed to fetch beats:', err);
+    } finally {
+      setLoadingBeats(false);
+    }
   };
+
+  const toggleBeat = (beat) => {
+    if (playingBeat === beat.id) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingBeat(null);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (beat.audio_url) {
+        const audio = new Audio(`${API_URL}/api/beats/${beat.id}/stream`);
+        audio.play().catch(e => console.log('Audio play failed:', e));
+        audio.onended = () => setPlayingBeat(null);
+        audioRef.current = audio;
+      }
+      setPlayingBeat(beat.id);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -153,15 +192,23 @@ export default function InstrumentalsPage() {
           </div>
         </div>
 
-        {/* Beat Previews */}
+        {/* Beat Catalog - Real Data */}
         <div className="p-6">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">BEAT CATALOG</h2>
           <p className="text-sm text-gray-400 text-center mb-6">Preview our latest beats — tap to play</p>
-          <div className="space-y-3">
-            {DEMO_BEATS.map(beat => (
-              <BeatPreview key={beat.id} beat={beat} isPlaying={playingBeat === beat.id} onToggle={toggleBeat} />
-            ))}
-          </div>
+          {loadingBeats ? (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-2 border-[#E040FB] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : beats.length > 0 ? (
+            <div className="space-y-3">
+              {beats.map(beat => (
+                <BeatPreview key={beat.id} beat={beat} isPlaying={playingBeat === beat.id} onToggle={toggleBeat} audioRef={audioRef} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 text-sm">No beats available yet. Check back soon!</div>
+          )}
           <div className="mt-4 p-3 bg-[#1a1a1a] rounded-xl flex items-center gap-3">
             <SpeakerHigh className="w-5 h-5 text-[#E040FB] flex-shrink-0" />
             <p className="text-xs text-gray-400">Audio previews play tagged samples. Full untagged files are delivered after purchase.</p>

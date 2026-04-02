@@ -1557,10 +1557,13 @@ from routes.ai_routes import ai_router
 from routes.email_routes import email_router
 from routes.paypal_routes import paypal_router
 from routes.content_routes import content_router
+from routes.beats_routes import beats_router, init_beats_routes
+init_beats_routes(db, put_object, get_object, get_current_user, require_admin)
 app.include_router(ai_router)
 app.include_router(email_router)
 app.include_router(paypal_router)
 app.include_router(content_router)
+app.include_router(beats_router)
 
 # CORS middleware
 app.add_middleware(
@@ -1589,6 +1592,8 @@ async def startup():
     await db.submissions.create_index("status")
     await db.splits.create_index("track_id", unique=True)
     await db.admin_actions.create_index("admin_id")
+    await db.beats.create_index("id", unique=True)
+    await db.beats.create_index("genre")
     
     # Initialize storage
     try:
@@ -1635,6 +1640,29 @@ async def startup():
     # Write test credentials
     from pathlib import Path
     Path("/app/memory").mkdir(exist_ok=True)
+
+    # Seed demo beats if none exist
+    beat_count = await db.beats.count_documents({})
+    if beat_count == 0:
+        demo_beats = [
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "Midnight Drip", "genre": "Trap", "bpm": 140, "key": "Cm", "mood": "Dark", "tags": ["dark", "trap", "808"], "status": "active", "plays": 0, "duration": "3:24"},
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "Golden Hour", "genre": "R&B/Soul", "bpm": 85, "key": "Eb", "mood": "Chill", "tags": ["chill", "rnb", "smooth"], "status": "active", "plays": 0, "duration": "3:45"},
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "City Lights", "genre": "Hip-Hop", "bpm": 92, "key": "Am", "mood": "Energetic", "tags": ["boom bap", "hiphop"], "status": "active", "plays": 0, "duration": "2:58"},
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "Lagos Nights", "genre": "Afrobeats", "bpm": 105, "key": "F#m", "mood": "Party", "tags": ["afro", "dancehall"], "status": "active", "plays": 0, "duration": "3:12"},
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "Sunday Morning", "genre": "Gospel", "bpm": 78, "key": "G", "mood": "Uplifting", "tags": ["gospel", "uplifting"], "status": "active", "plays": 0, "duration": "4:01"},
+            {"id": f"beat_{uuid.uuid4().hex[:12]}", "title": "Neon Dreams", "genre": "Pop", "bpm": 120, "key": "Dm", "mood": "Happy", "tags": ["pop", "dance"], "status": "active", "plays": 0, "duration": "3:33"},
+        ]
+        for b in demo_beats:
+            b["prices"] = {"basic_lease": 29.99, "premium_lease": 79.99, "unlimited_lease": 149.99, "exclusive": 499.99}
+            b["audio_url"] = None
+            b["preview_url"] = None
+            b["cover_url"] = None
+            b["created_by"] = "system"
+            b["created_at"] = datetime.now(timezone.utc).isoformat()
+            b["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.beats.insert_many(demo_beats)
+        logger.info(f"Seeded {len(demo_beats)} demo beats")
+
     with open("/app/memory/test_credentials.md", "w") as f:
         f.write(f"""# Test Credentials
 
