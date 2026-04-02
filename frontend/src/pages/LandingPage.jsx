@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
-import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Quotes, Play, Pause } from '@phosphor-icons/react';
+import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Quotes, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork } from '@phosphor-icons/react';
 import axios from 'axios';
 
 // Hero images
@@ -367,6 +367,44 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* ===== POWERFUL FEATURES ===== */}
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="features-section">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-xs font-bold text-[#7C4DFF] tracking-[4px] mb-4">ALL-IN-ONE PLATFORM</p>
+            <h2 className="text-4xl sm:text-5xl font-black leading-[1.05] tracking-tight text-white mb-4">
+              Everything You Need to <AnimatedColorText>Win</AnimatedColorText>
+            </h2>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              More than just distribution. Kalmori gives you AI-powered tools, deep analytics, and everything to build a real music career.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { icon: <Brain className="w-7 h-7" weight="fill" />, color: '#E040FB', title: 'AI Release Strategy', desc: 'Get AI-powered release plans with optimal timing, playlist targeting, and marketing recommendations tailored to your genre.' },
+              { icon: <ChartLineUp className="w-7 h-7" weight="fill" />, color: '#1DB954', title: 'Real-Time Analytics', desc: 'Track streams, revenue, fan demographics, peak listening hours, and geographic data across all platforms in one dashboard.' },
+              { icon: <CurrencyDollar className="w-7 h-7" weight="fill" />, color: '#FFD700', title: 'Revenue & Royalty Calculator', desc: 'See exactly what you earn per stream on each platform. Model different scenarios with our what-if royalty calculator.' },
+              { icon: <Trophy className="w-7 h-7" weight="fill" />, color: '#FF6B6B', title: 'Release Leaderboard', desc: 'See how your releases stack up. Track momentum, hot streaks, and compete with your own catalog.' },
+              { icon: <Target className="w-7 h-7" weight="fill" />, color: '#7C4DFF', title: 'Goal Tracking & Milestones', desc: 'Set stream goals, revenue targets, and geographic reach milestones. Watch your progress and celebrate achievements.' },
+              { icon: <ShareNetwork className="w-7 h-7" weight="fill" />, color: '#00BCD4', title: 'Artist Public Profile', desc: 'Your shareable link-in-bio page. Show your music, social links, and pre-save campaigns — all in one beautiful page.' },
+              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#FF9800', title: 'Fan Analytics', desc: 'Understand your audience: listener growth, top countries, platform engagement, and optimal release windows.' },
+              { icon: <Lightning className="w-7 h-7" weight="fill" />, color: '#E040FB', title: 'AI Smart Notifications', desc: 'Get intelligent alerts about trending moments, streaming spikes, and actionable insights delivered to you.' },
+              { icon: <MusicNotes className="w-7 h-7" weight="fill" />, color: '#9C27B0', title: 'Beat Marketplace', desc: 'Browse and purchase professional instrumentals. Producers can sell beats directly on the platform.' },
+            ].map((f, i) => (
+              <div key={i} className="bg-[#111] rounded-2xl p-7 border border-white/5 hover:border-white/15 transition-all group" data-testid={`feature-card-${i}`}>
+                <div className="w-12 h-12 rounded-xl mb-5 flex items-center justify-center group-hover:scale-110 transition-transform"
+                  style={{ backgroundColor: `${f.color}15`, color: f.color }}>
+                  {f.icon}
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== PROMOTION SERVICES ===== */}
       <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="promotion-section">
         <div className="max-w-7xl mx-auto">
@@ -509,16 +547,34 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ===== BUILT FOR YOUNG ARTISTS ===== */}
+      {/* ===== BUILT FOR YOUNG ARTISTS — with stats ===== */}
       <section className="py-24 px-6 bg-black" data-testid="young-artists-section">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-20">
+            {[
+              { value: '150+', label: 'Streaming Platforms', color: '#E040FB' },
+              { value: '100%', label: 'Your Royalties', color: '#1DB954' },
+              { value: '24/7', label: 'Analytics Dashboard', color: '#7C4DFF' },
+              { value: 'AI', label: 'Powered Strategy', color: '#FFD700' },
+            ].map((s, i) => (
+              <div key={i} className="text-center p-6 bg-[#111] rounded-2xl border border-white/5" data-testid={`stat-card-${i}`}>
+                <p className="text-4xl sm:text-5xl font-black" style={{ color: s.color }}>{s.value}</p>
+                <p className="text-sm text-gray-400 mt-2 font-medium">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center max-w-3xl mx-auto">
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center mx-auto mb-8 shadow-lg shadow-[#7C4DFF]/30">
               <Rocket className="w-10 h-10 text-white" weight="fill" />
             </div>
             <h2 className="text-4xl sm:text-5xl font-black leading-[1.05] tracking-tight text-white mb-6">Built for Young Artists & Producers</h2>
-            <p className="text-lg text-gray-400 leading-relaxed">
+            <p className="text-lg text-gray-400 leading-relaxed mb-4">
               Whether you're just starting out or ready to take your career to the next level, Kalmori provides the tools, distribution, and support you need to succeed in the music industry.
+            </p>
+            <p className="text-base text-gray-500 leading-relaxed">
+              Upload your first track, get AI-powered release strategies, build your fanbase with real-time analytics, and share your artist profile with the world. All from one platform.
             </p>
           </div>
         </div>

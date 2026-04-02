@@ -34,6 +34,8 @@ const ReleaseDetailPage = () => {
   const [stores, setStores] = useState([]);
   const [selectedStores, setSelectedStores] = useState([]);
   const [distributing, setDistributing] = useState(false);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [storeRegion, setStoreRegion] = useState('All');
   const [newTrack, setNewTrack] = useState({ title: '', track_number: 1 });
   const [showAddTrack, setShowAddTrack] = useState(false);
   const [playingTrack, setPlayingTrack] = useState(null);
@@ -445,11 +447,51 @@ const ReleaseDetailPage = () => {
           <div className="bg-[#141414] border border-white/10 rounded-md p-6">
             <h2 className="text-lg font-medium mb-6 flex items-center gap-2">
               <Globe className="w-5 h-5 text-[#007AFF]" />
-              Distribution
+              Distribution — {stores.length} Platforms
             </h2>
+
+            {/* Search & Filter Controls */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <input
+                type="text" placeholder="Search platforms..." value={storeSearch}
+                onChange={(e) => setStoreSearch(e.target.value)}
+                className="bg-[#0A0A0A] border border-white/10 rounded px-3 py-2 text-sm text-white w-48 focus:outline-none focus:border-[#7C4DFF]"
+                data-testid="store-search-input"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {['All', ...new Set(stores.map(s => s.region).filter(Boolean))].map(r => (
+                  <button key={r} onClick={() => setStoreRegion(r)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      storeRegion === r ? 'bg-[#7C4DFF] text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    }`}
+                    data-testid={`region-filter-${r.toLowerCase().replace(/\s/g, '-')}`}
+                  >{r}</button>
+                ))}
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-gray-500">{selectedStores.length}/{stores.length} selected</span>
+                <button onClick={() => {
+                  const filteredIds = stores
+                    .filter(s => (!storeSearch || s.store_name.toLowerCase().includes(storeSearch.toLowerCase())) && (storeRegion === 'All' || s.region === storeRegion))
+                    .map(s => s.store_id);
+                  const allSelected = filteredIds.every(id => selectedStores.includes(id));
+                  if (allSelected) setSelectedStores(prev => prev.filter(id => !filteredIds.includes(id)));
+                  else setSelectedStores(prev => [...new Set([...prev, ...filteredIds])]);
+                }}
+                  className="text-xs text-[#7C4DFF] font-semibold hover:text-[#E040FB] transition-colors"
+                  data-testid="select-all-stores-btn"
+                >
+                  {stores
+                    .filter(s => (!storeSearch || s.store_name.toLowerCase().includes(storeSearch.toLowerCase())) && (storeRegion === 'All' || s.region === storeRegion))
+                    .every(s => selectedStores.includes(s.store_id)) ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+            </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
-              {stores.map((store) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-6 max-h-[400px] overflow-y-auto pr-1">
+              {stores
+                .filter(s => (!storeSearch || s.store_name.toLowerCase().includes(storeSearch.toLowerCase())) && (storeRegion === 'All' || s.region === storeRegion))
+                .map((store) => (
                 <button
                   key={store.store_id}
                   onClick={() => toggleStore(store.store_id)}
