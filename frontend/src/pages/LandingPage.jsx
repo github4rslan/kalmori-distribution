@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
-import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Quotes } from '@phosphor-icons/react';
+import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Quotes, Play, Pause } from '@phosphor-icons/react';
+import axios from 'axios';
 
 // Hero images
 const heroSlideImages = [
@@ -108,6 +109,33 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [zoomScale, setZoomScale] = useState(1);
+  const [featuredBeats, setFeaturedBeats] = useState([]);
+  const [playingBeatId, setPlayingBeatId] = useState(null);
+  const audioRef = React.useRef(null);
+
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/beats?limit=4`)
+      .then(res => setFeaturedBeats(res.data.beats?.slice(0, 4) || []))
+      .catch(() => {});
+    return () => { if (audioRef.current) audioRef.current.pause(); };
+  }, []);
+
+  const toggleBeat = (beat) => {
+    if (playingBeatId === beat.id) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setPlayingBeatId(null);
+    } else {
+      audioRef.current?.pause();
+      if (beat.audio_url) {
+        const audio = new Audio(`${process.env.REACT_APP_BACKEND_URL}/api/beats/${beat.id}/stream`);
+        audio.play().catch(() => {});
+        audio.onended = () => setPlayingBeatId(null);
+        audioRef.current = audio;
+      }
+      setPlayingBeatId(beat.id);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentSlide((p) => (p + 1) % heroSlideImages.length), 30000);
@@ -495,6 +523,54 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* ===== FEATURED BEATS ===== */}
+      {featuredBeats.length > 0 && (
+        <section className="py-20 px-6 bg-black" data-testid="featured-beats-section">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <p className="text-xs font-bold text-[#E040FB] tracking-[4px] mb-4">FROM OUR CATALOG</p>
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white leading-[1.1]">Featured Beats</h2>
+              <p className="text-gray-400 mt-3 text-base">Preview our latest instrumentals — tap to play</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+              {featuredBeats.map((beat) => (
+                <div key={beat.id} className="bg-[#111] rounded-2xl p-5 border border-white/5 hover:border-[#E040FB]/30 transition-all group" data-testid={`featured-beat-${beat.id}`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <button onClick={() => toggleBeat(beat)}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
+                        playingBeatId === beat.id ? 'bg-[#E040FB] scale-110' : 'bg-white/10 group-hover:bg-white/20'
+                      }`} data-testid={`play-featured-${beat.id}`}>
+                      {playingBeatId === beat.id ? <Pause className="w-4 h-4 text-white" weight="fill" /> : <Play className="w-4 h-4 text-white" weight="fill" />}
+                    </button>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-bold text-white truncate">{beat.title}</h4>
+                      <p className="text-xs text-gray-500">{beat.genre}</p>
+                    </div>
+                  </div>
+                  {playingBeatId === beat.id && (
+                    <div className="flex items-end gap-[3px] h-6 mb-3 justify-center">
+                      {[...Array(12)].map((_, i) => (
+                        <div key={i} className="w-1.5 bg-[#E040FB] rounded-full animate-pulse"
+                          style={{ height: `${8 + Math.random() * 16}px`, animationDelay: `${i * 0.05}s`, animationDuration: `${0.3 + Math.random() * 0.4}s` }} />
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{beat.bpm} BPM &middot; {beat.key}</span>
+                    <span className="text-[#E040FB] font-semibold">${beat.prices?.basic_lease || '29.99'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="text-center">
+              <button onClick={() => navigate('/instrumentals')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all" data-testid="browse-all-beats-btn">
+                BROWSE ALL BEATS <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===== PRICING QUICK SECTION ===== */}
       <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="pricing-section">

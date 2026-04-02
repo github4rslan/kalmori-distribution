@@ -487,7 +487,40 @@ async def upgrade_subscription(plan: str, request: Request):
     user = await get_current_user(request)
     if plan not in SUBSCRIPTION_PLANS: raise HTTPException(status_code=400, detail="Invalid plan")
     await db.users.update_one({"id": user["id"]}, {"$set": {"plan": plan}})
-    return {"message": f"Upgraded to {SUBSCRIPTION_PLANS[plan]['name']} plan"}
+    await db.subscriptions.update_one({"user_id": user["id"]}, {"$set": {
+        "user_id": user["id"], "plan": plan, "status": "active",
+        "price": SUBSCRIPTION_PLANS[plan]["price"],
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }}, upsert=True)
+    return {"message": f"Upgraded to {SUBSCRIPTION_PLANS[plan]['name']} plan", "plan": plan}
+
+from pydantic import BaseModel as PydanticBaseModel
+class SubscriptionCheckout(PydanticBaseModel):
+    plan: str
+    origin_url: str
+
+@api_router.post("/subscriptions/checkout")
+async def create_subscription_checkout(data: SubscriptionCheckout, request: Request):
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    user = await get_current_user(request)
+    if data.plan not in SUBSCRIPTION_PLANS: raise HTTPException(status_code=400, detail="Invalid plan")
+    plan_info = SUBSCRIPTION_PLANS[data.plan]
+    if plan_info["price"] == 0:
+        await db.users.update_one({"id": user["id"]}, {"$set": {"plan": "free"}})
+        return {"message": "Downgraded to Free", "redirect_url": None}
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    host_url = str(request.base_url)
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
+    session = await stripe_checkout.create_checkout_session(CheckoutSessionRequest(
+        amount=plan_info["price"], currency="usd",
+        success_url=f"{data.origin_url}/pricing?subscription=success&plan={data.plan}&session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{data.origin_url}/pricing?subscription=cancelled",
+        metadata={"user_id": user["id"], "plan": data.plan, "type": "subscription"}))
+    await db.payment_transactions.insert_one({"id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.session_id,
+        "user_id": user["id"], "amount": plan_info["price"], "currency": "usd", "type": "subscription",
+        "plan": data.plan, "payment_status": "pending", "provider": "stripe",
+        "created_at": datetime.now(timezone.utc).isoformat()})
+    return {"checkout_url": session.url, "session_id": session.session_id}
 
 # ============= NOTIFICATIONS =============
 @api_router.get("/notifications")
