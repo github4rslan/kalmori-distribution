@@ -1780,6 +1780,115 @@ async def serve_file(path: str, request: Request, auth: Optional[str] = Query(No
         raise HTTPException(status_code=404, detail="File not found")
 
 # ============= HEALTH =============
+# ============= ARTIST PUBLIC PROFILE =============
+import re
+
+def generate_slug(name: str) -> str:
+    """Generate URL-safe slug from artist name"""
+    slug = name.lower().strip()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s-]+', '-', slug)
+    slug = slug.strip('-')
+    return slug or f"artist-{uuid.uuid4().hex[:8]}"
+
+class UpdateSlugInput(BaseModel):
+    slug: str
+
+@api_router.put("/artist/profile/slug")
+async def set_artist_slug(data: UpdateSlugInput, request: Request):
+    """Set a custom slug for the artist's public profile URL"""
+    user = await get_current_user(request)
+    slug = generate_slug(data.slug)
+    if len(slug) < 2:
+        raise HTTPException(status_code=400, detail="Slug must be at least 2 characters")
+    if len(slug) > 50:
+        raise HTTPException(status_code=400, detail="Slug must be under 50 characters")
+    existing = await db.artist_profiles.find_one({"slug": slug, "user_id": {"$ne": user["id"]}})
+    if existing:
+        raise HTTPException(status_code=409, detail="This URL is already taken. Try a different one.")
+    await db.artist_profiles.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"slug": slug, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"message": "Profile URL updated", "slug": slug}
+
+@api_router.get("/artist/profile/slug")
+async def get_artist_slug(request: Request):
+    """Get the current user's slug"""
+    user = await get_current_user(request)
+    profile = await db.artist_profiles.find_one({"user_id": user["id"]}, {"_id": 0, "slug": 1})
+    slug = profile.get("slug") if profile else None
+    if not slug:
+        slug = generate_slug(user.get("artist_name", user.get("name", "artist")))
+        await db.artist_profiles.update_one(
+            {"user_id": user["id"]},
+            {"$set": {"slug": slug}},
+            upsert=True
+        )
+    return {"slug": slug}
+
+@api_router.get("/artist/{slug}")
+async def get_public_artist_profile(slug: str):
+    """Public endpoint - no auth required. Returns artist profile for public display."""
+    profile = await db.artist_profiles.find_one({"slug": slug}, {"_id": 0})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Artist not found")
+    user_id = profile["user_id"]
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Artist not found")
+
+    # Get distributed releases
+    releases = await db.releases.find(
+        {"artist_id": user_id, "status": {"$in": ["distributed", "pending_review"]}},
+        {"_id": 0, "id": 1, "title": 1, "release_type": 1, "genre": 1, "cover_art_url": 1, "release_date": 1, "status": 1, "track_count": 1}
+    ).sort("created_at", -1).to_list(20)
+
+    # Get stream counts per release
+    stream_pipeline = [
+        {"$match": {"artist_id": user_id}},
+        {"$group": {"_id": "$release_id", "streams": {"$sum": 1}}}
+    ]
+    stream_data = {r["_id"]: r["streams"] for r in await db.stream_events.aggregate(stream_pipeline).to_list(200)}
+
+    for r in releases:
+        r["total_streams"] = stream_data.get(r["id"], 0)
+
+    # Get active pre-save campaigns
+    presave_campaigns = await db.presave_campaigns.find(
+        {"artist_id": user_id, "status": "active"},
+        {"_id": 0, "id": 1, "release_title": 1, "release_date": 1, "cover_art_url": 1, "subscriber_count": 1, "platforms": 1}
+    ).to_list(10)
+
+    # Total streams
+    total_streams_pipeline = [
+        {"$match": {"artist_id": user_id}},
+        {"$group": {"_id": None, "total": {"$sum": 1}}}
+    ]
+    total_result = await db.stream_events.aggregate(total_streams_pipeline).to_list(1)
+    total_streams = total_result[0]["total"] if total_result else 0
+
+    return {
+        "artist_name": profile.get("artist_name", user.get("artist_name", user.get("name", "Artist"))),
+        "bio": profile.get("bio"),
+        "genre": profile.get("genre"),
+        "country": profile.get("country"),
+        "avatar_url": user.get("avatar_url"),
+        "website": profile.get("website"),
+        "spotify_url": profile.get("spotify_url"),
+        "apple_music_url": profile.get("apple_music_url"),
+        "instagram": profile.get("instagram"),
+        "twitter": profile.get("twitter"),
+        "slug": slug,
+        "releases": releases,
+        "presave_campaigns": presave_campaigns,
+        "stats": {
+            "total_streams": total_streams,
+            "total_releases": len(releases),
+        }
+    }
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}

@@ -45,6 +45,7 @@ import FanAnalyticsPage from './pages/FanAnalyticsPage';
 import RevenueAnalyticsPage from './pages/RevenueAnalyticsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import GoalsPage from './pages/GoalsPage';
+import ArtistProfilePage from './pages/ArtistProfilePage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -274,6 +275,7 @@ const AppRouter = () => {
       <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
       <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
       <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />
+      <Route path="/artist/:slug" element={<ArtistProfilePage />} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
       <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissionsPage /></AdminRoute>} />

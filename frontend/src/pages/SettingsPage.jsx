@@ -20,7 +20,10 @@ import {
   Bell,
   SpotifyLogo,
   Link as LinkIcon,
-  PlugsConnected
+  PlugsConnected,
+  ShareNetwork,
+  Copy,
+  ArrowSquareOut
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
@@ -56,11 +59,16 @@ const SettingsPage = () => {
   const [notifPrefs, setNotifPrefs] = useState({});
   const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
   const [spotifyStatus, setSpotifyStatus] = useState(null);
+  const [slug, setSlug] = useState('');
+  const [slugInput, setSlugInput] = useState('');
+  const [savingSlug, setSavingSlug] = useState(false);
+  const [slugCopied, setSlugCopied] = useState(false);
 
   useEffect(() => {
     fetchData();
     fetchNotifPrefs();
     fetchSpotifyStatus();
+    fetchSlug();
   }, []);
 
   const fetchSpotifyStatus = async () => {
@@ -68,6 +76,38 @@ const SettingsPage = () => {
       const res = await axios.get(`${API}/integrations/spotify/status`, { withCredentials: true });
       setSpotifyStatus(res.data);
     } catch {}
+  };
+
+  const fetchSlug = async () => {
+    try {
+      const res = await axios.get(`${API}/artist/profile/slug`, { withCredentials: true });
+      setSlug(res.data.slug || '');
+      setSlugInput(res.data.slug || '');
+    } catch {}
+  };
+
+  const handleSaveSlug = async () => {
+    if (!slugInput.trim()) return;
+    setSavingSlug(true);
+    try {
+      const res = await axios.put(`${API}/artist/profile/slug`, { slug: slugInput }, { withCredentials: true });
+      setSlug(res.data.slug);
+      setSlugInput(res.data.slug);
+      toast.success('Profile URL updated!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to update URL');
+    } finally {
+      setSavingSlug(false);
+    }
+  };
+
+  const copyProfileUrl = () => {
+    const url = `${window.location.origin}/artist/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setSlugCopied(true);
+      setTimeout(() => setSlugCopied(false), 2000);
+      toast.success('Profile link copied!');
+    }).catch(() => toast.error('Failed to copy'));
   };
 
   const fetchNotifPrefs = async () => {
@@ -177,6 +217,9 @@ const SettingsPage = () => {
             </TabsTrigger>
             <TabsTrigger value="integrations" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white" data-testid="integrations-settings-tab">
               <PlugsConnected className="w-4 h-4 mr-2" /> Integrations
+            </TabsTrigger>
+            <TabsTrigger value="public-profile" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white" data-testid="public-profile-tab">
+              <ShareNetwork className="w-4 h-4 mr-2" /> Public Profile
             </TabsTrigger>
           </TabsList>
 
@@ -519,6 +562,92 @@ const SettingsPage = () => {
                 </div>
                 <span className="px-3 py-1 text-[10px] font-bold text-gray-500 border border-white/10 rounded-full">COMING SOON</span>
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Public Profile Tab */}
+          <TabsContent value="public-profile" className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-white mb-1">Your Public Profile</h2>
+              <p className="text-sm text-gray-400">Share your artist page with fans. This link shows your bio, music, and social links.</p>
+            </div>
+
+            {/* Profile URL */}
+            <div className="bg-[#141414] border border-white/10 rounded-lg p-6" data-testid="public-profile-url-section">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <LinkIcon className="w-4 h-4 text-[#7C4DFF]" />
+                Profile URL
+              </h3>
+
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-1 flex items-center bg-[#0A0A0A] border border-white/10 rounded-lg overflow-hidden">
+                  <span className="px-3 py-2.5 text-sm text-white/40 border-r border-white/10 whitespace-nowrap">
+                    {window.location.origin}/artist/
+                  </span>
+                  <input
+                    type="text"
+                    value={slugInput}
+                    onChange={(e) => setSlugInput(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="your-name"
+                    className="flex-1 bg-transparent px-3 py-2.5 text-sm text-white outline-none"
+                    data-testid="slug-input"
+                  />
+                </div>
+                <Button
+                  onClick={handleSaveSlug}
+                  disabled={savingSlug || slugInput === slug}
+                  className="bg-[#7C4DFF] hover:bg-[#7C4DFF]/80 text-white text-sm px-4"
+                  data-testid="save-slug-btn"
+                >
+                  {savingSlug ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+
+              {slug && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={copyProfileUrl}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:bg-white/10 transition-all"
+                    data-testid="copy-profile-url-btn"
+                  >
+                    {slugCopied ? (
+                      <><CheckCircle className="w-4 h-4 text-[#22C55E]" weight="fill" /> Copied!</>
+                    ) : (
+                      <><Copy className="w-4 h-4" /> Copy Link</>
+                    )}
+                  </button>
+                  <a
+                    href={`/artist/${slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white/70 hover:bg-white/10 transition-all"
+                    data-testid="view-profile-btn"
+                  >
+                    <ArrowSquareOut className="w-4 h-4" /> View Profile
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* What's shown */}
+            <div className="bg-[#141414] border border-white/10 rounded-lg p-6">
+              <h3 className="text-sm font-bold text-white mb-4">What fans will see</h3>
+              <ul className="space-y-3">
+                {[
+                  { label: 'Artist name & avatar', done: !!profile.artist_name },
+                  { label: 'Bio', done: !!profile.bio },
+                  { label: 'Genre & country', done: !!profile.genre },
+                  { label: 'Social links (Spotify, Instagram, etc.)', done: !!(profile.spotify_url || profile.instagram || profile.twitter) },
+                  { label: 'Released music with cover art', done: true },
+                  { label: 'Pre-save campaigns', done: true },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-sm">
+                    <CheckCircle className={`w-4 h-4 flex-shrink-0 ${item.done ? 'text-[#22C55E]' : 'text-white/20'}`} weight={item.done ? 'fill' : 'regular'} />
+                    <span className={item.done ? 'text-white/80' : 'text-white/40'}>{item.label}</span>
+                    {!item.done && <span className="text-[10px] text-[#FFD700] bg-[#FFD700]/10 px-2 py-0.5 rounded-full">Add in Profile tab</span>}
+                  </li>
+                ))}
+              </ul>
             </div>
           </TabsContent>
         </Tabs>
