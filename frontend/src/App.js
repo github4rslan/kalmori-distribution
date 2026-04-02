@@ -33,6 +33,9 @@ import StoresPage from './pages/StoresPage';
 import InstrumentalsPage from './pages/InstrumentalsPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import SpotifyCanvasPage from './pages/SpotifyCanvasPage';
+import ContentIdPage from './pages/ContentIdPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -252,6 +255,8 @@ const AppRouter = () => {
       <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetailPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+      <Route path="/spotify-canvas" element={<ProtectedRoute><SpotifyCanvasPage /></ProtectedRoute>} />
+      <Route path="/content-id" element={<ProtectedRoute><ContentIdPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
       <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissionsPage /></AdminRoute>} />
@@ -267,6 +272,8 @@ const AppRouter = () => {
       <Route path="/instrumentals" element={<InstrumentalsPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/forgot-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
-import { MusicNote, Lightning, ShieldCheck, Headset, Check, Star, PaperPlaneTilt } from '@phosphor-icons/react';
+import { MusicNote, Lightning, ShieldCheck, Headset, Check, Star, PaperPlaneTilt, Play, Pause, SpeakerHigh } from '@phosphor-icons/react';
 
 const licenseTiers = [
   { id: 'basic_lease', name: 'Basic Lease', price: 29.99, desc: 'Perfect for demos and mixtapes', features: ['MP3 File (320kbps)', 'Up to 5,000 streams', 'Non-exclusive license', 'Credit required'], color: '#7C4DFF' },
@@ -21,6 +21,45 @@ const whyItems = [
 const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const moods = ['Energetic/Hype', 'Chill/Laid-back', 'Dark/Moody', 'Emotional/Sad', 'Happy/Uplifting', 'Romantic', 'Aggressive', 'Party/Club'];
 
+const DEMO_BEATS = [
+  { id: 1, title: 'Midnight Drip', genre: 'Trap', bpm: 140, key: 'Cm', duration: '3:24', mood: 'Dark' },
+  { id: 2, title: 'Golden Hour', genre: 'R&B/Soul', bpm: 85, key: 'Eb', duration: '3:45', mood: 'Chill' },
+  { id: 3, title: 'City Lights', genre: 'Hip-Hop', bpm: 92, key: 'Am', duration: '2:58', mood: 'Energetic' },
+  { id: 4, title: 'Lagos Nights', genre: 'Afrobeats', bpm: 105, key: 'F#m', duration: '3:12', mood: 'Party' },
+  { id: 5, title: 'Sunday Morning', genre: 'Gospel', bpm: 78, key: 'G', duration: '4:01', mood: 'Uplifting' },
+  { id: 6, title: 'Neon Dreams', genre: 'Pop', bpm: 120, key: 'Dm', duration: '3:33', mood: 'Happy' },
+];
+
+const BeatPreview = ({ beat, isPlaying, onToggle }) => (
+  <div className="flex items-center gap-4 bg-[#1a1a1a] rounded-2xl p-4 transition-all hover:bg-[#222]" data-testid={`beat-${beat.id}`}>
+    <button onClick={() => onToggle(beat.id)}
+      className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+      style={{ backgroundColor: isPlaying ? '#E040FB' : '#333' }}
+      data-testid={`play-beat-${beat.id}`}>
+      {isPlaying ? <Pause className="w-5 h-5 text-white" weight="fill" /> : <Play className="w-5 h-5 text-white" weight="fill" />}
+    </button>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-sm font-bold text-white truncate">{beat.title}</h4>
+      <p className="text-xs text-gray-400">{beat.genre} &middot; {beat.bpm} BPM &middot; Key: {beat.key}</p>
+    </div>
+    {isPlaying && (
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-1 bg-[#E040FB] rounded-full animate-pulse" style={{
+            height: `${12 + Math.random() * 16}px`,
+            animationDelay: `${i * 0.1}s`,
+            animationDuration: `${0.4 + Math.random() * 0.3}s`
+          }} />
+        ))}
+      </div>
+    )}
+    <div className="flex items-center gap-3 text-xs text-gray-400">
+      <span>{beat.duration}</span>
+      <span className="px-2 py-0.5 rounded-full bg-white/5">{beat.mood}</span>
+    </div>
+  </div>
+);
+
 export default function InstrumentalsPage() {
   const navigate = useNavigate();
   const [selectedLicense, setSelectedLicense] = useState('');
@@ -28,6 +67,11 @@ export default function InstrumentalsPage() {
   const [selectedMood, setSelectedMood] = useState('');
   const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [playingBeat, setPlayingBeat] = useState(null);
+
+  const toggleBeat = (beatId) => {
+    setPlayingBeat(prev => prev === beatId ? null : beatId);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -109,7 +153,22 @@ export default function InstrumentalsPage() {
           </div>
         </div>
 
-        {/* Request Form */}
+        {/* Beat Previews */}
+        <div className="p-6">
+          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">BEAT CATALOG</h2>
+          <p className="text-sm text-gray-400 text-center mb-6">Preview our latest beats — tap to play</p>
+          <div className="space-y-3">
+            {DEMO_BEATS.map(beat => (
+              <BeatPreview key={beat.id} beat={beat} isPlaying={playingBeat === beat.id} onToggle={toggleBeat} />
+            ))}
+          </div>
+          <div className="mt-4 p-3 bg-[#1a1a1a] rounded-xl flex items-center gap-3">
+            <SpeakerHigh className="w-5 h-5 text-[#E040FB] flex-shrink-0" />
+            <p className="text-xs text-gray-400">Audio previews play tagged samples. Full untagged files are delivered after purchase.</p>
+          </div>
+        </div>
+
+        {/* Request Custom Beat Form */}
         <div className="mx-4 mt-4 mb-8 rounded-3xl p-6 border border-[#333] bg-[#0a0a0a]" data-testid="beat-request-form">
           <div className="text-center mb-2">
             <h2 className="text-xl font-extrabold text-white tracking-[2px]">REQUEST A CUSTOM BEAT</h2>

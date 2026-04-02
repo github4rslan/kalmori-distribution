@@ -1552,6 +1552,16 @@ app.include_router(api_router)
 from kalmori_routes import kalmori_router, init_cms_content
 app.include_router(kalmori_router)
 
+# Include feature routes
+from routes.ai_routes import ai_router
+from routes.email_routes import email_router
+from routes.paypal_routes import paypal_router
+from routes.content_routes import content_router
+app.include_router(ai_router)
+app.include_router(email_router)
+app.include_router(paypal_router)
+app.include_router(content_router)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,

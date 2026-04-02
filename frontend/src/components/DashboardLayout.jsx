@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo } from '@phosphor-icons/react';
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -15,6 +15,8 @@ const DashboardLayout = ({ children }) => {
     { path: '/releases', icon: <Disc className="w-5 h-5" />, label: 'Releases' },
     { path: '/analytics', icon: <ChartLineUp className="w-5 h-5" />, label: 'Analytics' },
     { path: '/wallet', icon: <Wallet className="w-5 h-5" />, label: 'Wallet' },
+    { path: '/spotify-canvas', icon: <SpotifyLogo className="w-5 h-5" />, label: 'Spotify Canvas' },
+    { path: '/content-id', icon: <YoutubeLogo className="w-5 h-5" />, label: 'Content ID' },
     { path: '/settings', icon: <Gear className="w-5 h-5" />, label: 'Settings' },
   ];
 

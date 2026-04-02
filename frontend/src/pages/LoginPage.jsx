@@ -84,6 +84,9 @@ const LoginPage = () => {
           <p className="mt-8 text-center text-sm text-gray-400">
             Don't have an account? <Link to="/register" className="text-[#7C4DFF] hover:underline" data-testid="signup-link">Sign up</Link>
           </p>
+          <p className="mt-3 text-center">
+            <Link to="/forgot-password" className="text-sm text-gray-500 hover:text-[#E040FB] transition-colors" data-testid="forgot-password-link">Forgot your password?</Link>
+          </p>
         </div>
       </div>
 
