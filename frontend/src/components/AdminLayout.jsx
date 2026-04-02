@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, API } from '../App';
 import { Button } from './ui/button';
-import { House, Users, ClipboardText, ChartBar, Gear, SignOut, List, X, ArrowLeft, ShieldCheck, Bell } from '@phosphor-icons/react';
+import { House, Users, ClipboardText, ChartBar, Gear, SignOut, List, X, ArrowLeft, ShieldCheck, Bell, MusicNote } from '@phosphor-icons/react';
 import axios from 'axios';
 
 const AdminLayout = ({ children }) => {
@@ -28,6 +28,7 @@ const AdminLayout = ({ children }) => {
     { path: '/admin', icon: <ChartBar className="w-5 h-5" />, label: 'Overview', exact: true },
     { path: '/admin/submissions', icon: <ClipboardText className="w-5 h-5" />, label: 'Submissions' },
     { path: '/admin/users', icon: <Users className="w-5 h-5" />, label: 'Users' },
+    { path: '/admin/beats', icon: <MusicNote className="w-5 h-5" />, label: 'Beat Manager' },
   ];
 
   const isActive = (item) => {
@@ -91,7 +92,7 @@ const AdminLayout = ({ children }) => {
             <div className="flex items-center gap-3">
               <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="admin-back-btn"><ArrowLeft className="w-6 h-6" /></button>
               <span className="lg:hidden text-white text-[16px] font-bold">
-                {location.pathname === '/admin' ? 'Overview' : location.pathname === '/admin/submissions' ? 'Submissions' : location.pathname === '/admin/users' ? 'Users' : 'Admin'}
+                {location.pathname === '/admin' ? 'Overview' : location.pathname === '/admin/submissions' ? 'Submissions' : location.pathname === '/admin/users' ? 'Users' : location.pathname === '/admin/beats' ? 'Beat Manager' : 'Admin'}
               </span>
             </div>
             <div className="flex-1" />
