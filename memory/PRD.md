@@ -141,4 +141,10 @@ Landing, Login, Register, ResetPassword, Dashboard, Releases, ReleaseDetail, Cre
 - iteration_8: 100% (16/16) - Auth & service layer
 - iteration_9: 100% (28/28) - api.ts port
 - iteration_10: 93% backend + 100% frontend - All new features
-- iteration_11: 100% (11/11) backend + 100% frontend - Back buttons, Object Storage, Stripe verified
+- iteration_11: 100% (11/11) - Back buttons, Object Storage, Stripe
+- iteration_12: 100% (16/16) - Beats API, Login/Register redesign
+- iteration_13: 100% (17/17) - Admin Beat Manager
+- iteration_14: 100% (23/23) - Backend modularization regression
+- iteration_15: 100% (16/16) - Subscriptions, Featured Beats, Pricing
+- iteration_16: 100% (18/18) - reCAPTCHA, Trending, Payment callbacks
+- iteration_17: 100% (20/20) - Beat purchase, Email receipts, Release Wizard
