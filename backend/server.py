@@ -704,6 +704,148 @@ async def get_release_leaderboard(request: Request):
         "active_releases": sum(1 for r in leaderboard if r["total_streams"] > 0),
     }
 
+# ===== GOALS & MILESTONES =====
+GOAL_TYPES = {
+    "streams": {"label": "Total Streams", "unit": "streams"},
+    "monthly_streams": {"label": "Monthly Streams", "unit": "streams/month"},
+    "countries": {"label": "Countries Reached", "unit": "countries"},
+    "revenue": {"label": "Revenue Earned", "unit": "USD"},
+    "releases": {"label": "Releases Published", "unit": "releases"},
+    "presave_subs": {"label": "Pre-Save Subscribers", "unit": "subscribers"},
+    "collaborations": {"label": "Collaborations", "unit": "collabs"},
+}
+
+class CreateGoalInput(BaseModel):
+    goal_type: str
+    target_value: float
+    title: Optional[str] = None
+    deadline: Optional[str] = None
+
+@api_router.post("/goals")
+async def create_goal(data: CreateGoalInput, request: Request):
+    user = await get_current_user(request)
+    if data.goal_type not in GOAL_TYPES:
+        raise HTTPException(status_code=400, detail=f"Invalid goal_type. Must be one of: {', '.join(GOAL_TYPES.keys())}")
+    goal_id = f"goal_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    goal_info = GOAL_TYPES[data.goal_type]
+    doc = {
+        "id": goal_id,
+        "user_id": user["id"],
+        "goal_type": data.goal_type,
+        "target_value": data.target_value,
+        "title": data.title or f"Reach {int(data.target_value):,} {goal_info['unit']}",
+        "deadline": data.deadline,
+        "status": "active",
+        "created_at": now,
+        "completed_at": None,
+    }
+    await db.goals.insert_one(doc)
+    doc.pop("_id", None)
+    return {"message": "Goal created", "goal": doc}
+
+@api_router.get("/goals")
+async def get_goals(request: Request):
+    user = await get_current_user(request)
+    goals = await db.goals.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1).isoformat()
+
+    # Compute current values for progress
+    total_streams = await db.stream_events.count_documents({"artist_id": user["id"]})
+    monthly_streams = await db.stream_events.count_documents({"artist_id": user["id"], "timestamp": {"$gte": month_start}})
+    countries_pipeline = [
+        {"$match": {"artist_id": user["id"]}},
+        {"$group": {"_id": "$country"}},
+    ]
+    countries_count = len(await db.stream_events.aggregate(countries_pipeline).to_list(200))
+    rev_pipeline = [
+        {"$match": {"artist_id": user["id"]}},
+        {"$group": {"_id": None, "total": {"$sum": "$revenue"}}},
+    ]
+    rev_result = await db.stream_events.aggregate(rev_pipeline).to_list(1)
+    total_revenue = round(rev_result[0]["total"], 2) if rev_result else 0
+    total_releases = await db.releases.count_documents({"artist_id": user["id"]})
+    presave_pipeline = [
+        {"$match": {"artist_id": user["id"]}},
+        {"$group": {"_id": None, "total": {"$sum": "$subscriber_count"}}},
+    ]
+    presave_result = await db.presave_campaigns.aggregate(presave_pipeline).to_list(1)
+    total_presave = presave_result[0]["total"] if presave_result else 0
+    total_collabs = await db.collaborations.count_documents({"artist_id": user["id"], "status": "accepted"})
+
+    current_values = {
+        "streams": total_streams,
+        "monthly_streams": monthly_streams,
+        "countries": countries_count,
+        "revenue": total_revenue,
+        "releases": total_releases,
+        "presave_subs": total_presave,
+        "collaborations": total_collabs,
+    }
+
+    enriched = []
+    newly_completed = []
+    for g in goals:
+        cv = current_values.get(g["goal_type"], 0)
+        target = g["target_value"] or 1
+        progress = min(round(cv / target * 100, 1), 100)
+        completed = cv >= target
+
+        # Check if just completed
+        if completed and g["status"] == "active":
+            g["status"] = "completed"
+            g["completed_at"] = now.isoformat()
+            await db.goals.update_one({"id": g["id"]}, {"$set": {"status": "completed", "completed_at": now.isoformat()}})
+            newly_completed.append(g)
+            # Create celebration notification
+            await db.notifications.insert_one({
+                "id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": user["id"],
+                "message": f"Goal achieved! {g['title']}",
+                "type": "milestone",
+                "read": False,
+                "created_at": now.isoformat(),
+            })
+
+        days_left = None
+        if g.get("deadline"):
+            try:
+                dl = datetime.fromisoformat(g["deadline"].replace("Z", "+00:00")) if "T" in g["deadline"] else datetime.strptime(g["deadline"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                days_left = max(0, (dl - now).days)
+            except Exception:
+                days_left = None
+
+        enriched.append({
+            **g,
+            "current_value": cv,
+            "progress": progress,
+            "completed": completed,
+            "days_left": days_left,
+            "goal_label": GOAL_TYPES.get(g["goal_type"], {}).get("label", g["goal_type"]),
+            "unit": GOAL_TYPES.get(g["goal_type"], {}).get("unit", ""),
+        })
+
+    active = [g for g in enriched if g["status"] == "active"]
+    completed_goals = [g for g in enriched if g["status"] == "completed"]
+
+    return {
+        "goals": enriched,
+        "active_count": len(active),
+        "completed_count": len(completed_goals),
+        "newly_completed": [g["id"] for g in newly_completed],
+        "current_metrics": current_values,
+    }
+
+@api_router.delete("/goals/{goal_id}")
+async def delete_goal(goal_id: str, request: Request):
+    user = await get_current_user(request)
+    result = await db.goals.delete_one({"id": goal_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return {"message": "Goal deleted"}
+
 # Per-stream rates by platform (industry average estimates in USD)
 PLATFORM_RATES = {
     "Spotify": 0.004, "Apple Music": 0.008, "YouTube Music": 0.002,
