@@ -18,6 +18,10 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
+import random
+import string
+import base64
+import csv
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -1526,17 +1530,17 @@ async def serve_file(path: str, request: Request, auth: Optional[str] = Query(No
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
-# Include router
+# Include routers
 app.include_router(api_router)
 
-# CORS middleware - specific origins for cookie-based auth
+# Include Kalmori GitHub routes (CMS, Cart, Credits, Social, Testimonials, etc.)
+from kalmori_routes import kalmori_router, init_cms_content
+app.include_router(kalmori_router)
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://tunedrop-gateway.preview.emergentagent.com",
-        "http://localhost:3000",
-        os.environ.get("FRONTEND_URL", "http://localhost:3000")
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1596,6 +1600,13 @@ async def startup():
         })
         logger.info(f"Admin user created: {admin_email}")
     
+    # Initialize CMS content from Kalmori routes
+    try:
+        await init_cms_content()
+        logger.info("CMS content initialized")
+    except Exception as e:
+        logger.error(f"CMS init failed: {e}")
+
     # Write test credentials
     from pathlib import Path
     Path("/app/memory").mkdir(exist_ok=True)
