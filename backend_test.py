@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 class TuneDropAPITester:
-    def __init__(self, base_url="https://artist-hub-219.preview.emergentagent.com"):
+    def __init__(self, base_url="https://artist-hub-220.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
