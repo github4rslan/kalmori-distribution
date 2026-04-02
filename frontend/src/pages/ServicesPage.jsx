@@ -41,7 +41,7 @@ export default function ServicesPage() {
                 ))}
               </div>
               <button onClick={() => navigate(s.link)}
-                className="px-6 py-3 rounded-full text-sm font-bold tracking-wider text-white" style={{ backgroundColor: s.color }}
+                className="px-8 py-3.5 rounded-full text-sm font-bold tracking-[1px] text-white hover:brightness-110 transition-all" style={{ backgroundColor: s.color }}
                 data-testid={`service-cta-${i}`}>
                 LEARN MORE <ArrowRight className="w-4 h-4 inline ml-1" />
               </button>

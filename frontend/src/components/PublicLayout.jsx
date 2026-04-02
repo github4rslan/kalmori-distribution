@@ -14,74 +14,48 @@ const PublicLayout = ({ children }) => {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [animColor, setAnimColor] = useState('#7C4DFF');
-  const [taglineColor, setTaglineColor] = useState('#FF4444');
   const [activeSubmenu, setActiveSubmenu] = useState(null);
 
-  // Animated color cycling (purple -> magenta -> pink)
-  useEffect(() => {
-    const colors = ['#7C4DFF', '#E040FB', '#FF4081'];
-    let idx = 0;
-    const interval = setInterval(() => {
-      idx = (idx + 1) % colors.length;
-      setAnimColor(colors[idx]);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Tagline color cycling (red -> gold -> pink-red)
-  useEffect(() => {
-    const colors = ['#FF4444', '#FFD700', '#FF6B6B'];
-    let idx = 0;
-    const interval = setInterval(() => {
-      idx = (idx + 1) % colors.length;
-      setTaglineColor(colors[idx]);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Scroll to top visibility
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Check if we're on a sub-page (dashboard sub-pages)
   const isDashboardSubPage = user && location.pathname !== '/dashboard' && location.pathname !== '/' &&
     ['/releases', '/analytics', '/wallet', '/settings'].some(p => location.pathname.startsWith(p));
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Guest menu items (matching GitHub exactly)
+  // Guest menu items — each with its OWN distinct icon color (matching screenshot exactly)
   const guestMenuItems = [
-    { path: '/', icon: <House className="w-5 h-5" />, label: 'Home' },
-    { path: '/releases', icon: <Disc className="w-5 h-5" />, label: 'My Releases' },
-    { path: '/pricing', icon: <Tag className="w-5 h-5" />, label: 'Pricing' },
-    { path: '/leasing', icon: <MusicNote className="w-5 h-5" />, label: 'Leasing' },
-    { path: '/promoting', icon: <Megaphone className="w-5 h-5" />, label: 'Promoting' },
-    { path: '/publishing', icon: <FileText className="w-5 h-5" />, label: 'Publishing' },
-    { path: '/services', icon: <Briefcase className="w-5 h-5" />, label: 'Our Services' },
-    { path: '/about', icon: <Info className="w-5 h-5" />, label: 'About Us' },
-    { path: '/contact', icon: <Headset className="w-5 h-5" />, label: 'Contact / Support' },
-    { path: '/stores', icon: <Storefront className="w-5 h-5" />, label: 'Stores' },
+    { path: '/', icon: <House className="w-6 h-6" weight="fill" />, label: 'Home', color: '#E040FB' },
+    { path: '/releases', icon: <Disc className="w-6 h-6" weight="fill" />, label: 'My Releases', color: '#4CAF50' },
+    { path: '/pricing', icon: <Tag className="w-6 h-6" weight="fill" />, label: 'Pricing', color: '#E040FB' },
+    { path: '/leasing', icon: <MusicNote className="w-6 h-6" weight="fill" />, label: 'Leasing', color: '#FF4081' },
+    { path: '/promoting', icon: <Megaphone className="w-6 h-6" weight="fill" />, label: 'Promoting', color: '#E040FB' },
+    { path: '/publishing', icon: <FileText className="w-6 h-6" weight="fill" />, label: 'Publishing', color: '#FFD700' },
+    { path: '/services', icon: <Briefcase className="w-6 h-6" weight="fill" />, label: 'Our Services', color: '#E040FB' },
+    { path: '/about', icon: <Info className="w-6 h-6" weight="fill" />, label: 'About Us', color: '#E040FB' },
+    { path: '/contact', icon: <Headset className="w-6 h-6" weight="fill" />, label: 'Contact / Support', color: '#E040FB' },
+    { path: '/stores', icon: <Storefront className="w-6 h-6" weight="fill" />, label: 'Stores', color: '#E040FB' },
   ];
 
-  // Logged-in user menu items (matching GitHub exactly)
+  // Logged-in user menu items with individual icon colors
   const userMenuItems = [
-    { path: '/dashboard', icon: <House className="w-5 h-5" />, label: 'Dashboard' },
-    { path: '/releases', icon: <Disc className="w-5 h-5" />, label: 'My Releases' },
+    { path: '/dashboard', icon: <House className="w-6 h-6" weight="fill" />, label: 'Dashboard', color: '#E040FB' },
+    { path: '/releases', icon: <Disc className="w-6 h-6" weight="fill" />, label: 'My Releases', color: '#4CAF50' },
     {
-      icon: <CloudArrowUp className="w-5 h-5" />, label: 'Distribute',
+      icon: <CloudArrowUp className="w-6 h-6" weight="fill" />, label: 'Distribute', color: '#7C4DFF',
       submenu: [
         { path: '/releases/new', icon: <MusicNotes className="w-5 h-5" />, label: 'Upload Music' },
         { path: '/releases', icon: <PlusCircle className="w-5 h-5" />, label: 'Add Tracks' },
       ]
     },
-    { path: '/promoting', icon: <Megaphone className="w-5 h-5" />, label: 'Promoting' },
-    { path: '/publishing', icon: <FileText className="w-5 h-5" />, label: 'Publishing' },
+    { path: '/promoting', icon: <Megaphone className="w-6 h-6" weight="fill" />, label: 'Promoting', color: '#E040FB' },
+    { path: '/publishing', icon: <FileText className="w-6 h-6" weight="fill" />, label: 'Publishing', color: '#FFD700' },
     {
-      icon: <ChartLine className="w-5 h-5" />, label: 'Analytics',
+      icon: <ChartLine className="w-6 h-6" weight="fill" />, label: 'Analytics', color: '#00B0FF',
       submenu: [
         { path: '/analytics', icon: <Speedometer className="w-5 h-5" />, label: 'Overview' },
         { path: '/analytics', icon: <ChartBar className="w-5 h-5" />, label: 'Stream Reports' },
@@ -89,7 +63,7 @@ const PublicLayout = ({ children }) => {
       ]
     },
     {
-      icon: <WalletIcon className="w-5 h-5" />, label: 'Wallet',
+      icon: <WalletIcon className="w-6 h-6" weight="fill" />, label: 'Wallet', color: '#FF6B35',
       submenu: [
         { path: '/wallet', icon: <WalletIcon className="w-5 h-5" />, label: 'Balance' },
         { path: '/wallet', icon: <ArrowCircleUp className="w-5 h-5" />, label: 'Withdrawals' },
@@ -114,13 +88,12 @@ const PublicLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header - exact match to TopNavigation.tsx */}
+      {/* Header */}
       <header className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]" data-testid="public-header">
         <div className="flex items-center justify-between px-4 py-3">
-          {/* Left: Back button on sub-pages, Menu button otherwise */}
           {isDashboardSubPage ? (
             <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 p-1 min-w-[44px] min-h-[44px]" data-testid="back-to-dashboard">
-              <ArrowLeft className="w-6 h-6" style={{ color: animColor, transition: 'color 2s ease' }} />
+              <ArrowLeft className="w-6 h-6 text-[#E040FB]" />
               <span className="text-white text-sm font-medium">Dashboard</span>
             </button>
           ) : (
@@ -129,40 +102,35 @@ const PublicLayout = ({ children }) => {
             </button>
           )}
 
-          {/* Center: KALMORI logo */}
-          <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center pointer-events-auto z-10" style={{ pointerEvents: 'none' }}>
-            <span className="text-[24px] font-extrabold tracking-[4px] pointer-events-auto" style={{ color: animColor, transition: 'color 2s ease' }}>KALMORI</span>
-            <div className="w-10 h-[3px] rounded-sm mt-1 pointer-events-auto" style={{ backgroundColor: animColor, transition: 'background-color 2s ease' }} />
+          {/* KALMORI logo with neon glow */}
+          <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center" style={{ pointerEvents: 'none' }}>
+            <span className="text-[24px] font-extrabold tracking-[4px] text-[#E040FB] pointer-events-auto" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
+            <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF] pointer-events-auto" />
           </button>
 
-          {/* Right: Cart + Profile/Login */}
           <div className="flex items-center gap-2 z-20">
-            {/* Cart Icon (logged-in only) */}
             {user && (
               <button onClick={() => navigate('/releases')} className="relative p-1" data-testid="header-cart-btn">
-                <ShoppingCart className="w-6 h-6" style={{ color: animColor, transition: 'color 2s ease' }} />
+                <ShoppingCart className="w-6 h-6 text-[#E040FB]" />
               </button>
             )}
-
-            {/* Profile / Login */}
             {isDashboardSubPage ? (
               <button onClick={() => setMenuOpen(true)} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-end" data-testid="menu-toggle-right">
                 <List className="w-6 h-6 text-white" />
               </button>
             ) : user ? (
               <button onClick={() => navigate('/settings')} className="p-1" data-testid="header-profile-btn">
-                <User className="w-6 h-6" style={{ color: animColor, transition: 'color 2s ease' }} />
+                <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
               </button>
             ) : (
               <button onClick={() => navigate('/login')} className="p-1" data-testid="header-account-btn">
-                <User className="w-6 h-6" style={{ color: animColor, transition: 'color 2s ease' }} />
+                <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Content */}
       <main>{children}</main>
 
       {/* Slide-out Menu */}
@@ -173,17 +141,18 @@ const PublicLayout = ({ children }) => {
             {/* Menu Header */}
             <div className="flex items-center justify-between px-5 pt-[50px] pb-2">
               <div className="flex flex-col">
-                <span className="text-[22px] font-extrabold tracking-[3px]" style={{ color: animColor, transition: 'color 2s ease' }}>KALMORI</span>
-                <div className="w-10 h-[3px] rounded-sm mt-1" style={{ backgroundColor: animColor, transition: 'background-color 2s ease' }} />
+                <span className="text-[22px] font-extrabold tracking-[3px] text-[#E040FB]" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
+                <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF]" />
               </div>
               <button onClick={closeMenu} className="p-1"><X className="w-6 h-6 text-white" /></button>
             </div>
 
-            {/* Tagline */}
-            <p className="px-5 mb-3 text-[13px] font-semibold tracking-wider" style={{ color: taglineColor, transition: 'color 2s ease' }}>Your Music, Your Way</p>
+            {/* Tagline — bright red */}
+            <p className="px-5 mb-3 text-[13px] font-semibold tracking-wider text-[#FF4444]">Your Music, Your Way</p>
 
-            {/* Animated border */}
-            <div className="h-[2px] mx-0 mb-4" style={{ backgroundColor: taglineColor, transition: 'background-color 2s ease' }} />
+            {/* Animated red border */}
+            <div className="h-[2px] mx-0 mb-2 bg-[#FF4444]" />
+            {/* Gray separator */}
             <div className="h-px bg-[#333] mx-5 mb-4" />
 
             {/* Scrollable Menu Content */}
@@ -197,41 +166,33 @@ const PublicLayout = ({ children }) => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-white text-base font-semibold truncate">{user.artist_name || user.name}</p>
-                      <p className="text-white text-[13px] mt-0.5 truncate opacity-80">{user.email}</p>
+                      <p className="text-white/80 text-[13px] mt-0.5 truncate">{user.email}</p>
                     </div>
                   </div>
 
-                  {/* Logged-in Menu Items with Submenus */}
+                  {/* Logged-in Menu Items */}
                   {userMenuItems.map((item) => (
                     <div key={item.label}>
                       <button
-                        onClick={() => {
-                          if (item.submenu) {
-                            toggleSubmenu(item.label);
-                          } else if (item.path) {
-                            handleNav(item.path);
-                          }
-                        }}
-                        className="flex items-center gap-3.5 w-full py-3.5 text-left"
+                        onClick={() => item.submenu ? toggleSubmenu(item.label) : item.path && handleNav(item.path)}
+                        className="flex items-center gap-4 w-full py-[14px] text-left"
                         data-testid={`menu-${item.label.toLowerCase().replace(/[^a-z]/g, '-')}`}
                       >
-                        <span style={{ color: animColor, transition: 'color 2s ease' }}>{item.icon}</span>
-                        <span className="flex-1 text-white text-base font-medium">{item.label}</span>
+                        <span style={{ color: item.color }}>{item.icon}</span>
+                        <span className="flex-1 text-white text-[16px] font-bold">{item.label}</span>
                         {item.submenu && (
                           activeSubmenu === item.label
                             ? <CaretUp className="w-4 h-4 text-gray-500" />
                             : <CaretDown className="w-4 h-4 text-gray-500" />
                         )}
                       </button>
-
-                      {/* Submenu */}
                       {item.submenu && activeSubmenu === item.label && (
-                        <div className="pl-9 pb-2">
+                        <div className="pl-10 pb-2">
                           {item.submenu.map((sub) => (
                             <button key={sub.label} onClick={() => handleNav(sub.path)}
                               className="flex items-center gap-3 w-full py-2.5 text-left"
                               data-testid={`submenu-${sub.label.toLowerCase().replace(/[^a-z]/g, '-')}`}>
-                              <span className="text-gray-500">{sub.icon}</span>
+                              <span className="text-[#ccc]">{sub.icon}</span>
                               <span className="text-[#ccc] text-sm">{sub.label}</span>
                             </button>
                           ))}
@@ -242,61 +203,57 @@ const PublicLayout = ({ children }) => {
 
                   <div className="h-px bg-[#222] my-4" />
 
-                  {/* Settings & Profile */}
-                  <button onClick={() => handleNav('/settings')} className="flex items-center gap-3.5 w-full py-3.5 text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><UserCircle className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Profile</span>
+                  <button onClick={() => handleNav('/settings')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <UserCircle className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Profile</span>
                   </button>
-                  <button onClick={() => handleNav('/settings')} className="flex items-center gap-3.5 w-full py-3.5 text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><Palette className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Theme Settings</span>
+                  <button onClick={() => handleNav('/settings')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <Palette className="w-6 h-6 text-[#7C4DFF]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Theme Settings</span>
                   </button>
-                  <button onClick={() => handleNav('/dashboard')} className="flex items-center gap-3.5 w-full py-3.5 text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><Bell className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Notifications</span>
+                  <button onClick={() => handleNav('/dashboard')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <Bell className="w-6 h-6 text-[#FF6B35]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Notifications</span>
                   </button>
 
                   <div className="h-px bg-[#222] my-4" />
 
-                  {/* Legal Links */}
-                  <button onClick={() => handleNav('/terms')} className="flex items-center gap-3.5 w-full py-3.5 text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><FileText className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Terms & Conditions</span>
+                  <button onClick={() => handleNav('/terms')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <FileText className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Terms & Conditions</span>
                   </button>
-                  <button onClick={() => handleNav('/privacy')} className="flex items-center gap-3.5 w-full py-3.5 text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><ShieldCheck className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Privacy Policy</span>
+                  <button onClick={() => handleNav('/privacy')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <ShieldCheck className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Privacy Policy</span>
                   </button>
 
-                  {/* Logout */}
                   <button onClick={async () => { closeMenu(); await logout(); navigate('/'); }}
-                    className="flex items-center gap-3.5 w-full py-3.5 text-left" data-testid="menu-logout">
-                    <span className="text-[#E53935]"><SignIn className="w-5 h-5" /></span>
-                    <span className="text-[#E53935] text-base font-medium">Logout</span>
+                    className="flex items-center gap-4 w-full py-[14px] text-left" data-testid="menu-logout">
+                    <SignIn className="w-6 h-6 text-[#E53935]" weight="fill" />
+                    <span className="text-[#E53935] text-[16px] font-bold">Logout</span>
                   </button>
                 </>
               ) : (
                 <>
-                  {/* Guest Menu Items */}
+                  {/* Guest Menu — each icon with its own color */}
                   {guestMenuItems.map((item) => (
                     <button key={item.path} onClick={() => handleNav(item.path)}
-                      className="flex items-center gap-3.5 w-full py-[14px] text-left"
+                      className="flex items-center gap-4 w-full py-[14px] text-left"
                       data-testid={`menu-${item.label.toLowerCase().replace(/[^a-z]/g, '-')}`}>
-                      <span style={{ color: animColor, transition: 'color 2s ease' }}>{item.icon}</span>
-                      <span className="text-white text-base font-medium">{item.label}</span>
+                      <span style={{ color: item.color }}>{item.icon}</span>
+                      <span className="text-white text-[16px] font-bold">{item.label}</span>
                     </button>
                   ))}
 
                   <div className="h-px bg-[#222] my-4" />
 
-                  {/* Legal Links */}
-                  <button onClick={() => handleNav('/terms')} className="flex items-center gap-3.5 w-full py-[14px] text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><FileText className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Terms & Conditions</span>
+                  <button onClick={() => handleNav('/terms')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <FileText className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Terms & Conditions</span>
                   </button>
-                  <button onClick={() => handleNav('/privacy')} className="flex items-center gap-3.5 w-full py-[14px] text-left">
-                    <span style={{ color: animColor, transition: 'color 2s ease' }}><ShieldCheck className="w-5 h-5" /></span>
-                    <span className="text-white text-base font-medium">Privacy Policy</span>
+                  <button onClick={() => handleNav('/privacy')} className="flex items-center gap-4 w-full py-[14px] text-left">
+                    <ShieldCheck className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                    <span className="text-white text-[16px] font-bold">Privacy Policy</span>
                   </button>
 
                   <div className="h-px bg-[#222] my-4" />
@@ -316,7 +273,7 @@ const PublicLayout = ({ children }) => {
               )}
             </div>
 
-            {/* Menu Footer */}
+            {/* Footer */}
             <div className="px-5 py-4 border-t border-[#1a1a1a]">
               <p className="text-[#666] text-xs text-center">&copy; 2026 Kalmori. All rights reserved.</p>
             </div>
@@ -326,7 +283,7 @@ const PublicLayout = ({ children }) => {
 
       {/* Scroll to Top */}
       {showScrollTop && (
-        <button onClick={scrollToTop} className="fixed bottom-[90px] right-5 z-50 w-[50px] h-[50px] rounded-full flex items-center justify-center shadow-lg shadow-[#7C4DFF]/30" style={{ backgroundColor: animColor, transition: 'background-color 2s ease' }} data-testid="scroll-to-top">
+        <button onClick={scrollToTop} className="fixed bottom-[90px] right-5 z-50 w-[50px] h-[50px] rounded-full flex items-center justify-center bg-[#7C4DFF] shadow-lg shadow-[#7C4DFF]/30" data-testid="scroll-to-top">
           <ArrowUp className="w-6 h-6 text-white" weight="bold" />
         </button>
       )}

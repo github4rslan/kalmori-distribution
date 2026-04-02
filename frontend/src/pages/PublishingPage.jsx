@@ -66,7 +66,7 @@ export default function PublishingPage() {
           <h2 className="text-[22px] font-extrabold text-white mb-2">Start Collecting Today</h2>
           <p className="text-sm text-gray-300 mb-5">Get lifetime access to publishing administration for just $75</p>
           <button onClick={() => setShowPopup(true)}
-            className="px-8 py-3.5 rounded-full bg-[#FFD700] text-black font-bold tracking-wider inline-flex items-center gap-2"
+            className="px-10 py-4 rounded-full bg-[#FFD700] text-black font-bold tracking-[2px] inline-flex items-center gap-2 hover:brightness-110 transition-all"
             data-testid="pub-signup-btn">
             <Star className="w-5 h-5" weight="fill" /> SIGN UP NOW
           </button>
@@ -79,7 +79,7 @@ export default function PublishingPage() {
               <Star className="w-16 h-16 text-[#FFD700] mx-auto" weight="fill" />
               <h2 className="text-2xl font-extrabold text-white mt-6 tracking-wider">WE WILL SOON BE YOUR PUBLISHER</h2>
               <p className="text-white/90 mt-3 leading-relaxed">Stay tuned for our upcoming publishing services!</p>
-              <button onClick={() => setShowPopup(false)} className="mt-8 px-12 py-3.5 rounded-full border-2 border-white text-white font-bold tracking-[2px]">GOT IT</button>
+              <button onClick={() => setShowPopup(false)} className="mt-8 px-12 py-3.5 rounded-full border-2 border-white text-white font-bold tracking-[2px] hover:bg-white/10 transition-all">GOT IT</button>
             </div>
           </div>
         )}

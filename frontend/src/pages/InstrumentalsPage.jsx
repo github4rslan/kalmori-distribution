@@ -208,7 +208,7 @@ export default function InstrumentalsPage() {
               )}
 
               <button type="submit"
-                className="w-full py-4.5 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-wider flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all"
                 data-testid="submit-beat-request">
                 <PaperPlaneTilt className="w-5 h-5" /> SUBMIT REQUEST
               </button>

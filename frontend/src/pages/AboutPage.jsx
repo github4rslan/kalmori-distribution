@@ -22,8 +22,8 @@ export default function AboutPage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Empowering Artists <span className="text-[#E040FB]">Worldwide</span></h1>
           <p className="text-gray-300 mt-4 leading-relaxed max-w-md mx-auto">We believe every artist deserves to be heard. Kalmori was founded to give independent musicians the tools they need to succeed.</p>
           <div className="flex gap-3 justify-center mt-6">
-            <button onClick={() => navigate('/register')} className="px-6 py-3 rounded-lg bg-[#7C4DFF] text-white text-sm font-bold tracking-wider" data-testid="about-get-started">GET STARTED</button>
-            <button onClick={() => navigate('/contact')} className="px-6 py-3 rounded-lg border border-[#7C4DFF] text-[#7C4DFF] text-sm font-bold tracking-wider">CONTACT US</button>
+            <button onClick={() => navigate('/register')} className="px-8 py-3.5 rounded-full bg-[#7C4DFF] text-white text-sm font-bold tracking-[1px] hover:brightness-110 transition-all" data-testid="about-get-started">GET STARTED</button>
+            <button onClick={() => navigate('/contact')} className="px-8 py-3.5 rounded-full border-2 border-[#7C4DFF] text-[#7C4DFF] text-sm font-bold tracking-[1px] hover:bg-[#7C4DFF]/10 transition-all">CONTACT US</button>
           </div>
         </div>
 
@@ -53,7 +53,7 @@ export default function AboutPage() {
         <div className="p-10 bg-[#111] text-center">
           <h2 className="text-2xl font-extrabold text-white">Ready to Join?</h2>
           <p className="text-sm text-gray-400 mt-2">Start distributing your music worldwide today</p>
-          <button onClick={() => navigate('/register')} className="mt-6 px-8 py-4 rounded-lg bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-wider" data-testid="about-join-cta">
+          <button onClick={() => navigate('/register')} className="mt-6 px-10 py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="about-join-cta">
             JOIN KALMORI <ArrowRight className="w-5 h-5 inline ml-2" />
           </button>
         </div>

@@ -98,7 +98,7 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full btn-animated py-3 rounded-lg text-white font-semibold flex items-center justify-center gap-2" data-testid="register-submit-btn">
+            <button type="submit" disabled={loading} className="w-full bg-[#E040FB] hover:brightness-110 py-3.5 rounded-full text-white font-bold tracking-[1px] flex items-center justify-center gap-2 transition-all" data-testid="register-submit-btn">
               {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>Create Account <ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
@@ -108,7 +108,7 @@ const RegisterPage = () => {
             <div className="relative flex justify-center"><span className="px-4 bg-black text-sm text-gray-500">or</span></div>
           </div>
 
-          <button type="button" onClick={handleGoogleLogin} className="w-full border border-white/10 hover:bg-white/5 text-white py-3 rounded-lg flex items-center justify-center gap-2 transition-colors" data-testid="google-register-btn">
+          <button type="button" onClick={handleGoogleLogin} className="w-full border-2 border-white/10 hover:bg-white/5 text-white py-3.5 rounded-full flex items-center justify-center gap-2 transition-all font-bold" data-testid="google-register-btn">
             <GoogleLogo className="w-5 h-5" weight="bold" /> Continue with Google
           </button>
 

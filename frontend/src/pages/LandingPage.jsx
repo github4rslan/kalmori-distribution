@@ -111,7 +111,7 @@ const HeroTypewriterSequence = () => {
 // Animated Button
 const AnimatedButton = ({ children, onClick, className = '' }) => {
   return (
-    <button onClick={onClick} className={`animate-btn-gradient text-white font-bold py-4 px-8 rounded-full flex items-center gap-3 ${className}`}>
+    <button onClick={onClick} className={`animate-btn-gradient text-white font-bold py-4 px-8 rounded-full flex items-center gap-3 tracking-[1px] hover:brightness-110 transition-all ${className}`}>
       {children}
     </button>
   );
@@ -179,7 +179,7 @@ const LandingPage = () => {
         <div className="relative z-10 min-h-screen flex flex-col items-center justify-end pb-24 px-6">
           <HeroTypewriterSequence />
           <Link to="/register">
-            <button className="bg-[#E53935] px-8 py-4 rounded text-white font-bold text-sm tracking-wider flex items-center gap-3" data-testid="hero-cta-btn">
+            <button className="bg-[#E53935] px-10 py-4 rounded-full text-white font-bold text-sm tracking-[2px] flex items-center gap-3 hover:brightness-110 transition-all" data-testid="hero-cta-btn">
               DISTRIBUTE MY MUSIC ONLINE <ArrowRight className="w-5 h-5" />
             </button>
           </Link>
@@ -255,7 +255,7 @@ const LandingPage = () => {
             <div key={i} className="flex items-center gap-3 text-gray-300"><Check className="w-5 h-5 text-[#E53935]" />{t}</div>
           ))}
         </div>
-        <Link to="/services"><button className="bg-[#E53935] px-8 py-4 rounded text-white font-bold text-sm tracking-wider flex items-center gap-3 mx-auto">ALL OUR SERVICES <ArrowRight className="w-5 h-5" /></button></Link>
+        <Link to="/services"><button className="bg-[#E53935] px-8 py-4 rounded-full text-white font-bold text-sm tracking-[2px] flex items-center gap-3 mx-auto hover:brightness-110 transition-all">ALL OUR SERVICES <ArrowRight className="w-5 h-5" /></button></Link>
       </section>
 
       {/* Analytics */}
@@ -297,8 +297,8 @@ const LandingPage = () => {
           ))}
         </div>
         <div className="flex gap-3 justify-center">
-          <Link to="/register"><button className="bg-[#E53935] px-6 py-3 rounded text-white font-bold text-sm">START FREE</button></Link>
-          <Link to="/pricing"><button className="border border-[#E53935] px-6 py-3 rounded text-[#E53935] font-bold text-sm">PRICING</button></Link>
+          <Link to="/register"><button className="bg-[#E53935] px-8 py-3.5 rounded-full text-white font-bold text-sm tracking-[1px] hover:brightness-110 transition-all">START FREE</button></Link>
+          <Link to="/pricing"><button className="border-2 border-[#E53935] px-8 py-3.5 rounded-full text-[#E53935] font-bold text-sm tracking-[1px] hover:bg-[#E53935]/10 transition-all">PRICING</button></Link>
         </div>
       </section>
 
@@ -338,7 +338,7 @@ const LandingPage = () => {
       <section className="py-20 px-6 text-center" style={{ background: 'linear-gradient(135deg, rgba(124,77,255,0.3), rgba(224,64,251,0.2))' }}>
         <h3 className="text-3xl sm:text-4xl font-extrabold mb-4">Ready to Start Your<br/>Journey?</h3>
         <p className="text-gray-300 mb-8 text-sm">Join thousands of artists distributing their music worldwide with Kalmori.</p>
-        <Link to="/register"><button className="bg-white text-[#E53935] px-8 py-4 rounded font-bold text-sm tracking-wider inline-flex items-center gap-2">GET STARTED FREE <ArrowRight className="w-4 h-4" /></button></Link>
+        <Link to="/register"><button className="bg-white text-[#E53935] px-10 py-4 rounded-full font-bold text-sm tracking-[2px] inline-flex items-center gap-2 hover:brightness-95 transition-all">GET STARTED FREE <ArrowRight className="w-4 h-4" /></button></Link>
       </section>
 
       <GlobalFooter />

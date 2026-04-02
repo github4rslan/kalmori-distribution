@@ -34,7 +34,7 @@ export default function StoresPage() {
                 <h3 className="text-[22px] font-bold text-white mb-4">{store.name}</h3>
                 <p className="text-[15px] text-[#999] leading-relaxed mb-6 px-2.5">{store.desc}</p>
                 <a href={store.website} target="_blank" rel="noopener noreferrer"
-                  className="inline-block px-8 py-3 rounded-full bg-[#E040FB] text-white text-[13px] font-bold tracking-wider hover:opacity-90 transition-opacity">
+                  className="inline-block px-8 py-3.5 rounded-full bg-[#E040FB] text-white text-[13px] font-bold tracking-[2px] hover:brightness-110 transition-all">
                   READ MORE
                 </a>
               </div>
@@ -47,7 +47,7 @@ export default function StoresPage() {
         <div className="mx-5 my-10 p-10 bg-[#111] rounded-2xl text-center max-w-xl self-center">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to distribute your music?</h2>
           <p className="text-[15px] text-gray-400 leading-relaxed mb-6">Kalmori helps independent artists get their music on all major platforms. Start reaching millions of listeners today.</p>
-          <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-wider" data-testid="stores-get-started">
+          <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="stores-get-started">
             GET STARTED
           </button>
         </div>

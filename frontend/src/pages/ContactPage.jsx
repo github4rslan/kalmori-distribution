@@ -56,7 +56,7 @@ export default function ContactPage() {
               className="w-full bg-black border border-[#333] rounded-xl px-4 py-4 text-white text-base placeholder-gray-600 focus:border-[#E040FB] focus:outline-none" data-testid="contact-email" />
             <textarea placeholder="Your Message" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5}
               className="w-full bg-black border border-[#333] rounded-xl px-4 py-4 text-white text-base placeholder-gray-600 focus:border-[#E040FB] focus:outline-none resize-none" data-testid="contact-message" />
-            <button type="submit" className="w-full py-4 rounded-xl bg-[#E040FB] text-white text-base font-bold tracking-wider flex items-center justify-center gap-2" data-testid="contact-submit">
+            <button type="submit" className="w-full py-4 rounded-full bg-[#E040FB] text-white text-base font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all" data-testid="contact-submit">
               <PaperPlaneTilt className="w-5 h-5" /> SEND MESSAGE
             </button>
           </form>

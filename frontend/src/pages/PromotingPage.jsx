@@ -55,7 +55,7 @@ export default function PromotingPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('/register')} className="px-8 py-3.5 rounded-full text-sm font-bold tracking-wider text-white" style={{ backgroundColor: pkg.color }}
+              <button onClick={() => navigate('/register')} className="px-8 py-3.5 rounded-full text-sm font-bold tracking-[1px] text-white hover:brightness-110 transition-all" style={{ backgroundColor: pkg.color }}
                 data-testid={`promo-cta-${pkg.name.toLowerCase()}`}>
                 GET STARTED
               </button>
