@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
+import { api } from './services/api';
+import { CartProvider } from './context/CartContext';
+
+// Configure axios for backward compatibility with cookie-based pages
+axios.defaults.withCredentials = true;
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -32,70 +37,170 @@ import PrivacyPage from './pages/PrivacyPage';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Configure axios
-axios.defaults.withCredentials = true;
+// Inactivity timeout (30 minutes)
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
 // Auth Context
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const checkAuth = useCallback(async () => {
-    // CRITICAL: Skip auth check if returning from OAuth callback
-    if (window.location.hash?.includes('session_id=')) {
-      setLoading(false);
-      return;
-    }
-    
+  // Activity tracking for inactivity timeout
+  const updateActivity = useCallback(() => {
+    localStorage.setItem('lastActivity', Date.now().toString());
+  }, []);
+
+  // Check for inactivity timeout
+  useEffect(() => {
+    if (!user || !token) return;
+    const checkInactivity = () => {
+      const lastActivityTime = parseInt(localStorage.getItem('lastActivity') || Date.now().toString());
+      if (Date.now() - lastActivityTime > INACTIVITY_TIMEOUT) {
+        console.log('Session expired due to inactivity');
+        performLogout();
+      }
+    };
+    const interval = setInterval(checkInactivity, 60000);
+    return () => clearInterval(interval);
+  }, [user, token]);
+
+  // Activity listeners
+  useEffect(() => {
+    const handleActivity = () => updateActivity();
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('keypress', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    return () => {
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('keypress', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+    };
+  }, [updateActivity]);
+
+  // Load stored auth on mount
+  useEffect(() => {
+    loadStoredAuth();
+  }, []);
+
+  const loadStoredAuth = async () => {
     try {
-      const response = await axios.get(`${API}/auth/me`);
-      setUser(response.data);
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      if (storedToken && storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(parsedUser);
+        api.setToken(storedToken);
+        updateActivity();
+      } else {
+        // Fallback: try cookie-based auth check
+        try {
+          const response = await fetch(`${API}/auth/me`, { credentials: 'include' });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          }
+        } catch {}
+      }
     } catch (error) {
-      setUser(null);
+      console.error('Error loading auth:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  };
 
   const login = async (email, password) => {
-    const response = await axios.post(`${API}/auth/login`, { email, password });
-    setUser(response.data);
-    return response.data;
+    const response = await api.login(email, password);
+    const accessToken = response.access_token;
+    const userData = response.user;
+    setToken(accessToken);
+    setUser(userData);
+    api.setToken(accessToken);
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    updateActivity();
+    return userData;
   };
 
   const register = async (data) => {
-    const response = await axios.post(`${API}/auth/register`, data);
-    setUser(response.data);
-    return response.data;
+    const response = await api.register(
+      data.email, data.password, data.artist_name || data.name,
+      data.user_role, data.legal_name, data.country,
+      data.recaptcha_token, data.state, data.town, data.post_code
+    );
+    const accessToken = response.access_token;
+    const userData = response.user;
+    setToken(accessToken);
+    setUser(userData);
+    api.setToken(accessToken);
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    updateActivity();
+    return userData;
+  };
+
+  const performLogout = () => {
+    setToken(null);
+    setUser(null);
+    api.setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('lastActivity');
   };
 
   const logout = async () => {
-    await axios.post(`${API}/auth/logout`);
-    setUser(null);
+    try {
+      await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
+    } catch {}
+    performLogout();
   };
 
   const processGoogleSession = async (sessionId) => {
-    const response = await axios.post(`${API}/auth/session`, { session_id: sessionId });
-    setUser(response.data);
-    return response.data;
+    const response = await fetch(`${API}/auth/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ session_id: sessionId })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Failed to process session');
+    // If the session endpoint returns a token, use it
+    if (data.access_token) {
+      setToken(data.access_token);
+      setUser(data.user);
+      api.setToken(data.access_token);
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+    } else {
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+    }
+    updateActivity();
+    return data;
   };
 
+  const updateUser = (data) => {
+    if (user) {
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      updateActivity();
+    }
+  };
+
+  const checkAuth = loadStoredAuth;
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, processGoogleSession, checkAuth }}>
+    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, logout, processGoogleSession, checkAuth, updateUser, updateActivity }}>
       {children}
     </AuthContext.Provider>
   );
@@ -105,7 +210,6 @@ const AuthProvider = ({ children }) => {
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
@@ -113,11 +217,7 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   return children;
 };
 
@@ -125,7 +225,6 @@ const ProtectedRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
@@ -133,27 +232,15 @@ const AdminRoute = ({ children }) => {
       </div>
     );
   }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   return children;
 };
 
 // App Router
 const AppRouter = () => {
   const location = useLocation();
-
-  // Handle OAuth callback - check synchronously during render
-  if (location.hash?.includes('session_id=')) {
-    return <AuthCallback />;
-  }
-
+  if (location.hash?.includes('session_id=')) return <AuthCallback />;
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -189,8 +276,10 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRouter />
-        <Toaster position="top-right" />
+        <CartProvider>
+          <AppRouter />
+          <Toaster position="top-right" />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

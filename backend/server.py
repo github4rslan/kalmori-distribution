@@ -53,8 +53,16 @@ api_router = APIRouter(prefix="/api")
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    name: str
+    name: Optional[str] = None
     artist_name: Optional[str] = None
+    user_role: Optional[str] = "artist"
+    legal_name: Optional[str] = None
+    country: Optional[str] = None
+    state: Optional[str] = None
+    town: Optional[str] = None
+    post_code: Optional[str] = None
+    phone_number: Optional[str] = None
+    recaptcha_token: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -307,12 +315,19 @@ async def register(user_data: UserCreate, response: Response):
     user_doc = {
         "id": user_id,
         "email": email,
-        "name": user_data.name,
-        "artist_name": user_data.artist_name or user_data.name,
+        "name": user_data.name or user_data.artist_name or email.split("@")[0],
+        "artist_name": user_data.artist_name or user_data.name or email.split("@")[0],
         "password_hash": hash_password(user_data.password),
         "role": "artist",
+        "user_role": user_data.user_role or "artist",
         "plan": "free",
         "avatar_url": None,
+        "legal_name": user_data.legal_name or "",
+        "country": user_data.country or "",
+        "state": user_data.state or "",
+        "town": user_data.town or "",
+        "post_code": user_data.post_code or "",
+        "phone_number": user_data.phone_number or "",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
@@ -336,7 +351,7 @@ async def register(user_data: UserCreate, response: Response):
     
     user_doc.pop("password_hash", None)
     user_doc.pop("_id", None)
-    return user_doc
+    return {"access_token": access_token, "refresh_token": refresh_token, "user": user_doc}
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin, response: Response):
@@ -355,7 +370,7 @@ async def login(credentials: UserLogin, response: Response):
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="none", max_age=604800, path="/")
     
     user.pop("password_hash", None)
-    return user
+    return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
 
 @api_router.get("/auth/me")
 async def get_me(request: Request):
