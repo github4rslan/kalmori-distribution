@@ -132,6 +132,13 @@ class ReleaseStrategyRequest(BaseModel):
     release_title: Optional[str] = None
     genre: Optional[str] = None
 
+class SaveStrategyRequest(BaseModel):
+    strategy: dict
+    data_summary: dict
+    release_title: Optional[str] = None
+    genre: Optional[str] = None
+    label: Optional[str] = None
+
 @ai_router.post("/release-strategy")
 async def get_release_strategy(data: ReleaseStrategyRequest, request: Request):
     """Generate AI-powered release strategy based on fan analytics data"""
@@ -341,3 +348,60 @@ Return ONLY the JSON. No markdown, no explanation outside the JSON."""
             },
             "fallback": True
         }
+
+
+@ai_router.post("/strategies/save")
+async def save_strategy(data: SaveStrategyRequest, request: Request):
+    """Save an AI-generated release strategy for later comparison"""
+    user = await _get_user_from_request(request)
+    from motor.motor_asyncio import AsyncIOMotorClient
+    db_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+    db = db_client[os.environ['DB_NAME']]
+    try:
+        strategy_id = f"strat_{uuid.uuid4().hex[:12]}"
+        now = datetime.now(timezone.utc).isoformat()
+        doc = {
+            "id": strategy_id,
+            "user_id": user["id"],
+            "strategy": data.strategy,
+            "data_summary": data.data_summary,
+            "release_title": data.release_title or "",
+            "genre": data.genre or "",
+            "label": data.label or f"Strategy - {now[:10]}",
+            "created_at": now,
+        }
+        await db.saved_strategies.insert_one(doc)
+        doc.pop("_id", None)
+        return {"message": "Strategy saved", "saved_strategy": doc}
+    finally:
+        db_client.close()
+
+@ai_router.get("/strategies")
+async def get_saved_strategies(request: Request):
+    """Get all saved strategies for the current user"""
+    user = await _get_user_from_request(request)
+    from motor.motor_asyncio import AsyncIOMotorClient
+    db_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+    db = db_client[os.environ['DB_NAME']]
+    try:
+        strategies = await db.saved_strategies.find(
+            {"user_id": user["id"]}, {"_id": 0}
+        ).sort("created_at", -1).to_list(50)
+        return {"strategies": strategies, "total": len(strategies)}
+    finally:
+        db_client.close()
+
+@ai_router.delete("/strategies/{strategy_id}")
+async def delete_saved_strategy(strategy_id: str, request: Request):
+    """Delete a saved strategy"""
+    user = await _get_user_from_request(request)
+    from motor.motor_asyncio import AsyncIOMotorClient
+    db_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+    db = db_client[os.environ['DB_NAME']]
+    try:
+        result = await db.saved_strategies.delete_one({"id": strategy_id, "user_id": user["id"]})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Strategy not found")
+        return {"message": "Strategy deleted"}
+    finally:
+        db_client.close()
