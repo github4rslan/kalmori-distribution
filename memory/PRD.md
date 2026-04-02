@@ -37,6 +37,13 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Platform Engagement donut chart, Peak Listening Hours bar chart
 - Pre-save subscriber tracking, campaign analytics
 
+### AI Release Strategy (NEW - Apr 2026)
+- AI-powered release strategy recommendations using OpenAI GPT-4o
+- Analyzes fan analytics: geography, peak hours, platform engagement, pre-save subs
+- Returns: optimal release day/time, platform tactics, geographic targeting, pre-release timeline, promotion tips
+- Beautiful UI section at bottom of Fan Analytics page with input fields and results display
+- Fallback strategy when AI unavailable
+
 ### Notifications & Communication
 - Push Notifications (bell + dropdown + 30s polling)
 - 8 notification preferences (email + push toggles)
@@ -69,5 +76,6 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 `/` `/login` `/register` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/settings` `/presave/:id` `/spotify-canvas` `/content-id` `/admin/*`
 
 ## Remaining Backlog
-- Real Spotify OAuth with API credentials (placeholder ready)
-- Apple Music / YouTube Music API connections
+- P1: Real Spotify OAuth with API credentials (placeholder ready)
+- P2: Apple Music / YouTube Music API connections
+- P2: Replace simulated DSP data with real API feeds once user provides DSP developer credentials
