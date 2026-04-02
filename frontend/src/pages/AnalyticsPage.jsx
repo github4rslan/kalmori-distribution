@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
+import ShareStatsModal from '../components/ShareStatsModal';
 import { Button } from '../components/ui/button';
 import { 
-  ChartLineUp, Play, CurrencyDollar, Globe, TrendUp, Sparkle, MusicNote, TiktokLogo, MapPin
+  ChartLineUp, Play, CurrencyDollar, Globe, TrendUp, Sparkle, MusicNote, TiktokLogo, MapPin, ShareNetwork, Upload
 } from '@phosphor-icons/react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -42,6 +43,9 @@ const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -69,6 +73,20 @@ const AnalyticsPage = () => {
       toast.success('AI insights generated!');
     } catch { toast.error('Failed to generate insights'); }
     finally { setInsightsLoading(false); }
+  };
+
+  const handleCSVImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axios.post(`${API}/analytics/import`, formData, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
+      toast.success(res.data.message || 'Data imported!');
+      fetchAll();
+    } catch (err) { toast.error(err.response?.data?.detail || 'Import failed'); }
+    finally { setImporting(false); e.target.value = ''; }
   };
 
   const COLORS = ['#1DB954', '#FC3C44', '#FF0000', '#FF9900', '#00FFFF', '#888'];
@@ -107,9 +125,19 @@ const AnalyticsPage = () => {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
             <p className="text-[#A1A1AA] mt-1">Track your streaming performance</p>
           </div>
-          <Button onClick={fetchAIInsights} disabled={insightsLoading} className="bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black" data-testid="ai-insights-btn">
-            {insightsLoading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Sparkle className="w-4 h-4 mr-2" />Get AI Insights</>}
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input type="file" accept=".csv" ref={importRef} onChange={handleCSVImport} className="hidden" />
+            <Button onClick={() => importRef.current?.click()} disabled={importing} variant="outline" className="rounded-full gap-2 border-white/10 text-white hover:bg-white/5" data-testid="import-csv-btn">
+              {importing ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
+              Import CSV
+            </Button>
+            <Button onClick={() => setShowShareModal(true)} variant="outline" className="rounded-full gap-2 border-[#E040FB]/30 text-[#E040FB] hover:bg-[#E040FB]/10" data-testid="share-stats-btn">
+              <ShareNetwork className="w-4 h-4" /> Share Stats
+            </Button>
+            <Button onClick={fetchAIInsights} disabled={insightsLoading} className="bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black" data-testid="ai-insights-btn">
+              {insightsLoading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Sparkle className="w-4 h-4 mr-2" />Get AI Insights</>}
+            </Button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -416,6 +444,7 @@ const AnalyticsPage = () => {
           </div>
         )}
       </div>
+      {showShareModal && <ShareStatsModal onClose={() => setShowShareModal(false)} />}
     </DashboardLayout>
   );
 };

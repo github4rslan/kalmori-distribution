@@ -15,9 +15,21 @@ import {
   Gear,
   Crown,
   CheckCircle,
-  UploadSimple
+  UploadSimple,
+  Bell
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+
+const NOTIF_PREF_LABELS = {
+  email_releases: { label: 'Release Updates', desc: 'Email when releases are approved or distributed' },
+  email_collaborations: { label: 'Collaboration Invites', desc: 'Email when someone invites you to collaborate' },
+  email_payments: { label: 'Payment Receipts', desc: 'Email receipts for purchases and subscriptions' },
+  email_marketing: { label: 'Marketing & Tips', desc: 'Promotional emails and distribution tips' },
+  push_releases: { label: 'Release Notifications', desc: 'In-app notifications for release status changes' },
+  push_collaborations: { label: 'Collaboration Updates', desc: 'In-app notifications for collaboration activity' },
+  push_payments: { label: 'Payment Alerts', desc: 'In-app notifications for payments and earnings' },
+  push_milestones: { label: 'Milestone Celebrations', desc: 'In-app notifications when you hit streaming milestones' },
+};
 
 const SettingsPage = () => {
   const { user, checkAuth } = useAuth();
@@ -36,10 +48,30 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState({});
+  const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchNotifPrefs();
   }, []);
+
+  const fetchNotifPrefs = async () => {
+    try {
+      const res = await axios.get(`${API}/settings/notification-preferences`, { withCredentials: true });
+      setNotifPrefs(res.data || {});
+    } catch {}
+  };
+
+  const toggleNotifPref = async (key) => {
+    const newVal = !notifPrefs[key];
+    setNotifPrefs(prev => ({ ...prev, [key]: newVal }));
+    setSavingNotifPrefs(true);
+    try {
+      await axios.put(`${API}/settings/notification-preferences`, { [key]: newVal }, { withCredentials: true });
+    } catch { toast.error('Failed to update preference'); }
+    finally { setSavingNotifPrefs(false); }
+  };
 
   const fetchData = async () => {
     try {
@@ -125,6 +157,9 @@ const SettingsPage = () => {
             </TabsTrigger>
             <TabsTrigger value="subscription" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white">
               <Crown className="w-4 h-4 mr-2" /> Subscription
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white" data-testid="notifications-settings-tab">
+              <Bell className="w-4 h-4 mr-2" /> Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -357,6 +392,42 @@ const SettingsPage = () => {
                         {key === 'free' ? 'Downgrade' : 'Upgrade'}
                       </Button>
                     )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-bold text-white mb-1">Email Notifications</h2>
+                <p className="text-sm text-gray-400">Choose what emails you receive</p>
+              </div>
+              <div className="space-y-3">
+                {Object.entries(NOTIF_PREF_LABELS).filter(([k]) => k.startsWith('email_')).map(([key, { label, desc }]) => (
+                  <div key={key} className="flex items-center justify-between p-4 bg-[#141414] border border-white/10 rounded-lg" data-testid={`pref-${key}`}>
+                    <div>
+                      <p className="text-sm font-medium text-white">{label}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                    </div>
+                    <Switch checked={!!notifPrefs[key]} onCheckedChange={() => toggleNotifPref(key)} data-testid={`toggle-${key}`} />
+                  </div>
+                ))}
+              </div>
+              <div className="pt-4">
+                <h2 className="text-lg font-bold text-white mb-1">In-App Notifications</h2>
+                <p className="text-sm text-gray-400">Choose what notifications appear in your dashboard</p>
+              </div>
+              <div className="space-y-3">
+                {Object.entries(NOTIF_PREF_LABELS).filter(([k]) => k.startsWith('push_')).map(([key, { label, desc }]) => (
+                  <div key={key} className="flex items-center justify-between p-4 bg-[#141414] border border-white/10 rounded-lg" data-testid={`pref-${key}`}>
+                    <div>
+                      <p className="text-sm font-medium text-white">{label}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                    </div>
+                    <Switch checked={!!notifPrefs[key]} onCheckedChange={() => toggleNotifPref(key)} data-testid={`toggle-${key}`} />
                   </div>
                 ))}
               </div>

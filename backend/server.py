@@ -943,6 +943,145 @@ async def send_receipt(request: Request):
         logger.warning(f"Receipt email failed: {e}")
         return {"message": "Receipt saved (email delivery pending)", "receipt_id": receipt_id}
 
+# ============= DSP DATA IMPORT (CSV) =============
+@api_router.post("/analytics/import")
+async def import_streaming_data(request: Request, file: UploadFile = File(...)):
+    """Import streaming data from CSV. Expected columns: date, platform, country, streams, revenue, release_title"""
+    user = await get_current_user(request)
+    import csv, io
+    content = await file.read()
+    try:
+        text = content.decode("utf-8")
+    except Exception:
+        text = content.decode("latin-1")
+    reader = csv.DictReader(io.StringIO(text))
+    events = []
+    for row in reader:
+        streams_count = int(row.get("streams", row.get("Streams", 1)))
+        revenue_per = float(row.get("revenue", row.get("Revenue", 0))) / max(streams_count, 1)
+        date_str = row.get("date", row.get("Date", datetime.now(timezone.utc).strftime("%Y-%m-%d")))
+        platform = row.get("platform", row.get("Platform", "Other"))
+        country = row.get("country", row.get("Country", "US"))
+        release_title = row.get("release_title", row.get("Release", row.get("Title", "Imported Track")))
+        for _ in range(streams_count):
+            hour = random.randint(0, 23)
+            minute = random.randint(0, 59)
+            events.append({
+                "id": f"se_{uuid.uuid4().hex[:12]}",
+                "artist_id": user["id"],
+                "release_id": f"import_{uuid.uuid4().hex[:8]}",
+                "release_title": release_title,
+                "platform": platform,
+                "country": country,
+                "revenue": round(revenue_per + random.uniform(-0.001, 0.001), 4),
+                "timestamp": f"{date_str}T{hour:02d}:{minute:02d}:00+00:00",
+                "source": "csv_import",
+            })
+    if events:
+        await db.stream_events.insert_many(events)
+    return {"message": f"Imported {len(events)} stream events from {file.filename}", "count": len(events)}
+
+
+# ============= SHARE YOUR STATS =============
+@api_router.get("/stats/milestones")
+async def get_milestones(request: Request):
+    user = await get_current_user(request)
+    # Aggregate user stats
+    total_pipeline = [{"$match": {"artist_id": user["id"]}}, {"$group": {"_id": None, "total_streams": {"$sum": 1}, "total_revenue": {"$sum": "$revenue"}}}]
+    total_result = await db.stream_events.aggregate(total_pipeline).to_list(1)
+    total = total_result[0] if total_result else {"total_streams": 0, "total_revenue": 0}
+    ts = total["total_streams"]
+    rev = total["total_revenue"]
+    release_count = await db.releases.count_documents({"artist_id": user["id"]})
+    # Top platform
+    top_platform_pipeline = [{"$match": {"artist_id": user["id"]}}, {"$group": {"_id": "$platform", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": 1}]
+    top_platform_result = await db.stream_events.aggregate(top_platform_pipeline).to_list(1)
+    top_platform = top_platform_result[0]["_id"] if top_platform_result else "N/A"
+    # Top country
+    top_country_pipeline = [{"$match": {"artist_id": user["id"]}}, {"$group": {"_id": "$country", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": 1}]
+    top_country_result = await db.stream_events.aggregate(top_country_pipeline).to_list(1)
+    top_country = top_country_result[0]["_id"] if top_country_result else "N/A"
+    # Generate milestones
+    milestones = []
+    stream_thresholds = [100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000]
+    for thresh in stream_thresholds:
+        if ts >= thresh:
+            milestones.append({"type": "streams", "value": thresh, "label": f"{thresh:,} Streams", "achieved": True})
+        else:
+            milestones.append({"type": "streams", "value": thresh, "label": f"{thresh:,} Streams", "achieved": False})
+            break
+    return {
+        "stats": {
+            "total_streams": ts,
+            "total_revenue": round(rev, 2),
+            "release_count": release_count,
+            "top_platform": top_platform,
+            "top_country": top_country,
+            "artist_name": user.get("artist_name") or user.get("name", "Artist"),
+        },
+        "milestones": milestones,
+    }
+
+
+@api_router.get("/stats/share-card")
+async def get_share_card_data(request: Request):
+    """Generate data for a shareable stats card"""
+    user = await get_current_user(request)
+    pipeline = [{"$match": {"artist_id": user["id"]}}, {"$group": {"_id": None, "total_streams": {"$sum": 1}, "total_revenue": {"$sum": "$revenue"}}}]
+    result = await db.stream_events.aggregate(pipeline).to_list(1)
+    totals = result[0] if result else {"total_streams": 0, "total_revenue": 0}
+    # Top platforms
+    platform_pipeline = [{"$match": {"artist_id": user["id"]}}, {"$group": {"_id": "$platform", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": 3}]
+    top_platforms = await db.stream_events.aggregate(platform_pipeline).to_list(3)
+    release_count = await db.releases.count_documents({"artist_id": user["id"]})
+    return {
+        "artist_name": user.get("artist_name") or user.get("name", "Artist"),
+        "total_streams": totals["total_streams"],
+        "total_revenue": round(totals["total_revenue"], 2),
+        "release_count": release_count,
+        "top_platforms": [{"name": p["_id"], "streams": p["count"]} for p in top_platforms],
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ============= NOTIFICATION PREFERENCES =============
+@api_router.get("/settings/notification-preferences")
+async def get_notification_prefs(request: Request):
+    user = await get_current_user(request)
+    prefs = await db.notification_preferences.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not prefs:
+        prefs = {
+            "user_id": user["id"],
+            "email_releases": True,
+            "email_collaborations": True,
+            "email_payments": True,
+            "email_marketing": False,
+            "push_releases": True,
+            "push_collaborations": True,
+            "push_payments": True,
+            "push_milestones": True,
+        }
+        await db.notification_preferences.insert_one({**prefs})
+    prefs.pop("_id", None)
+    return prefs
+
+@api_router.put("/settings/notification-preferences")
+async def update_notification_prefs(request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    allowed_keys = ["email_releases", "email_collaborations", "email_payments", "email_marketing",
+                    "push_releases", "push_collaborations", "push_payments", "push_milestones"]
+    updates = {k: v for k, v in body.items() if k in allowed_keys and isinstance(v, bool)}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No valid preferences provided")
+    await db.notification_preferences.update_one(
+        {"user_id": user["id"]},
+        {"$set": updates},
+        upsert=True
+    )
+    return {"message": "Preferences updated"}
+
+
 # ============= FILE SERVING =============
 @api_router.get("/files/{path:path}")
 async def serve_file(path: str, request: Request, auth: Optional[str] = Query(None)):
@@ -974,12 +1113,14 @@ from routes.email_routes import email_router
 from routes.paypal_routes import paypal_router
 from routes.content_routes import content_router
 from routes.beats_routes import beats_router, init_beats_routes
+from routes.collab_routes import collab_router
 init_beats_routes(db, put_object, get_object, get_current_user, require_admin)
 app.include_router(ai_router)
 app.include_router(email_router)
 app.include_router(paypal_router)
 app.include_router(content_router)
 app.include_router(beats_router)
+app.include_router(collab_router)
 
 # CORS
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
