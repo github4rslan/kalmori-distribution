@@ -709,6 +709,73 @@ async def delete_split(track_id: str, request: Request):
     await db.splits.delete_one({"track_id": track_id})
     return {"message": "Split agreement removed"}
 
+# ============= BEAT PURCHASES =============
+class BeatPurchaseCheckout(PydanticBaseModel):
+    beat_id: str
+    license_type: str  # basic_lease, premium_lease, unlimited_lease, exclusive
+    origin_url: str
+
+@api_router.post("/beats/purchase/checkout")
+async def create_beat_purchase_checkout(data: BeatPurchaseCheckout, request: Request):
+    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    user = await get_current_user(request)
+    beat = await db.beats.find_one({"id": data.beat_id}, {"_id": 0})
+    if not beat: raise HTTPException(status_code=404, detail="Beat not found")
+    prices = beat.get("prices", {})
+    amount = prices.get(data.license_type)
+    if not amount: raise HTTPException(status_code=400, detail="Invalid license type")
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    host_url = str(request.base_url)
+    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
+    session = await stripe_checkout.create_checkout_session(CheckoutSessionRequest(
+        amount=amount, currency="usd",
+        success_url=f"{data.origin_url}/instrumentals?purchase=success&beat_id={data.beat_id}&license={data.license_type}&session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{data.origin_url}/instrumentals?purchase=cancelled",
+        metadata={"beat_id": data.beat_id, "user_id": user["id"], "license_type": data.license_type, "type": "beat_purchase"}))
+    await db.beat_purchases.insert_one({
+        "id": f"bp_{uuid.uuid4().hex[:12]}", "session_id": session.session_id,
+        "user_id": user["id"], "beat_id": data.beat_id, "beat_title": beat["title"],
+        "license_type": data.license_type, "amount": amount, "currency": "usd",
+        "payment_status": "pending", "created_at": datetime.now(timezone.utc).isoformat()})
+    return {"checkout_url": session.url, "session_id": session.session_id, "amount": amount}
+
+@api_router.get("/beats/purchases")
+async def get_beat_purchases(request: Request):
+    user = await get_current_user(request)
+    purchases = await db.beat_purchases.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"purchases": purchases}
+
+# ============= EMAIL RECEIPTS =============
+@api_router.post("/receipts/send")
+async def send_receipt(request: Request):
+    """Send email receipt for a purchase (triggered after successful payment)"""
+    user = await get_current_user(request)
+    body = await request.json()
+    txn_id = body.get("transaction_id") or body.get("session_id")
+    if not txn_id: raise HTTPException(status_code=400, detail="Transaction ID required")
+    txn = await db.payment_transactions.find_one({"$or": [{"id": txn_id}, {"session_id": txn_id}]}, {"_id": 0})
+    if not txn:
+        txn = await db.beat_purchases.find_one({"$or": [{"id": txn_id}, {"session_id": txn_id}]}, {"_id": 0})
+    if not txn: raise HTTPException(status_code=404, detail="Transaction not found")
+    # Store receipt record
+    receipt_id = f"rcpt_{uuid.uuid4().hex[:12]}"
+    await db.receipts.insert_one({
+        "id": receipt_id, "user_id": user["id"], "email": user["email"],
+        "transaction": txn, "sent_at": datetime.now(timezone.utc).isoformat()})
+    # Try sending email
+    try:
+        from routes.email_routes import send_email
+        await send_email(user["email"], "Your Kalmori Receipt",
+            f"<h2>Payment Receipt</h2><p>Thank you for your purchase!</p>"
+            f"<p><strong>Amount:</strong> ${txn.get('amount', 0):.2f} USD</p>"
+            f"<p><strong>Date:</strong> {txn.get('created_at', 'N/A')}</p>"
+            f"<p><strong>Receipt ID:</strong> {receipt_id}</p>"
+            f"<p>- The Kalmori Team</p>")
+        return {"message": "Receipt sent", "receipt_id": receipt_id}
+    except Exception as e:
+        logger.warning(f"Receipt email failed: {e}")
+        return {"message": "Receipt saved (email delivery pending)", "receipt_id": receipt_id}
+
 # ============= FILE SERVING =============
 @api_router.get("/files/{path:path}")
 async def serve_file(path: str, request: Request, auth: Optional[str] = Query(None)):

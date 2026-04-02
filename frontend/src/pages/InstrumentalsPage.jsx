@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
-import { MusicNote, Lightning, ShieldCheck, Headset, Check, Star, PaperPlaneTilt, Play, Pause, SpeakerHigh } from '@phosphor-icons/react';
+import { useAuth } from '../App';
+import { MusicNote, Lightning, ShieldCheck, Headset, Check, Star, PaperPlaneTilt, Play, Pause, SpeakerHigh, ShoppingCart } from '@phosphor-icons/react';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -56,7 +58,9 @@ const BeatPreview = ({ beat, isPlaying, onToggle, audioRef }) => (
 
 export default function InstrumentalsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedLicense, setSelectedLicense] = useState('');
+  const [selectedBeat, setSelectedBeat] = useState(null);
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
@@ -64,11 +68,38 @@ export default function InstrumentalsPage() {
   const [playingBeat, setPlayingBeat] = useState(null);
   const [beats, setBeats] = useState([]);
   const [loadingBeats, setLoadingBeats] = useState(true);
+  const [purchasing, setPurchasing] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => {
     fetchBeats();
+    // Handle purchase success/cancel return
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('purchase') === 'success') {
+      toast.success('Beat purchased! Check your email for the download link.');
+      window.history.replaceState({}, '', '/instrumentals');
+    } else if (params.get('purchase') === 'cancelled') {
+      toast.error('Purchase was cancelled');
+      window.history.replaceState({}, '', '/instrumentals');
+    }
   }, []);
+
+  const handleBuyBeat = async (beat, licenseType) => {
+    if (!user) { navigate('/login'); return; }
+    setPurchasing(true);
+    try {
+      const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
+        || localStorage.getItem('access_token');
+      const res = await axios.post(`${API_URL}/api/beats/purchase/checkout`, {
+        beat_id: beat.id, license_type: licenseType, origin_url: window.location.origin,
+      }, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+      if (res.data.checkout_url) {
+        window.location.href = res.data.checkout_url;
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to start checkout');
+    } finally { setPurchasing(false); }
+  };
 
   const fetchBeats = async () => {
     try {
@@ -203,7 +234,26 @@ export default function InstrumentalsPage() {
           ) : beats.length > 0 ? (
             <div className="space-y-3">
               {beats.map(beat => (
-                <BeatPreview key={beat.id} beat={beat} isPlaying={playingBeat === beat.id} onToggle={toggleBeat} audioRef={audioRef} />
+                <div key={beat.id} className="flex items-center gap-3 bg-[#1a1a1a] rounded-2xl p-4 transition-all hover:bg-[#222]" data-testid={`beat-${beat.id}`}>
+                  <button onClick={() => toggleBeat(beat)}
+                    className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ backgroundColor: playingBeat === beat.id ? '#E040FB' : '#333' }}
+                    data-testid={`play-beat-${beat.id}`}>
+                    {playingBeat === beat.id ? <Pause className="w-5 h-5 text-white" weight="fill" /> : <Play className="w-5 h-5 text-white" weight="fill" />}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-white truncate">{beat.title}</h4>
+                    <p className="text-xs text-gray-400">{beat.genre} &middot; {beat.bpm} BPM &middot; {beat.key}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 hidden sm:block">{beat.duration || '--:--'}</span>
+                    <button onClick={() => { setSelectedBeat(beat); setSelectedLicense('basic_lease'); }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#E040FB] hover:brightness-110 text-white text-xs font-bold transition-all"
+                      data-testid={`buy-beat-${beat.id}`}>
+                      <ShoppingCart className="w-3.5 h-3.5" /> ${beat.prices?.basic_lease || '29.99'}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -321,6 +371,42 @@ export default function InstrumentalsPage() {
             </form>
           )}
         </div>
+
+        {/* Beat Purchase Modal */}
+        {selectedBeat && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedBeat(null)}>
+            <div className="bg-[#111] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="purchase-modal">
+              <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5 sm:hidden" />
+              <h3 className="text-lg font-extrabold text-white mb-1">{selectedBeat.title}</h3>
+              <p className="text-sm text-gray-400 mb-5">{selectedBeat.genre} &middot; {selectedBeat.bpm} BPM &middot; Key: {selectedBeat.key}</p>
+              <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">SELECT LICENSE</p>
+              <div className="space-y-2.5 mb-5">
+                {licenseTiers.map(tier => (
+                  <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                      selectedLicense === tier.id ? 'border-opacity-100 bg-white/5' : 'border-opacity-20'
+                    }`} style={{ borderColor: tier.color }}
+                    data-testid={`modal-tier-${tier.id}`}>
+                    <div>
+                      <p className="text-sm font-bold text-white">{tier.name}</p>
+                      <p className="text-xs text-gray-500">{tier.desc}</p>
+                    </div>
+                    <span className="text-lg font-extrabold" style={{ color: tier.color }}>
+                      ${selectedBeat.prices?.[tier.id] || tier.price}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => handleBuyBeat(selectedBeat, selectedLicense)} disabled={purchasing}
+                className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+                data-testid="confirm-purchase-btn">
+                {purchasing ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> :
+                  <><ShoppingCart className="w-5 h-5" /> BUY NOW — ${selectedBeat.prices?.[selectedLicense] || '29.99'}</>}
+              </button>
+              <button onClick={() => setSelectedBeat(null)} className="w-full py-3 text-gray-400 text-sm mt-2 hover:text-white transition-colors">Cancel</button>
+            </div>
+          </div>
+        )}
 
         <GlobalFooter />
       </div>

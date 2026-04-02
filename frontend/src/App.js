@@ -16,6 +16,7 @@ import DashboardPage from './pages/DashboardPage';
 import ReleasesPage from './pages/ReleasesPage';
 import ReleaseDetailPage from './pages/ReleaseDetailPage';
 import CreateReleasePage from './pages/CreateReleasePage';
+import ReleaseWizardPage from './pages/ReleaseWizardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import WalletPage from './pages/WalletPage';
 import SettingsPage from './pages/SettingsPage';
@@ -252,7 +253,7 @@ const AppRouter = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
-      <Route path="/releases/new" element={<ProtectedRoute><CreateReleasePage /></ProtectedRoute>} />
+      <Route path="/releases/new" element={<ProtectedRoute><ReleaseWizardPage /></ProtectedRoute>} />
       <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetailPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
