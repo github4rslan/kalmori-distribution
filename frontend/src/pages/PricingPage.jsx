@@ -47,6 +47,27 @@ export default function PricingPage() {
   const currentPlan = user?.plan || 'free';
   const planOrder = ['free', 'rise', 'pro'];
 
+  // Handle Stripe checkout return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const subscription = params.get('subscription');
+    const plan = params.get('plan');
+    if (subscription === 'success' && plan) {
+      const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
+        || localStorage.getItem('access_token');
+      axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${plan}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
+      }).then(() => {
+        toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
+        window.history.replaceState({}, '', '/pricing');
+        setTimeout(() => window.location.reload(), 500);
+      }).catch(() => toast.error('Failed to activate plan'));
+    } else if (subscription === 'cancelled') {
+      toast.error('Payment was cancelled');
+      window.history.replaceState({}, '', '/pricing');
+    }
+  }, []);
+
   const handlePlanAction = async (planId) => {
     if (!user) {
       navigate('/register');

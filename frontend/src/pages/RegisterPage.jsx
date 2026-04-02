@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash, CaretDown, Check } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const COUNTRIES = [
   'United States', 'United Kingdom', 'Canada', 'Australia', 'Nigeria', 'Ghana', 'South Africa',
@@ -44,6 +45,8 @@ const RegisterPage = () => {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [countrySearch, setCountrySearch] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
@@ -62,6 +65,7 @@ const RegisterPage = () => {
     if (password.length < 8) { setError('Password must be at least 8 characters long and contain at least 1 upper case letter, 1 number, and one special character'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match'); return; }
     if (!agreedToTerms) { setError('You must agree to the Terms & Conditions'); return; }
+    if (!recaptchaToken) { setError('Please complete the reCAPTCHA verification'); return; }
 
     setLoading(true);
     try {
@@ -76,6 +80,7 @@ const RegisterPage = () => {
         state,
         town,
         post_code: postCode,
+        recaptcha_token: recaptchaToken,
       });
       toast.success('Account created successfully!');
       navigate('/dashboard');
@@ -286,6 +291,19 @@ const RegisterPage = () => {
                 <Link to="/terms" className="text-[#E040FB] hover:underline">Terms & Conditions</Link>
               </span>
             </div>
+
+            {/* reCAPTCHA */}
+            {process.env.REACT_APP_RECAPTCHA_SITE_KEY && (
+              <div className="flex justify-center pt-2" data-testid="recaptcha-container">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                  onChange={(token) => setRecaptchaToken(token)}
+                  onExpired={() => setRecaptchaToken(null)}
+                  theme="dark"
+                />
+              </div>
+            )}
 
             {/* Submit */}
             <div className="flex justify-center pt-2">

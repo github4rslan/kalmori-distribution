@@ -3,21 +3,27 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
-import { Disc, Play, CurrencyDollar, TrendUp, Plus, ArrowRight } from '@phosphor-icons/react';
+import { Disc, Play, CurrencyDollar, TrendUp, TrendDown, Plus, ArrowRight, Fire, CaretUp, CaretDown } from '@phosphor-icons/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const DashboardPage = () => {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState(null);
   const [releases, setReleases] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [analyticsRes, releasesRes] = await Promise.all([axios.get(`${API}/analytics/overview`), axios.get(`${API}/releases`)]);
+        const [analyticsRes, releasesRes, trendingRes] = await Promise.all([
+          axios.get(`${API}/analytics/overview`),
+          axios.get(`${API}/releases`),
+          axios.get(`${API}/analytics/trending`).catch(() => ({ data: { trending: [] } })),
+        ]);
         setAnalytics(analyticsRes.data);
         setReleases(releasesRes.data.slice(0, 5));
+        setTrending(trendingRes.data.trending || []);
       } catch (error) { console.error('Failed to fetch:', error); }
       finally { setLoading(false); }
     };
@@ -108,6 +114,41 @@ const DashboardPage = () => {
             )}
           </div>
         </div>
+
+        {/* Trending This Week */}
+        {trending.length > 0 && (
+          <div className="card-kalmori p-6" data-testid="trending-section">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Fire className="w-5 h-5 text-[#FF4081]" weight="fill" />
+                <h2 className="text-lg font-medium">Trending This Week</h2>
+              </div>
+              <span className="text-xs text-gray-500">Last 7 days</span>
+            </div>
+            <div className="space-y-3">
+              {trending.slice(0, 5).map((item, i) => (
+                <Link key={item.release_id} to={`/releases/${item.release_id}`}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors" data-testid={`trending-item-${i}`}>
+                  <span className="text-lg font-bold text-gray-600 w-6 text-center">{i + 1}</span>
+                  <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Disc className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{item.title}</p>
+                    <p className="text-xs text-gray-500">{item.genre} &middot; {item.top_store}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-mono font-semibold">{item.streams_this_week?.toLocaleString()}</p>
+                    <div className={`flex items-center gap-0.5 justify-end text-xs ${item.change_percent >= 0 ? 'text-[#4CAF50]' : 'text-red-400'}`}>
+                      {item.change_percent >= 0 ? <CaretUp className="w-3 h-3" weight="fill" /> : <CaretDown className="w-3 h-3" weight="fill" />}
+                      <span>{Math.abs(item.change_percent)}%</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/releases/new" className="group card-kalmori p-6 hover:border-[#7C4DFF]/50">
