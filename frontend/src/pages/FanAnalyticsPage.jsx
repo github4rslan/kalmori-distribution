@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
-import { Users, Globe, ChartLineUp, Clock, TrendUp, MusicNote, Lightning, CalendarBlank, MapPin, Rocket, Star, Target, ArrowRight, SpinnerGap, FloppyDisk, Trash, ArrowsLeftRight, X, CaretDown, CaretUp, BookmarkSimple } from '@phosphor-icons/react';
+import { Users, Globe, ChartLineUp, Clock, TrendUp, MusicNote, Lightning, CalendarBlank, MapPin, Rocket, Star, Target, ArrowRight, SpinnerGap, FloppyDisk, Trash, ArrowsLeftRight, X, CaretDown, CaretUp, BookmarkSimple, FilePdf } from '@phosphor-icons/react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
 
@@ -100,6 +100,31 @@ export default function FanAnalyticsPage() {
       if (compareB?.id === id) setCompareB(null);
     } catch (err) {
       toast.error('Failed to delete');
+    }
+  };
+
+  const exportPdf = async (strategyData, dataSummary, title, genreVal, labelVal) => {
+    try {
+      const res = await axios.post(`${API}/ai/strategies/export-pdf`, {
+        strategy: strategyData,
+        data_summary: dataSummary,
+        release_title: title || null,
+        genre: genreVal || null,
+        label: labelVal || null,
+      }, { withCredentials: true, responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      const safeLabel = (labelVal || title || 'strategy').replace(/[^a-zA-Z0-9 _-]/g, '').replace(/\s+/g, '_');
+      link.setAttribute('download', `Kalmori_Strategy_${safeLabel}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF downloaded!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export PDF');
     }
   };
 
@@ -305,6 +330,7 @@ export default function FanAnalyticsPage() {
               onReset={() => setStrategy(null)}
               onSave={saveStrategy}
               saving={saving}
+              onExport={() => exportPdf(strategy.strategy, strategy.data_summary, releaseTitle, genre, null)}
             />
           )}
 
@@ -313,6 +339,7 @@ export default function FanAnalyticsPage() {
             <SavedStrategiesPanel
               strategies={savedStrategies}
               onDelete={deleteStrategy}
+              onExport={(strat) => exportPdf(strat.strategy, strat.data_summary, strat.release_title, strat.genre, strat.label)}
               compareMode={compareMode}
               setCompareMode={setCompareMode}
               compareA={compareA}
@@ -329,7 +356,7 @@ export default function FanAnalyticsPage() {
 }
 
 /* ===================== STRATEGY RESULTS ===================== */
-function AIStrategyResults({ strategy, onReset, onSave, saving }) {
+function AIStrategyResults({ strategy, onReset, onSave, saving, onExport }) {
   const s = strategy.strategy;
   const summary = strategy.data_summary;
   const [label, setLabel] = useState('');
@@ -385,13 +412,20 @@ function AIStrategyResults({ strategy, onReset, onSave, saving }) {
         >
           <Lightning className="w-4 h-4" /> New Strategy
         </button>
+        <button
+          onClick={onExport}
+          className="px-4 py-2 bg-[#E040FB]/10 border border-[#E040FB]/30 text-[#E040FB] rounded-lg text-sm font-medium hover:bg-[#E040FB]/20 transition-colors flex items-center gap-2"
+          data-testid="export-pdf-btn"
+        >
+          <FilePdf className="w-4 h-4" /> Export PDF
+        </button>
       </div>
     </div>
   );
 }
 
 /* ===================== SAVED STRATEGIES PANEL ===================== */
-function SavedStrategiesPanel({ strategies, onDelete, compareMode, setCompareMode, compareA, compareB, selectForCompare, setCompareA, setCompareB }) {
+function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, setCompareMode, compareA, compareB, selectForCompare, setCompareA, setCompareB }) {
   if (strategies.length === 0) {
     return <p className="text-gray-500 text-sm py-4">No saved strategies yet. Generate and save one above.</p>;
   }
@@ -461,6 +495,14 @@ function SavedStrategiesPanel({ strategies, onDelete, compareMode, setCompareMod
                       <ArrowsLeftRight className="w-4 h-4" />
                     </button>
                   )}
+                  <button
+                    onClick={() => onExport(strat)}
+                    className="p-1.5 text-gray-600 hover:text-[#E040FB] rounded-lg transition-colors"
+                    data-testid={`export-strategy-${strat.id}`}
+                    title="Export as PDF"
+                  >
+                    <FilePdf className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => onDelete(strat.id)}
                     className="p-1.5 text-gray-600 hover:text-red-400 rounded-lg transition-colors"

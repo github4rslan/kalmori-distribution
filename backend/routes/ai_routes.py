@@ -405,3 +405,157 @@ async def delete_saved_strategy(strategy_id: str, request: Request):
         return {"message": "Strategy deleted"}
     finally:
         db_client.close()
+
+
+class ExportStrategyRequest(BaseModel):
+    strategy: dict
+    data_summary: dict
+    release_title: Optional[str] = None
+    genre: Optional[str] = None
+    label: Optional[str] = None
+
+@ai_router.post("/strategies/export-pdf")
+async def export_strategy_pdf(data: ExportStrategyRequest, request: Request):
+    """Generate a branded Kalmori PDF one-pager for a release strategy"""
+    user = await _get_user_from_request(request)
+    from fastapi.responses import Response
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.colors import HexColor, white, black
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER
+    from io import BytesIO
+
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=20*mm, bottomMargin=15*mm, leftMargin=18*mm, rightMargin=18*mm)
+
+    # Colors
+    purple = HexColor("#7C4DFF")
+    gray_text = HexColor("#999999")
+    light_text = HexColor("#333333")
+
+    # Styles
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle('KTitle', parent=styles['Title'], fontSize=22, textColor=purple, spaceAfter=2*mm, fontName='Helvetica-Bold'))
+    styles.add(ParagraphStyle('KSubtitle', parent=styles['Normal'], fontSize=10, textColor=gray_text, spaceAfter=6*mm))
+    styles.add(ParagraphStyle('KHeading', parent=styles['Heading2'], fontSize=13, textColor=purple, spaceBefore=5*mm, spaceAfter=3*mm, fontName='Helvetica-Bold'))
+    styles.add(ParagraphStyle('KBody', parent=styles['Normal'], fontSize=9.5, textColor=light_text, spaceAfter=2*mm, leading=13))
+    styles.add(ParagraphStyle('KSmall', parent=styles['Normal'], fontSize=8, textColor=gray_text, spaceAfter=1*mm))
+    styles.add(ParagraphStyle('KBold', parent=styles['Normal'], fontSize=10, textColor=black, fontName='Helvetica-Bold', spaceAfter=2*mm))
+    styles.add(ParagraphStyle('KCenter', parent=styles['Normal'], fontSize=8, textColor=gray_text, alignment=TA_CENTER))
+
+    s = data.strategy
+    summary = data.data_summary or {}
+    elements = []
+
+    # Header
+    elements.append(Paragraph("KALMORI", styles['KTitle']))
+    title_label = data.label or data.release_title or "AI Release Strategy"
+    elements.append(Paragraph(f"{title_label} &mdash; Generated {datetime.now(timezone.utc).strftime('%B %d, %Y')}", styles['KSubtitle']))
+
+    # Artist info line
+    artist_name = user.get("artist_name") or user.get("name", "Artist")
+    info_parts = [f"Artist: {artist_name}"]
+    if data.genre:
+        info_parts.append(f"Genre: {data.genre}")
+    if summary.get("total_streams"):
+        info_parts.append(f"Streams Analyzed: {summary['total_streams']:,}")
+    elements.append(Paragraph(" | ".join(info_parts), styles['KSmall']))
+    elements.append(Spacer(1, 3*mm))
+
+    # Optimal Release Window
+    elements.append(Paragraph("Optimal Release Window", styles['KHeading']))
+    window_data = [
+        ["Best Day", s.get("optimal_release_day", "Friday")],
+        ["Best Time", s.get("optimal_release_time", "00:00 UTC")],
+    ]
+    if summary.get("top_platform"):
+        window_data.append(["Top Platform", summary["top_platform"]])
+    if summary.get("top_country"):
+        window_data.append(["Top Market", summary["top_country"]])
+    if s.get("estimated_first_week_range"):
+        window_data.append(["Est. First Week", s["estimated_first_week_range"]])
+
+    t = Table(window_data, colWidths=[45*mm, 120*mm])
+    t.setStyle(TableStyle([
+        ('TEXTCOLOR', (0, 0), (0, -1), gray_text),
+        ('TEXTCOLOR', (1, 0), (1, -1), black),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, 0), (-1, -2), 0.5, HexColor("#EEEEEE")),
+    ]))
+    elements.append(t)
+
+    if s.get("release_day_reasoning"):
+        elements.append(Spacer(1, 2*mm))
+        elements.append(Paragraph(s["release_day_reasoning"], styles['KBody']))
+
+    # Platform Strategy
+    if s.get("target_platforms"):
+        elements.append(Paragraph("Platform Strategy", styles['KHeading']))
+        for p in s["target_platforms"]:
+            priority = p.get("priority", "medium").upper()
+            elements.append(Paragraph(
+                f"<b>[{priority}] {p.get('platform', '')}</b> &mdash; {p.get('tactic', '')}",
+                styles['KBody']
+            ))
+
+    # Geographic Targeting
+    if s.get("geographic_strategy"):
+        elements.append(Paragraph("Geographic Targeting", styles['KHeading']))
+        for g in s["geographic_strategy"]:
+            elements.append(Paragraph(
+                f"<b>{g.get('region', '')}</b>: {g.get('tactic', '')}",
+                styles['KBody']
+            ))
+
+    # Pre-Release Timeline
+    if s.get("pre_release_timeline"):
+        elements.append(Paragraph("Pre-Release Timeline", styles['KHeading']))
+        timeline = sorted(s["pre_release_timeline"], key=lambda x: x.get("days_before", 0), reverse=True)
+        tl_data = []
+        for t_item in timeline:
+            days = t_item.get("days_before", 0)
+            label_text = "Release Day" if days == 0 else f"-{days} days"
+            tl_data.append([label_text, t_item.get("action", "")])
+        tl_table = Table(tl_data, colWidths=[22*mm, 143*mm])
+        tl_table.setStyle(TableStyle([
+            ('TEXTCOLOR', (0, 0), (0, -1), purple),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('LINEBELOW', (0, 0), (-1, -2), 0.5, HexColor("#EEEEEE")),
+        ]))
+        elements.append(tl_table)
+
+    # Promotion Tips
+    if s.get("promotion_tips"):
+        elements.append(Paragraph("Promotion Tips", styles['KHeading']))
+        for i, tip in enumerate(s["promotion_tips"], 1):
+            elements.append(Paragraph(f"{i}. {tip}", styles['KBody']))
+
+    # Confidence Note
+    if s.get("confidence_note"):
+        elements.append(Spacer(1, 3*mm))
+        elements.append(Paragraph(f"Note: {s['confidence_note']}", styles['KSmall']))
+
+    # Footer
+    elements.append(Spacer(1, 6*mm))
+    elements.append(Paragraph("Generated by Kalmori AI | kalmori.com", styles['KCenter']))
+
+    doc.build(elements)
+    pdf_bytes = buf.getvalue()
+    buf.close()
+
+    safe_label = "".join(c for c in (data.label or data.release_title or "strategy") if c.isalnum() or c in " _-").strip().replace(" ", "_")
+    filename = f"Kalmori_Strategy_{safe_label}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
