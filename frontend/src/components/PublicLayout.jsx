@@ -150,8 +150,6 @@ const PublicLayout = ({ children }) => {
             {/* Tagline — bright red */}
             <p className="px-5 mb-3 text-[13px] font-semibold tracking-wider text-[#FF4444]">Your Music, Your Way</p>
 
-            {/* Animated red border */}
-            <div className="h-[2px] mx-0 mb-2 bg-[#FF4444]" />
             {/* Gray separator */}
             <div className="h-px bg-[#333] mx-5 mb-4" />
 
