@@ -89,6 +89,11 @@ Frontend: React + Tailwind + Shadcn/UI | Backend: FastAPI + Motor + MongoDB | Au
 - [x] How-it-works explainer
 - [x] Content ID management page
 
+### Backend Modularization [Apr 2, 2026]
+- [x] server.py reduced from 1686 → 772 lines (54% reduction)
+- [x] Shared models/helpers extracted to core.py (285 lines)
+- [x] All API endpoints preserved, zero regressions (iteration 14: 100%)
+
 ### Admin Beat Manager [Apr 2, 2026]
 - [x] Admin Beat Manager page at /admin/beats with full CRUD
 - [x] Create/edit beats with title, genre, BPM, key, mood, pricing modal
