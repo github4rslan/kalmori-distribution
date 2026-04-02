@@ -94,8 +94,12 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-start justify-center overflow-y-auto">
-      <div className="w-full max-w-[460px] mx-auto px-6 py-10 text-center">
+    <div className="min-h-screen relative flex items-start justify-center overflow-y-auto">
+      {/* Purple-pink gradient background */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #7C4DFF 0%, #9C27B0 30%, #E040FB 70%, #FF4081 100%)' }} />
+      <div className="absolute inset-0 bg-black/40" />
+
+      <div className="relative z-10 w-full max-w-[460px] mx-auto px-6 py-10 text-center">
         {/* Header */}
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
           Join <span style={{ color: '#E040FB' }}>Kalmori</span>

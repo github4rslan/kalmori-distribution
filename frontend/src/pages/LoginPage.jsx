@@ -37,9 +37,9 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center">
-      {/* Background image with dark overlay */}
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.pexels.com/photos/1644616/pexels-photo-1644616.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260)' }} />
-      <div className="absolute inset-0 bg-black/80" />
+      {/* Purple-pink gradient background */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #7C4DFF 0%, #9C27B0 30%, #E040FB 70%, #FF4081 100%)' }} />
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Form */}
       <div className="relative z-10 w-full max-w-[420px] mx-auto px-6 py-12 text-center">
