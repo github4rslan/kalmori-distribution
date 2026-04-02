@@ -89,6 +89,17 @@ Frontend: React + Tailwind + Shadcn/UI | Backend: FastAPI + Motor + MongoDB | Au
 - [x] How-it-works explainer
 - [x] Content ID management page
 
+### Beat Catalog API [Apr 2, 2026]
+- [x] Full CRUD beats API (/api/beats) with Object Storage audio uploads
+- [x] Instrumentals page fetches real beats from database
+- [x] Demo beats seeded on startup (6 beats across genres)
+- [x] Admin-only beat management (create/update/delete/upload audio)
+
+### Login/Register Redesign [Apr 2, 2026]
+- [x] Login page: TuneCore-style centered layout with purple-pink gradient background
+- [x] Registration page: All mobile app fields (legal name, stage name, country picker, state, town, post code, artist/producer role toggle, terms checkbox)
+- [x] Password show/hide toggle, confirm password validation
+
 ### Landing Page TuneCore Redesign [Apr 2, 2026]
 - [x] TuneCore "Letter Layout" typography-forward design applied
 - [x] KALMORI animated logo preserved in pink/purple
