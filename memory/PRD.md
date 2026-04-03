@@ -15,55 +15,39 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 
 ### Core
 - Auth (JWT + Google OAuth + reCAPTCHA), Responsive dark premium UI
-- Welcome email on sign-up (energetic music-industry vibe)
+- Multi-step sign-up (CD Baby style): Step 1 (Email/Password/Terms/reCAPTCHA), Step 2 (Name/Country/Address/Phone)
+- Role Selection page (/select-role): Artist vs Label/Producer with stacked gold buttons
+- Password requirements: 12+ chars, 1 number, 1 capital, no spaces
+- Welcome email on sign-up (energetic music-industry vibe, role-specific content)
 - Email template system with reusable email_base wrapper
 
-### Admin Dashboard (Full Upgrade — Apr 2026)
-- **Overview**: 6 stat cards (Total Users, Releases, Pending Review, Revenue, Total Streams, This Week Streams)
-- **Platform Analytics**: Platform Streams breakdown, Top Markets, Top Artists (clickable), Monthly stream trend, Active artists count
-- **User Management**: Search, pagination, View/Edit per user, role/plan/status editing
-- **User Detail Page** (/admin/users/:userId): Full profile view with stats grid (streams, revenue, releases, pre-saves, goals), inline profile editor (name, artist_name, bio, genre, country, social links, role, plan, status), platform breakdown, country breakdown, weekly stream trends, releases table, goals & milestones
+### Admin Dashboard (Full Upgrade)
+- Overview: 6 stat cards, Platform Streams, Top Markets, Top Artists, Monthly trend
+- User Detail Page (/admin/users/:userId): Full profile editor, stats, platform/country breakdown, releases table, goals
 - Submissions review, Beat Manager
 
 ### Content
-- 4-tab Release Wizard, UPC auto-gen, Spotify Canvas, Content ID
+- 4-tab Release Wizard with professional track form: Title/Title Version, ISRC (+ auto-generate), Dolby Atmos ISRC, ISWC, Audio Language, Production, Publisher, Preview Start/End Time, Artists section (role+name), Main Contributors (Composer/Lyricist), Contributors (add/remove)
 - 150 streaming platforms with region-based filtering, search, Select All
 
 ### Commerce
 - Stripe subs (4 tiers) + upgrade/downgrade, Beat catalog, My Purchases, Wallet
 
-### Analytics
-- DSP simulation, Streaming Feed, CSV import, Share Stats
-- Fan Analytics: Listener Growth, Countries, Platform Engagement, Peak Hours, Pre-save
-- Revenue Analytics: Summary cards, monthly trend, platform breakdown, royalty splits, what-if calculator
-- Release Leaderboard: Top-3 podium, sparklines, hot streak/rising badges, sort/filter
-
-### AI Features
-- AI Release Strategy + Save/Compare + PDF Export
-- AI Smart Notifications: 7-day trend analysis, categorized insights, bell badges
-
-### Email
-- Weekly Digest Emails: Branded HTML, preview modal, Settings toggle
-- Welcome email on registration
-- Beat purchase receipt, subscription receipt, release approved/rejected, payment received, password reset
+### Analytics & AI
+- DSP simulation, Fan Analytics, Revenue Analytics, Release Leaderboard, Goal Tracking & Milestones
+- AI Release Strategy + Save/Compare + PDF Export, AI Smart Notifications
 
 ### Growth
-- Goal Tracking & Milestones (7 goal types, auto-completion, deadline countdown)
-- Artist Profile Public Page (/artist/:slug with link-in-bio, social links, pre-save)
+- Artist Profile Public Page (/artist/:slug), Pre-Save Campaigns, Collaborations
 
 ### Landing Page
-- Marketing-focused with feature showcases (9 feature cards)
-- Stats row: 150+ Platforms, 100% Royalties, 24/7 Analytics, AI Strategy
-- Sign-up form: wider 2-column layout, styled Terms/reCAPTCHA
-
-### Other
-- Notifications: 9 preferences (email + push + digest)
-- Collaborations, Beat Search/Filter, Social Sharing, Pre-Save Campaigns
+- Marketing-focused with 9 feature showcase cards + stats row
+- Sign-up redesigned as multi-step flow
 
 ## All Pages & Routes
-`/` `/login` `/register` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats`
+`/` `/login` `/register` `/select-role` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats`
 
 ## Remaining Backlog
-- P1: Real Spotify OAuth with API credentials (placeholder ready)
+- P1: Real Spotify OAuth with API credentials
 - P2: Apple Music / YouTube Music API connections
 - P2: Replace simulated DSP data with real API feeds
