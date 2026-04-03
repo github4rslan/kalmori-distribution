@@ -1041,7 +1041,7 @@ async def get_revenue_analytics(request: Request):
     plan = user.get("plan", "free")
     plan_cut = SUBSCRIPTION_PLANS.get(plan, {}).get("revenue_share", 15) / 100
 
-    # Platform streams and revenue
+    # Platform streams and revenue (from stream_events)
     pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": "$platform", "streams": {"$sum": 1}, "raw_revenue": {"$sum": "$revenue"}}}
@@ -1093,6 +1093,79 @@ async def get_revenue_analytics(request: Request):
     total_collab_payout = sum(s["estimated_amount"] for s in splits)
     artist_take = round(total_net - total_collab_payout, 2)
 
+    # === Kalmori Distribution Earnings (from imported_royalties) ===
+    kalmori_entries = await db.imported_royalties.find(
+        {"matched_artist_id": user["id"], "status": "matched"}, {"_id": 0}
+    ).to_list(5000)
+
+    kalmori_total_streams = 0
+    kalmori_total_revenue = 0
+    kalmori_platform_map = {}
+    kalmori_monthly_map = {}
+
+    for e in kalmori_entries:
+        streams = e.get("streams", 0)
+        revenue = e.get("revenue", 0)
+        platform = e.get("platform", "Other") or "Other"
+        period = e.get("period", "") or ""
+        kalmori_total_streams += streams
+        kalmori_total_revenue += revenue
+
+        if platform not in kalmori_platform_map:
+            kalmori_platform_map[platform] = {"streams": 0, "revenue": 0}
+        kalmori_platform_map[platform]["streams"] += streams
+        kalmori_platform_map[platform]["revenue"] += revenue
+
+        # Extract YYYY-MM from period for monthly aggregation
+        month_key = ""
+        if period:
+            # Try various period formats
+            for fmt in ["%Y-%m", "%Y-%m-%d"]:
+                try:
+                    from datetime import datetime as dt_parse
+                    parsed = dt_parse.strptime(period[:len(fmt.replace('%', '').replace('-', '')) + period.count('-')], fmt)
+                    month_key = parsed.strftime("%Y-%m")
+                    break
+                except:
+                    pass
+            if not month_key and len(period) >= 7:
+                month_key = period[:7]
+        # Use import created_at as fallback
+        if not month_key:
+            created = e.get("created_at", "")
+            if created and len(created) >= 7:
+                month_key = created[:7]
+        if month_key:
+            if month_key not in kalmori_monthly_map:
+                kalmori_monthly_map[month_key] = {"streams": 0, "revenue": 0}
+            kalmori_monthly_map[month_key]["streams"] += streams
+            kalmori_monthly_map[month_key]["revenue"] += revenue
+
+    kalmori_platforms = sorted(
+        [{"platform": k, "streams": v["streams"], "revenue": round(v["revenue"], 2)}
+         for k, v in kalmori_platform_map.items()],
+        key=lambda x: -x["revenue"]
+    )
+
+    # Build kalmori monthly trend aligned to last 6 months
+    kalmori_monthly = []
+    for m in monthly:
+        mk = m["month"]
+        km = kalmori_monthly_map.get(mk, {"streams": 0, "revenue": 0})
+        kalmori_monthly.append({"month": mk, "streams": km["streams"], "revenue": round(km["revenue"], 2)})
+
+    # Check label split if user is under a label
+    label_entry = await db.label_artists.find_one(
+        {"artist_id": user["id"], "status": "active"}, {"_id": 0, "artist_split": 1, "label_split": 1}
+    )
+    kalmori_artist_split = label_entry.get("artist_split", 100) if label_entry else 100
+    kalmori_your_take = round(kalmori_total_revenue * kalmori_artist_split / 100, 2)
+
+    # Combined totals
+    combined_streams = total_streams + kalmori_total_streams
+    combined_gross = round(total_gross + kalmori_total_revenue, 2)
+    combined_net = round(total_net + kalmori_your_take, 2)
+
     return {
         "summary": {
             "total_streams": total_streams,
@@ -1108,6 +1181,20 @@ async def get_revenue_analytics(request: Request):
         "platforms": platforms,
         "monthly_trend": monthly,
         "collaborator_splits": splits,
+        "kalmori": {
+            "total_streams": kalmori_total_streams,
+            "total_revenue": round(kalmori_total_revenue, 2),
+            "your_take": kalmori_your_take,
+            "artist_split_pct": kalmori_artist_split,
+            "platforms": kalmori_platforms,
+            "monthly_trend": kalmori_monthly,
+            "entries_count": len(kalmori_entries),
+        },
+        "combined": {
+            "total_streams": combined_streams,
+            "total_gross": combined_gross,
+            "total_net": combined_net,
+        },
     }
 
 class RevenueCalculatorInput(BaseModel):
