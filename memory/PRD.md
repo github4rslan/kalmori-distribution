@@ -13,8 +13,8 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **File Parsing**: openpyxl (XLSX), pdfplumber (PDF), csv (CSV)
 
 ## Route Files
-- `server.py` (~2,200 lines) - Auth, Artist, Release, Track, Distribution, Payments, Wallet, Analytics, Goals, Notifications, Fan Analytics, Spotify, Artist Public Profile
-- `routes/admin_routes.py` - Admin Dashboard, Users, Submissions, Analytics, Royalty Import (CSV/XLSX/PDF), Distributor Templates, Reconciliation
+- `server.py` (~2,400 lines) - Auth, Artist, Release, Track, Distribution, Payments, Wallet, Analytics, Revenue Export, Goals, Notifications, Fan Analytics, Spotify, Artist Public Profile
+- `routes/admin_routes.py` - Admin Dashboard, Users, Submissions, Analytics, Royalty Import (CSV/XLSX/PDF) with auto-notifications, Distributor Templates, Reconciliation
 - `routes/label_routes.py` - Label Dashboard, Roster, Royalty Splits, Payout Export (Kalmori-branded)
 - `routes/ai_routes.py` - AI Strategy, Smart Insights, PDF Export
 - `routes/email_routes.py` - Email templates, Digest
@@ -37,8 +37,9 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 ### Admin Dashboard
 - Overview stats, Platform Analytics, User Detail Page, Submissions review, Beat Manager
 - **Multi-Format Royalty Import** (Admin-only): Accepts CSV, Excel (.xlsx), and PDF files
-- **Distributor Template Manager**: CRUD for column mappings (CD Baby, DistroKid, RouteNote pre-seeded)
+- **Distributor Template Manager**: CRUD for column mappings
 - **Smart Royalty Reconciliation**: Duplicate detection, revenue discrepancy flagging
+- **Auto-Notification on Import**: When admin uploads royalty data, all matched users get in-app notifications + email notifications
 
 ### White-Label Branding
 - All client-facing exports/emails say "Kalmori Distribution" — never the real distributor
@@ -48,17 +49,26 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - 4-tab Release Wizard, 150 streaming platforms, Stripe subs, Beat catalog, Wallet
 
 ### Analytics & AI
-- Revenue Analytics (with Kalmori Distribution earnings integration), Release Leaderboard
+- Revenue Analytics with Kalmori Distribution integration, Release Leaderboard
 - AI Release Strategy + PDF Export, AI Smart Notifications
 - Fan Analytics, Goal Tracking & Milestones
 
 ### Client Revenue Dashboard (Completed Apr 3, 2026)
-- Unified Revenue Analytics page with 3 tabs: Overview, Kalmori Earnings, Calculator
-- Merges streaming revenue (stream_events) with Kalmori imported royalties (imported_royalties)
-- Kalmori Earnings tab: branded section with platform breakdown, monthly trends, split-adjusted take
+- 3 tabs: Overview, Kalmori Earnings, Calculator
+- Merges streaming revenue with Kalmori imported royalties
+- Kalmori Earnings tab: branded platform breakdown, monthly trends, split-adjusted take
 - Combined summary cards: Total Earnings, Streaming Revenue, Kalmori Earnings, Your Take
-- Accessible for both Artist and Producer (label_producer) roles
-- Fee Breakdown with plan cuts, collaborator splits, and Kalmori split calculations
+
+### Revenue Export (Completed Apr 3, 2026)
+- Artists/Producers can download personal Kalmori-branded earnings as CSV or PDF
+- CSV includes: header, streaming earnings by platform, Kalmori distribution earnings, combined totals
+- PDF includes: styled report with tables for streaming + Kalmori earnings and combined summary
+- Export dropdown on Revenue Analytics page
+
+### Auto-Notification System (Completed Apr 3, 2026)
+- On royalty import, matched users receive in-app notifications (type: royalty_update)
+- Email notifications sent to matched users' email on file
+- Message includes earnings amount and Kalmori Distribution branding
 
 ### Growth
 - Artist Profile Public Page, Pre-Save Campaigns, Collaborations
