@@ -13,7 +13,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **File Parsing**: openpyxl (XLSX), pdfplumber (PDF), csv (CSV)
 
 ## Route Files
-- `server.py` (2,185 lines) - Auth, Artist, Release, Track, Distribution, Payments, Wallet, Analytics, Goals, Notifications, Fan Analytics, Spotify, Artist Public Profile
+- `server.py` (~2,200 lines) - Auth, Artist, Release, Track, Distribution, Payments, Wallet, Analytics, Goals, Notifications, Fan Analytics, Spotify, Artist Public Profile
 - `routes/admin_routes.py` - Admin Dashboard, Users, Submissions, Analytics, Royalty Import (CSV/XLSX/PDF), Distributor Templates, Reconciliation
 - `routes/label_routes.py` - Label Dashboard, Roster, Royalty Splits, Payout Export (Kalmori-branded)
 - `routes/ai_routes.py` - AI Strategy, Smart Insights, PDF Export
@@ -36,7 +36,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 
 ### Admin Dashboard
 - Overview stats, Platform Analytics, User Detail Page, Submissions review, Beat Manager
-- **Multi-Format Royalty Import** (Admin-only): Accepts CSV, Excel (.xlsx), and PDF files. Auto-detects 3 formats: standard (multi-artist), retail_daily (Zojak Evolution), retail_ranking (Zojak Ranking). Fuzzy matches ALL platform users. Artist selector for single-artist reports. Auto-estimates revenue at $0.004/stream when no revenue column. Email notifications to matched artists.
+- **Multi-Format Royalty Import** (Admin-only): Accepts CSV, Excel (.xlsx), and PDF files
 - **Distributor Template Manager**: CRUD for column mappings (CD Baby, DistroKid, RouteNote pre-seeded)
 - **Smart Royalty Reconciliation**: Duplicate detection, revenue discrepancy flagging
 
@@ -48,8 +48,17 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - 4-tab Release Wizard, 150 streaming platforms, Stripe subs, Beat catalog, Wallet
 
 ### Analytics & AI
-- Revenue Analytics, Release Leaderboard, AI Release Strategy + PDF Export
-- AI Smart Notifications, Fan Analytics, Goal Tracking & Milestones
+- Revenue Analytics (with Kalmori Distribution earnings integration), Release Leaderboard
+- AI Release Strategy + PDF Export, AI Smart Notifications
+- Fan Analytics, Goal Tracking & Milestones
+
+### Client Revenue Dashboard (Completed Apr 3, 2026)
+- Unified Revenue Analytics page with 3 tabs: Overview, Kalmori Earnings, Calculator
+- Merges streaming revenue (stream_events) with Kalmori imported royalties (imported_royalties)
+- Kalmori Earnings tab: branded section with platform breakdown, monthly trends, split-adjusted take
+- Combined summary cards: Total Earnings, Streaming Revenue, Kalmori Earnings, Your Take
+- Accessible for both Artist and Producer (label_producer) roles
+- Fee Breakdown with plan cuts, collaborator splits, and Kalmori split calculations
 
 ### Growth
 - Artist Profile Public Page, Pre-Save Campaigns, Collaborations
@@ -61,3 +70,5 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - P1: Real Spotify OAuth with API credentials (user has developer account)
 - P2: Apple Music / YouTube Music API connections
 - P2: Replace simulated DSP data with real API feeds
+- P3: Automated distributor report scheduler
+- P4: Bulk reconciliation actions
