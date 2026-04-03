@@ -26,14 +26,14 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Manage artist roster: add by email, remove, view stats per artist
 - Collective analytics: total streams, revenue, releases across all managed artists
 - Platform & Country breakdowns, Top Performers ranking, Recent Releases table
-- **Royalty Splits Management**: Custom royalty split per artist (default 70/30), editable via inline editor, summary cards (Total Revenue, Artist Payouts, Label Earnings), revenue split visualization bar, split validation (must sum to 100%)
-- **Payout Reports & Export**: CSV and PDF export of detailed payout reports with split calculations per artist
-- **Royalty Import System**: Upload CSV files from external distributors (DistroKid, TuneCore, CD Baby etc.), auto-detect columns from headers, fuzzy match artist names to roster, auto-distribute revenue based on split settings, email notifications to matched artists, import history with drill-down detail, manual assignment UI for unmatched entries
+- **Royalty Splits Management**: Custom royalty split per artist (default 70/30), editable via inline editor, summary cards
+- **Payout Reports & Export**: CSV and PDF export of detailed payout reports with split calculations per artist, payout summary table
 
 ### Admin Dashboard
 - Overview: 6 stat cards, Platform Streams, Top Markets, Top Artists, Monthly trend
 - User Detail Page: Full profile editor, stats, breakdowns, releases, goals
 - Submissions review, Beat Manager
+- **Royalty Import System** (Admin-only): Upload CSV files from external distributors (CD Baby, DistroKid, RouteNote, TuneCore), auto-detect columns from headers, fuzzy match artist names to ALL platform users, auto-distribute revenue, email notifications to matched artists, import history with drill-down detail, manual assignment UI for unmatched entries with full user dropdown
 
 ### Content
 - 4-tab Release Wizard with professional track form: Title/Version, ISRC (auto-generate), Dolby Atmos ISRC, ISWC, Audio Language, Production, Publisher, Preview Start/End, Artists, Main Contributors, Contributors
@@ -48,7 +48,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Artist Profile Public Page (/artist/:slug), Pre-Save Campaigns, Collaborations
 
 ## All Pages & Routes
-`/` `/login` `/register` `/select-role` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats`
+`/` `/login` `/register` `/select-role` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import`
 
 ## Remaining Backlog
 - P1: Real Spotify OAuth with API credentials
