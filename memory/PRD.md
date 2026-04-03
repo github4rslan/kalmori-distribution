@@ -6,7 +6,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Recharts + Phosphor Icons + Framer Motion
 - **Backend**: FastAPI (modularized: server.py + core.py + /routes/)
-- **Database**: MongoDB (15+ collections including label_artists)
+- **Database**: MongoDB (15+ collections including label_artists, imported_royalties, royalty_imports)
 - **Storage**: Emergent Object Storage | **Payments**: Stripe + PayPal
 - **Auth**: JWT + Google Social Login + reCAPTCHA v2
 - **AI**: OpenAI GPT-4o via Emergent LLM Key | **Email**: Resend | **PDF**: reportlab
@@ -27,6 +27,8 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Collective analytics: total streams, revenue, releases across all managed artists
 - Platform & Country breakdowns, Top Performers ranking, Recent Releases table
 - **Royalty Splits Management**: Custom royalty split per artist (default 70/30), editable via inline editor, summary cards (Total Revenue, Artist Payouts, Label Earnings), revenue split visualization bar, split validation (must sum to 100%)
+- **Payout Reports & Export**: CSV and PDF export of detailed payout reports with split calculations per artist
+- **Royalty Import System**: Upload CSV files from external distributors (DistroKid, TuneCore, CD Baby etc.), auto-detect columns from headers, fuzzy match artist names to roster, auto-distribute revenue based on split settings, email notifications to matched artists, import history with drill-down detail, manual assignment UI for unmatched entries
 
 ### Admin Dashboard
 - Overview: 6 stat cards, Platform Streams, Top Markets, Top Artists, Monthly trend
@@ -52,3 +54,4 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - P1: Real Spotify OAuth with API credentials
 - P2: Apple Music / YouTube Music API connections
 - P2: Replace simulated DSP data with real API feeds
+- P4: Refactor server.py (3000+ lines) into modular route files
