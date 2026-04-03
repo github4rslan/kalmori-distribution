@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 admin_router = APIRouter(prefix="/api/admin")
 
+DEFAULT_PER_STREAM_RATE = 0.004  # $0.004 per stream (industry average)
+
 
 # ============= MODELS =============
 
@@ -324,17 +326,10 @@ async def admin_platform_analytics(request: Request):
     }
 
 
-# ============= ROYALTY IMPORT =============
+# ============= FILE PARSERS =============
 
-@admin_router.post("/royalties/import")
-async def admin_import_royalties(request: Request):
-    user = await require_admin(request)
-    form = await request.form()
-    file = form.get("file")
-    template_id = form.get("template_id", "")
-    if not file:
-        raise HTTPException(status_code=400, detail="No file uploaded")
-    content = await file.read()
+def parse_csv_to_rows(content: bytes):
+    """Parse CSV bytes into header + data rows"""
     try:
         text = content.decode("utf-8-sig")
     except:
@@ -343,9 +338,224 @@ async def admin_import_royalties(request: Request):
     rows = list(reader)
     if len(rows) < 2:
         raise HTTPException(status_code=400, detail="CSV must have a header row and at least one data row")
-    headers = rows[0]
-    headers_lower = [h.strip().lower() for h in headers]
+    return rows[0], rows[1:]
 
+def parse_xlsx_to_rows(content: bytes):
+    """Parse Excel bytes into header + data rows"""
+    import openpyxl
+    wb = openpyxl.load_workbook(io.BytesIO(content), data_only=True)
+    ws = wb.active
+    all_rows = []
+    for row in ws.iter_rows(values_only=True):
+        all_rows.append([str(cell) if cell is not None else "" for cell in row])
+    if len(all_rows) < 2:
+        raise HTTPException(status_code=400, detail="Excel file must have a header row and at least one data row")
+    return all_rows[0], all_rows[1:]
+
+def parse_pdf_to_rows(content: bytes):
+    """Parse PDF bytes — extract tables from all pages"""
+    import pdfplumber
+    pdf = pdfplumber.open(io.BytesIO(content))
+    all_tables = []
+    for page in pdf.pages:
+        tables = page.extract_tables()
+        for table in tables:
+            if table and len(table) >= 2:
+                all_tables.extend(table)
+    pdf.close()
+    if not all_tables or len(all_tables) < 2:
+        raise HTTPException(status_code=400, detail="Could not extract table data from PDF. Make sure the PDF contains tabular data.")
+    headers = [str(cell).strip() if cell else "" for cell in all_tables[0]]
+    data = []
+    for row in all_tables[1:]:
+        data.append([str(cell).strip() if cell else "" for cell in row])
+    return headers, data
+
+def detect_file_format(rows_header: list, data_rows: list):
+    """Detect if this is a standard multi-artist report or a single-artist retail/platform report"""
+    headers_lower = [h.strip().lower() for h in rows_header]
+    # Check for standard format (has artist column)
+    artist_aliases = ["artist", "artist name", "artist_name", "performer", "primary artist"]
+    has_artist = any(a in h for h in headers_lower for a in artist_aliases)
+
+    # Check for retail/platform daily format (Zojak Evolution style): Retail, date1, date2, ...
+    is_retail_daily = ("retail" in headers_lower or "platform" in headers_lower) and len(rows_header) > 3
+
+    # Check for retail ranking format: retail, proportion, streams
+    is_retail_ranking = ("retail" in headers_lower or "platform" in headers_lower) and any(
+        w in headers_lower for w in ["streams", "proportion", "plays", "units"]
+    )
+
+    if has_artist:
+        return "standard"
+    elif is_retail_daily:
+        return "retail_daily"
+    elif is_retail_ranking:
+        return "retail_ranking"
+    else:
+        return "unknown"
+
+def normalize_retail_daily(headers: list, data_rows: list, artist_id: str, artist_name: str):
+    """Convert Zojak Evolution daily format into standard import entries"""
+    entries = []
+    date_cols = headers[1:]  # Skip "Retail" column
+    for row in data_rows:
+        if not row or not row[0]:
+            continue
+        platform = row[0].strip()
+        total_streams = 0
+        for i, date_col in enumerate(date_cols, 1):
+            if i < len(row):
+                try:
+                    total_streams += int(float(str(row[i]).strip().replace(",", "") or "0"))
+                except:
+                    pass
+        period = f"{date_cols[0].strip()} - {date_cols[-1].strip()}" if date_cols else ""
+        entries.append({
+            "artist_name_raw": artist_name,
+            "matched_artist_id": artist_id,
+            "platform": platform,
+            "country": "",
+            "track": "",
+            "streams": total_streams,
+            "revenue": round(total_streams * DEFAULT_PER_STREAM_RATE, 4),
+            "period": period,
+            "status": "matched" if artist_id else "unmatched",
+        })
+    return entries
+
+def normalize_retail_ranking(headers: list, data_rows: list, artist_id: str, artist_name: str):
+    """Convert Zojak Ranking format into standard import entries"""
+    headers_lower = [h.strip().lower() for h in headers]
+    stream_col = None
+    for i, h in enumerate(headers_lower):
+        if h in ["streams", "plays", "units", "quantity"]:
+            stream_col = i
+            break
+    entries = []
+    for row in data_rows:
+        if not row or not row[0]:
+            continue
+        platform = row[0].strip()
+        streams = 0
+        if stream_col and stream_col < len(row):
+            try:
+                streams = int(float(str(row[stream_col]).strip().replace(",", "") or "0"))
+            except:
+                pass
+        entries.append({
+            "artist_name_raw": artist_name,
+            "matched_artist_id": artist_id,
+            "platform": platform,
+            "country": "",
+            "track": "",
+            "streams": streams,
+            "revenue": round(streams * DEFAULT_PER_STREAM_RATE, 4),
+            "period": "",
+            "status": "matched" if artist_id else "unmatched",
+        })
+    return entries
+
+
+# ============= ROYALTY IMPORT =============
+
+@admin_router.post("/royalties/import")
+async def admin_import_royalties(request: Request):
+    """Admin: Import royalty file (CSV, XLSX, PDF) — matches against ALL platform users"""
+    user = await require_admin(request)
+    form = await request.form()
+    file = form.get("file")
+    template_id = form.get("template_id", "")
+    assign_artist_id = form.get("artist_id", "")  # For single-artist reports
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    filename = file.filename.lower()
+    content = await file.read()
+
+    # Parse based on file extension
+    if filename.endswith(".csv"):
+        headers, data_rows = parse_csv_to_rows(content)
+    elif filename.endswith(".xlsx") or filename.endswith(".xls"):
+        headers, data_rows = parse_xlsx_to_rows(content)
+    elif filename.endswith(".pdf"):
+        headers, data_rows = parse_pdf_to_rows(content)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file format. Please upload CSV, XLSX, or PDF.")
+
+    # Detect format type
+    file_format = detect_file_format(headers, data_rows)
+
+    # Resolve artist for single-artist reports
+    assigned_artist_name = ""
+    if assign_artist_id:
+        au = await db.users.find_one({"id": assign_artist_id}, {"_id": 0, "artist_name": 1, "name": 1})
+        assigned_artist_name = au.get("artist_name", au.get("name", "")) if au else ""
+
+    import_id = f"imp_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Handle special formats (Zojak/PaymentHub style)
+    if file_format in ("retail_daily", "retail_ranking"):
+        if not assign_artist_id:
+            raise HTTPException(status_code=400, detail="This file is a single-artist platform report. Please select which artist it belongs to.")
+        if file_format == "retail_daily":
+            raw_entries = normalize_retail_daily(headers, data_rows, assign_artist_id, assigned_artist_name)
+        else:
+            raw_entries = normalize_retail_ranking(headers, data_rows, assign_artist_id, assigned_artist_name)
+
+        entries = []
+        total_revenue = 0
+        matched = 0
+        for e in raw_entries:
+            entry = {**e, "id": f"ir_{uuid.uuid4().hex[:12]}", "import_id": import_id, "admin_id": user["id"], "created_at": now}
+            entries.append(entry)
+            total_revenue += e["revenue"]
+            if e["status"] == "matched":
+                matched += 1
+
+        if entries:
+            await db.imported_royalties.insert_many(entries)
+
+        await db.royalty_imports.insert_one({
+            "id": import_id, "admin_id": user["id"],
+            "filename": file.filename, "total_rows": len(entries),
+            "matched": matched, "unmatched": len(entries) - matched,
+            "total_revenue": round(total_revenue, 2),
+            "column_mapping": {"format": file_format, "assigned_artist": assigned_artist_name},
+            "template_used": f"Auto ({file_format})",
+            "created_at": now,
+        })
+
+        # Send email notification
+        if assign_artist_id and total_revenue > 0:
+            try:
+                au_email = await db.users.find_one({"id": assign_artist_id}, {"_id": 0, "email": 1})
+                if au_email and au_email.get("email"):
+                    from routes.email_routes import send_email, email_base
+                    body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">Hey {assigned_artist_name}!</p>
+                    <p style="color:#999;font-size:14px;line-height:1.7;margin:0 0 20px;">New streaming data has been uploaded. Here's your update:</p>
+                    <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
+                    <p style="color:#1DB954;font-size:36px;font-weight:bold;margin:0;">${total_revenue:.2f}</p>
+                    <p style="color:#999;font-size:13px;margin:4px 0 0;">Estimated earnings added</p>
+                    </div>"""
+                    html = email_base("linear-gradient(135deg,#1DB954 0%,#4CAF50 100%)", "New Streaming Data!", body, "Distributed via Kalmori")
+                    import asyncio
+                    asyncio.ensure_future(send_email(au_email["email"], f"New streaming data: ${total_revenue:.2f}", html))
+            except Exception as e:
+                logger.warning(f"Notification email failed: {e}")
+
+        return {
+            "message": f"Import complete. {matched} matched, {len(entries) - matched} unmatched.",
+            "import_id": import_id, "total_rows": len(entries),
+            "matched": matched, "unmatched": len(entries) - matched,
+            "total_revenue": round(total_revenue, 2),
+            "column_mapping": {"format": file_format, "assigned_artist": assigned_artist_name},
+            "file_format": file_format,
+        }
+
+    # Standard multi-artist format
+    headers_lower = [h.strip().lower() for h in headers]
     template_name = ""
     if template_id:
         tpl = await db.distributor_templates.find_one({"id": template_id}, {"_id": 0})
@@ -364,7 +574,57 @@ async def admin_import_royalties(request: Request):
         col_map = detect_columns(headers)
 
     if "artist" not in col_map:
-        raise HTTPException(status_code=400, detail=f"Could not detect 'Artist' column. Headers found: {headers}")
+        # If no artist column but an artist is selected, treat all rows as that artist
+        if assign_artist_id:
+            col_map_no_artist = col_map
+            entries = []
+            total_revenue = 0
+            for row in data_rows:
+                if not row:
+                    continue
+                track = row[col_map_no_artist["track"]].strip() if "track" in col_map_no_artist and col_map_no_artist["track"] < len(row) else ""
+                platform = row[col_map_no_artist["platform"]].strip() if "platform" in col_map_no_artist and col_map_no_artist["platform"] < len(row) else ""
+                country = row[col_map_no_artist["country"]].strip() if "country" in col_map_no_artist and col_map_no_artist["country"] < len(row) else ""
+                period = row[col_map_no_artist["period"]].strip() if "period" in col_map_no_artist and col_map_no_artist["period"] < len(row) else ""
+                try:
+                    streams_val = int(float(str(row[col_map_no_artist["streams"]]).strip().replace(",", ""))) if "streams" in col_map_no_artist and col_map_no_artist["streams"] < len(row) else 0
+                except:
+                    streams_val = 0
+                try:
+                    rev_val = float(str(row[col_map_no_artist["revenue"]]).strip().replace(",", "").replace("$", "")) if "revenue" in col_map_no_artist and col_map_no_artist["revenue"] < len(row) else 0
+                except:
+                    rev_val = 0
+                if rev_val == 0 and streams_val > 0:
+                    rev_val = round(streams_val * DEFAULT_PER_STREAM_RATE, 4)
+                entry = {
+                    "id": f"ir_{uuid.uuid4().hex[:12]}", "import_id": import_id,
+                    "admin_id": user["id"], "artist_name_raw": assigned_artist_name,
+                    "matched_artist_id": assign_artist_id, "track": track,
+                    "platform": platform, "country": country, "streams": streams_val,
+                    "revenue": round(rev_val, 4), "period": period,
+                    "status": "matched", "created_at": now,
+                }
+                entries.append(entry)
+                total_revenue += rev_val
+            if entries:
+                await db.imported_royalties.insert_many(entries)
+            await db.royalty_imports.insert_one({
+                "id": import_id, "admin_id": user["id"],
+                "filename": file.filename, "total_rows": len(entries),
+                "matched": len(entries), "unmatched": 0,
+                "total_revenue": round(total_revenue, 2),
+                "column_mapping": {k: headers[v] for k, v in col_map_no_artist.items()},
+                "template_used": template_name or "Auto-detected",
+                "created_at": now,
+            })
+            return {
+                "message": f"Import complete. {len(entries)} rows assigned to {assigned_artist_name}.",
+                "import_id": import_id, "total_rows": len(entries),
+                "matched": len(entries), "unmatched": 0,
+                "total_revenue": round(total_revenue, 2),
+                "column_mapping": {k: headers[v] for k, v in col_map_no_artist.items()},
+            }
+        raise HTTPException(status_code=400, detail=f"Could not detect 'Artist' column. Headers found: {headers}. For single-artist reports, please select an artist from the dropdown.")
 
     all_users = {}
     async for u in db.users.find({}, {"_id": 0, "id": 1, "artist_name": 1, "name": 1, "email": 1}):
@@ -374,15 +634,13 @@ async def admin_import_royalties(request: Request):
     async for r in db.label_artists.find({"status": "active"}, {"_id": 0}):
         all_splits[r["artist_id"]] = {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)}
 
-    import_id = f"imp_{uuid.uuid4().hex[:12]}"
-    now = datetime.now(timezone.utc).isoformat()
     matched = 0
     unmatched = 0
     total_revenue = 0
     entries = []
     notifications = {}
 
-    for row in rows[1:]:
+    for row in data_rows:
         if not row or len(row) <= max(col_map.values(), default=0):
             continue
         artist_name_raw = row[col_map["artist"]].strip() if "artist" in col_map else ""
@@ -391,13 +649,15 @@ async def admin_import_royalties(request: Request):
         country = row[col_map["country"]].strip() if "country" in col_map and col_map["country"] < len(row) else ""
         period = row[col_map["period"]].strip() if "period" in col_map and col_map["period"] < len(row) else ""
         try:
-            streams_val = int(float(row[col_map["streams"]].strip().replace(",", ""))) if "streams" in col_map and col_map["streams"] < len(row) else 0
+            streams_val = int(float(str(row[col_map["streams"]]).strip().replace(",", ""))) if "streams" in col_map and col_map["streams"] < len(row) else 0
         except:
             streams_val = 0
         try:
-            rev_val = float(row[col_map["revenue"]].strip().replace(",", "").replace("$", "")) if "revenue" in col_map and col_map["revenue"] < len(row) else 0
+            rev_val = float(str(row[col_map["revenue"]]).strip().replace(",", "").replace("$", "")) if "revenue" in col_map and col_map["revenue"] < len(row) else 0
         except:
             rev_val = 0
+        if rev_val == 0 and streams_val > 0:
+            rev_val = round(streams_val * DEFAULT_PER_STREAM_RATE, 4)
 
         matched_id = fuzzy_match_artist(artist_name_raw, all_users, 0.7)
         entry = {

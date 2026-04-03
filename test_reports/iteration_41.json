@@ -1,0 +1,129 @@
+{
+  "summary": "Iteration 41 - Multi-Format File Support for Admin Royalty Import. All 18 backend tests passed. All frontend UI elements verified and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Admin Royalty Import - Artist Selector",
+        "issues": ["Console warning about <span> inside <option> element - cosmetic only, does not affect functionality"]
+      }
+    ]
+  },
+  "passed_tests": [
+    "Backend: CSV import still works (standard multi-artist format)",
+    "Backend: XLSX import works (standard multi-artist format)",
+    "Backend: Retail ranking format (no artist column) requires artist_id - returns 400",
+    "Backend: Retail ranking format with artist_id returns file_format='retail_ranking'",
+    "Backend: Retail daily format (Zojak Evolution style) returns file_format='retail_daily'",
+    "Backend: Auto-revenue estimation at $0.004/stream when no revenue column",
+    "Backend: artist_id form field assigns all rows to selected artist",
+    "Backend: Unsupported file format (.txt) correctly rejected with 400",
+    "Backend: Template selector still works with DistroKid template",
+    "Backend: Import history endpoint loads correctly",
+    "Backend: Admin dashboard endpoint works",
+    "Backend: Admin users endpoint works",
+    "Backend: Admin templates endpoint works",
+    "Backend: Admin reconciliation endpoint works",
+    "Backend: CSV export has Kalmori Distribution branding (first line)",
+    "Backend: Label royalties endpoint works (export-only)",
+    "Backend: Real ranking.xlsx file imported successfully",
+    "Backend: Real evolutions.xlsx file imported successfully",
+    "Frontend: Admin Royalty Import page has 3 tabs (Import & Upload, Distributor Templates, Reconciliation)",
+    "Frontend: Artist selector dropdown shows 55 platform users",
+    "Frontend: File input accepts .csv, .xlsx, .xls, .pdf extensions",
+    "Frontend: Format tags present (CSV green, XLSX purple, PDF red)",
+    "Frontend: Import history shows XLSX imports with correct format detection (retail_daily, retail_ranking)",
+    "Frontend: Distributor Templates tab shows 3 templates (CD Baby, DistroKid, RouteNote)",
+    "Frontend: Reconciliation tab shows summary cards and duplicate/discrepancy tables",
+    "Frontend: Label Dashboard Payouts tab has export-only functionality (CSV/PDF buttons)",
+    "Frontend: Label Dashboard does NOT have import functionality (confirmed)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration41_multiformat_import.py",
+    "/app/test_reports/pytest/pytest_results_iteration41.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Multi-format file support correctly implemented: CSV, XLSX, PDF all accepted",
+    "File format auto-detection working: 'standard', 'retail_daily', 'retail_ranking'",
+    "Artist selector dropdown correctly shows all platform users for single-artist report assignment",
+    "Auto-revenue estimation at $0.004/stream working when no revenue column exists",
+    "Single-artist reports correctly require artist_id selection (400 error without it)",
+    "Template selector still works alongside artist selector",
+    "Kalmori Distribution branding present in CSV export (white-label requirement met)",
+    "Import history correctly shows file format detection results"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration41_multiformat_import.py"
+  ],
+  "success_rate": {
+    "backend": "100% (18/18 passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "admin@tunedrop.com",
+      "password": "Admin123!",
+      "role": "admin"
+    }
+  },
+  "seed_data_creation": "Multiple test imports created during testing (CSV, XLSX files with various formats)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 41 tested multi-format file support for admin royalty import. The system now accepts: (1) CSV files, (2) Excel (.xlsx/.xls) files, (3) PDF files with tabular data. For single-artist reports (like Zojak platform reports without artist column), admin must select which artist the file belongs to via dropdown. Revenue is auto-estimated at $0.004/stream when no revenue column exists. The system auto-detects 3 formats: 'standard' (multi-artist with artist column), 'retail_daily' (daily streams per platform like Zojak Evolution), 'retail_ranking' (platform ranking with stream totals). Real Zojak files at /tmp/ranking.xlsx and /tmp/evolutions.xlsx were successfully imported. All existing admin endpoints still work. Label Dashboard Payouts tab has export-only functionality.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": [],
+    "note": "No mocked APIs. All endpoints are fully functional with real MongoDB data."
+  },
+  "features_verified": {
+    "multi_format_import": {
+      "POST /api/admin/royalties/import": {
+        "accepts": ["CSV (.csv)", "Excel (.xlsx, .xls)", "PDF (.pdf)"],
+        "form_fields": {
+          "file": "Required - the file to import",
+          "template_id": "Optional - distributor template for column mapping",
+          "artist_id": "Optional - assigns all rows to selected artist (required for single-artist reports)"
+        },
+        "returns": {
+          "import_id": "string",
+          "total_rows": "number",
+          "matched": "number",
+          "unmatched": "number",
+          "total_revenue": "number",
+          "column_mapping": "object",
+          "file_format": "string (retail_daily, retail_ranking, or standard) - only for special formats"
+        },
+        "file_format_detection": {
+          "standard": "Has artist column - multi-artist report",
+          "retail_daily": "Has Retail/Platform column + date columns (Zojak Evolution style)",
+          "retail_ranking": "Has Retail/Platform column + Streams/Proportion columns (Zojak Ranking style)"
+        },
+        "auto_revenue_estimation": "$0.004 per stream when no revenue column exists",
+        "status": "Working"
+      }
+    },
+    "artist_selector": {
+      "location": "Admin Royalty Import page - Import & Upload tab",
+      "purpose": "Assign all rows to selected artist for single-artist reports",
+      "data_source": "GET /api/admin/royalties/users (returns all platform users)",
+      "options_count": "55 users",
+      "status": "Working"
+    },
+    "file_format_tags": {
+      "location": "Admin Royalty Import page - dropzone area",
+      "tags": ["CSV (green)", "XLSX (purple)", "PDF (red)"],
+      "status": "Working"
+    },
+    "kalmori_branding": {
+      "endpoint": "GET /api/label/royalties/export/csv",
+      "first_line": "Kalmori Distribution — Payout Report",
+      "status": "Working"
+    }
+  }
+}

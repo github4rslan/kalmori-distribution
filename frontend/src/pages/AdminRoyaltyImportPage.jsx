@@ -67,16 +67,25 @@ const AdminRoyaltyImportPage = () => {
     finally { setLoadingRecon(false); }
   };
 
+  const [selectedArtistId, setSelectedArtistId] = useState('');
+
   useEffect(() => { if (activeSection === 'reconciliation') fetchReconciliation(); }, [activeSection]);
+
+  const SUPPORTED_EXTENSIONS = ['.csv', '.xlsx', '.xls', '.pdf'];
 
   const handleFileUpload = async (file) => {
     if (!file) return;
-    if (!file.name.endsWith('.csv')) { toast.error('Please upload a CSV file'); return; }
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+    if (!SUPPORTED_EXTENSIONS.includes(ext)) {
+      toast.error('Unsupported format. Please upload CSV, XLSX, or PDF.');
+      return;
+    }
     setImporting(true);
     setImportResult(null);
     const formData = new FormData();
     formData.append('file', file);
     if (selectedTemplateId) formData.append('template_id', selectedTemplateId);
+    if (selectedArtistId) formData.append('artist_id', selectedArtistId);
     try {
       const res = await axios.post(`${API}/admin/royalties/import`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -183,18 +192,35 @@ const AdminRoyaltyImportPage = () => {
               </h3>
               <p className="text-xs text-gray-500 mb-4">Select a template or let the system auto-detect columns.</p>
 
-              {/* Template Selector */}
-              <div className="flex items-center gap-3 mb-5">
-                <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#E53935] min-w-[220px]"
-                  data-testid="template-selector">
-                  <option value="">Auto-detect columns</option>
-                  {templates.map(t => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-                {selectedTemplateId && (
-                  <span className="text-xs text-[#E53935] bg-[#E53935]/10 px-2 py-1 rounded-md">Using template</span>
+              {/* Template + Artist Selectors */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-5">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-[10px] text-gray-500 mb-1">Column Template</label>
+                  <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#E53935]"
+                    data-testid="template-selector">
+                    <option value="">Auto-detect columns</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-[10px] text-gray-500 mb-1">Assign to Artist <span className="text-gray-600">(for single-artist reports)</span></label>
+                  <select value={selectedArtistId} onChange={(e) => setSelectedArtistId(e.target.value)}
+                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#E53935]"
+                    data-testid="artist-selector">
+                    <option value="">Auto-detect from file</option>
+                    {allUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.artist_name || u.name} ({u.email})</option>
+                    ))}
+                  </select>
+                </div>
+                {(selectedTemplateId || selectedArtistId) && (
+                  <div className="flex gap-2 mt-4 sm:mt-0">
+                    {selectedTemplateId && <span className="text-xs text-[#E53935] bg-[#E53935]/10 px-2 py-1 rounded-md">Template active</span>}
+                    {selectedArtistId && <span className="text-xs text-[#1DB954] bg-[#1DB954]/10 px-2 py-1 rounded-md">Artist selected</span>}
+                  </div>
                 )}
               </div>
 
@@ -209,29 +235,34 @@ const AdminRoyaltyImportPage = () => {
                 } ${importing ? 'pointer-events-none opacity-50' : ''}`}
                 data-testid="admin-csv-dropzone"
               >
-                <input type="file" ref={fileInputRef} accept=".csv" className="hidden"
+                <input type="file" ref={fileInputRef} accept=".csv,.xlsx,.xls,.pdf" className="hidden"
                   onChange={(e) => { handleFileUpload(e.target.files[0]); e.target.value = ''; }}
                   data-testid="admin-csv-file-input" />
                 {importing ? (
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 border-2 border-[#E53935] border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-gray-400">Parsing CSV and matching users...</p>
+                    <p className="text-sm text-gray-400">Parsing file and matching users...</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-2xl bg-[#E53935]/10 flex items-center justify-center">
                       <Upload className="w-8 h-8 text-[#E53935]" />
                     </div>
-                    <p className="text-sm font-medium text-white">Drop your CSV file here or <span className="text-[#E53935] font-bold">browse</span></p>
-                    <p className="text-xs text-gray-500">CD Baby, DistroKid, RouteNote, TuneCore, and more</p>
+                    <p className="text-sm font-medium text-white">Drop your file here or <span className="text-[#E53935] font-bold">browse</span></p>
+                    <p className="text-xs text-gray-500">Supports CSV, Excel (.xlsx), and PDF files</p>
                   </div>
                 )}
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                {['Artist', 'Track', 'Platform', 'Country', 'Streams', 'Revenue', 'Period'].map(col => (
-                  <span key={col} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-gray-400 border border-white/5">{col}</span>
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#1DB954]/10 text-[#1DB954] border border-[#1DB954]/20 font-bold">CSV</span>
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#7C4DFF]/10 text-[#7C4DFF] border border-[#7C4DFF]/20 font-bold">XLSX</span>
+                <span className="text-[10px] px-2.5 py-1 rounded-md bg-[#E53935]/10 text-[#E53935] border border-[#E53935]/20 font-bold">PDF</span>
+                <span className="text-[10px] text-gray-600 self-center ml-2">|</span>
+                {['Artist', 'Track', 'Platform', 'Streams', 'Revenue'].map(col => (
+                  <span key={col} className="text-[10px] px-2 py-1 rounded-md bg-white/5 text-gray-400 border border-white/5">{col}</span>
                 ))}
+                <span className="text-[10px] text-gray-500 self-center ml-1">columns auto-detected</span>
               </div>
             </div>
 
@@ -257,6 +288,11 @@ const AdminRoyaltyImportPage = () => {
                 {importResult.column_mapping && (
                   <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5">
                     <span className="text-[10px] text-gray-500">Detected:</span>
+                    {importResult.file_format && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#7C4DFF]/10 text-[#7C4DFF] font-bold">
+                        Format: {importResult.file_format === 'retail_daily' ? 'Daily Platform Report' : importResult.file_format === 'retail_ranking' ? 'Platform Ranking' : 'Standard'}
+                      </span>
+                    )}
                     {Object.entries(importResult.column_mapping).map(([field, col]) => (
                       <span key={field} className="text-[10px] px-2 py-0.5 rounded-full bg-[#E53935]/10 text-[#E53935]">{field}: {col}</span>
                     ))}
