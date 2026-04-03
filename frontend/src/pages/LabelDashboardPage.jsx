@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API, BACKEND_URL, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
 import { Button } from '../components/ui/button';
-import { Users, ChartLineUp, CurrencyDollar, Disc, MusicNotes, Globe, Plus, X, Trash, ArrowSquareOut, Lightning, Envelope, Percent, FloppyDisk, DownloadSimple, Upload, FileText, FileCsv, CheckCircle, WarningCircle, Clock, ArrowRight, CaretDown, Eye, FileArrowUp } from '@phosphor-icons/react';
+import { Users, ChartLineUp, CurrencyDollar, Disc, MusicNotes, Globe, Plus, X, Trash, Lightning, Envelope, Percent, FloppyDisk, DownloadSimple, FileText, FileCsv } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 const fmt = (n) => {
@@ -35,17 +35,7 @@ const LabelDashboardPage = () => {
   const [splitValue, setSplitValue] = useState(70);
   const [savingSplit, setSavingSplit] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [imports, setImports] = useState([]);
-  const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState(null);
-  const [selectedImport, setSelectedImport] = useState(null);
-  const [importDetail, setImportDetail] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
-  const [assigningEntry, setAssigningEntry] = useState(null);
-  const [assignArtistId, setAssignArtistId] = useState('');
-  const [dragOver, setDragOver] = useState(false);
   const [exporting, setExporting] = useState(null);
-  const fileInputRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -61,46 +51,6 @@ const LabelDashboardPage = () => {
       setRoyalties(royaltiesRes.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
-  };
-
-  const fetchImports = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/label/royalties/imports`, { withCredentials: true });
-      setImports(res.data.imports || []);
-    } catch (err) { console.error(err); }
-  }, []);
-
-  useEffect(() => { if (activeTab === 'payouts') fetchImports(); }, [activeTab, fetchImports]);
-
-  const handleFileUpload = async (file) => {
-    if (!file) return;
-    if (!file.name.endsWith('.csv')) {
-      toast.error('Please upload a CSV file');
-      return;
-    }
-    setImporting(true);
-    setImportResult(null);
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await axios.post(`${API}/label/royalties/import`, formData, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setImportResult(res.data);
-      toast.success(`Import complete: ${res.data.matched} matched, ${res.data.unmatched} unmatched`);
-      fetchImports();
-      fetchAll();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Import failed');
-    } finally { setImporting(false); }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    handleFileUpload(file);
   };
 
   const handleExport = async (format) => {
@@ -122,32 +72,6 @@ const LabelDashboardPage = () => {
     } catch (err) {
       toast.error(`Failed to export ${format.toUpperCase()}`);
     } finally { setExporting(null); }
-  };
-
-  const handleViewImport = async (importId) => {
-    setSelectedImport(importId);
-    setLoadingDetail(true);
-    try {
-      const res = await axios.get(`${API}/label/royalties/imports/${importId}`, { withCredentials: true });
-      setImportDetail(res.data);
-    } catch (err) {
-      toast.error('Failed to load import details');
-    } finally { setLoadingDetail(false); }
-  };
-
-  const handleAssign = async (entryId) => {
-    if (!assignArtistId) { toast.error('Select an artist'); return; }
-    try {
-      await axios.put(`${API}/label/royalties/entries/${entryId}/assign`, { artist_id: assignArtistId }, { withCredentials: true });
-      toast.success('Entry assigned!');
-      setAssigningEntry(null);
-      setAssignArtistId('');
-      if (selectedImport) handleViewImport(selectedImport);
-      fetchImports();
-      fetchAll();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Assignment failed');
-    }
   };
 
   const handleInvite = async () => {
@@ -212,7 +136,7 @@ const LabelDashboardPage = () => {
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'royalties', label: 'Royalty Splits' },
-            { id: 'payouts', label: 'Payouts & Import' },
+            { id: 'payouts', label: 'Payouts' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-[#FFD700] text-black' : 'text-gray-400 hover:text-white'}`}
@@ -566,9 +490,9 @@ const LabelDashboardPage = () => {
           </div>
         )}
 
-        {/* ===== PAYOUTS & IMPORT TAB ===== */}
+        {/* ===== PAYOUTS TAB ===== */}
         {activeTab === 'payouts' && (
-          <div className="space-y-6" data-testid="payouts-import-section">
+          <div className="space-y-6" data-testid="payouts-section">
             {/* Export Section */}
             <div className="bg-[#141414] border border-white/10 rounded-xl p-6" data-testid="export-section">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
@@ -593,276 +517,52 @@ const LabelDashboardPage = () => {
               </div>
             </div>
 
-            {/* Import Section */}
-            <div className="bg-[#141414] border border-white/10 rounded-xl p-6" data-testid="import-section">
-              <h3 className="text-base font-bold text-white flex items-center gap-2 mb-1">
-                <FileArrowUp className="w-5 h-5 text-[#E040FB]" /> Import External Royalties
-              </h3>
-              <p className="text-xs text-gray-500 mb-5">Upload CSV files from DistroKid, TuneCore, CD Baby, or any distributor. We'll auto-match artists to your roster.</p>
-
-              {/* Drag & Drop Zone */}
-              <div
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                  dragOver ? 'border-[#E040FB] bg-[#E040FB]/5' : 'border-white/10 hover:border-[#7C4DFF]/40 hover:bg-white/[0.02]'
-                } ${importing ? 'pointer-events-none opacity-50' : ''}`}
-                data-testid="csv-dropzone"
-              >
-                <input type="file" ref={fileInputRef} accept=".csv" className="hidden"
-                  onChange={(e) => { handleFileUpload(e.target.files[0]); e.target.value = ''; }}
-                  data-testid="csv-file-input" />
-                {importing ? (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-10 h-10 border-2 border-[#E040FB] border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-gray-400">Parsing and matching artists...</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-[#E040FB]/10 flex items-center justify-center">
-                      <Upload className="w-7 h-7 text-[#E040FB]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-white">Drop your CSV file here or <span className="text-[#E040FB]">browse</span></p>
-                      <p className="text-xs text-gray-500 mt-1">Supports CSV files from any major distributor</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Expected Columns Info */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {['Artist', 'Track', 'Platform', 'Country', 'Streams', 'Revenue', 'Period'].map(col => (
-                  <span key={col} className="text-[10px] px-2 py-1 rounded-md bg-white/5 text-gray-400 border border-white/5">{col}</span>
-                ))}
-                <span className="text-[10px] text-gray-500 self-center ml-1">auto-detected from headers</span>
-              </div>
-            </div>
-
-            {/* Import Result (shows right after upload) */}
-            {importResult && (
-              <div className="bg-[#141414] border border-[#E040FB]/20 rounded-xl p-6 animate-in fade-in" data-testid="import-result">
-                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-[#1DB954]" /> Latest Import Result
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center">
-                    <p className="text-xl font-bold font-mono text-white">{importResult.total_rows}</p>
-                    <p className="text-[10px] text-gray-500">Total Rows</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-bold font-mono text-[#1DB954]">{importResult.matched}</p>
-                    <p className="text-[10px] text-gray-500">Matched</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-bold font-mono text-[#FF6B6B]">{importResult.unmatched}</p>
-                    <p className="text-[10px] text-gray-500">Unmatched</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xl font-bold font-mono text-[#FFD700]">${importResult.total_revenue?.toFixed(2)}</p>
-                    <p className="text-[10px] text-gray-500">Total Revenue</p>
-                  </div>
+            {/* Per-Artist Payout Summary */}
+            {royalties && royalties.artists.length > 0 && (
+              <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden" data-testid="payout-summary">
+                <div className="p-5 border-b border-white/10">
+                  <h3 className="text-base font-bold text-white">Payout Summary</h3>
+                  <p className="text-xs text-gray-500 mt-1">Breakdown of earnings by artist based on current splits.</p>
                 </div>
-                {importResult.column_mapping && (
-                  <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5">
-                    <span className="text-[10px] text-gray-500">Detected columns:</span>
-                    {Object.entries(importResult.column_mapping).map(([field, col]) => (
-                      <span key={field} className="text-[10px] px-2 py-0.5 rounded-full bg-[#7C4DFF]/10 text-[#7C4DFF]">{field}: {col}</span>
-                    ))}
-                  </div>
-                )}
-                {importResult.unmatched > 0 && importResult.import_id && (
-                  <Button onClick={() => handleViewImport(importResult.import_id)}
-                    className="mt-4 bg-[#FF6B6B]/10 hover:bg-[#FF6B6B]/20 text-[#FF6B6B] font-bold text-xs gap-2" data-testid="view-unmatched-btn">
-                    <WarningCircle className="w-4 h-4" /> Review Unmatched Entries
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {/* Import History */}
-            <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden" data-testid="import-history">
-              <div className="p-5 border-b border-white/10">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#FFD700]" /> Import History
-                </h3>
-              </div>
-              {imports.length === 0 ? (
-                <div className="p-8 text-center">
-                  <FileArrowUp className="w-10 h-10 text-white/10 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">No imports yet. Upload a CSV to get started.</p>
-                </div>
-              ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/5">
-                        <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">File</th>
-                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Rows</th>
-                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Matched</th>
-                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Unmatched</th>
-                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Revenue</th>
-                        <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Date</th>
-                        <th className="text-center py-3 px-4 text-xs text-gray-500 font-medium">Actions</th>
+                        <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Artist</th>
+                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Gross Revenue</th>
+                        <th className="text-center py-3 px-4 text-xs text-gray-500 font-medium">Split</th>
+                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Artist Payout</th>
+                        <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Label Earnings</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {imports.map((imp) => (
-                        <tr key={imp.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`import-row-${imp.id}`}>
+                      {royalties.artists.map((a) => (
+                        <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`payout-row-${a.id}`}>
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <FileCsv className="w-4 h-4 text-[#1DB954] flex-shrink-0" />
-                              <span className="text-sm text-white truncate max-w-[180px]">{imp.filename}</span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                                {a.artist_name?.charAt(0).toUpperCase() || 'A'}
+                              </div>
+                              <span className="text-sm font-medium text-white">{a.artist_name || a.name}</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-right text-sm font-mono text-gray-300">{imp.total_rows}</td>
-                          <td className="py-3 px-4 text-right text-sm font-mono text-[#1DB954]">{imp.matched}</td>
-                          <td className="py-3 px-4 text-right">
-                            <span className={`text-sm font-mono ${imp.unmatched > 0 ? 'text-[#FF6B6B]' : 'text-gray-500'}`}>
-                              {imp.unmatched}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right text-sm font-mono text-[#FFD700]">${imp.total_revenue?.toFixed(2)}</td>
-                          <td className="py-3 px-4 text-xs text-gray-500">
-                            {imp.created_at ? new Date(imp.created_at).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <button onClick={() => handleViewImport(imp.id)}
-                              className="p-1.5 text-[#7C4DFF] hover:bg-[#7C4DFF]/10 rounded-lg transition-colors"
-                              data-testid={`view-import-${imp.id}`}>
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-white">${a.gross_revenue.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-center text-xs text-gray-400">{a.artist_split}/{a.label_split}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-[#1DB954]">${a.artist_earnings.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right text-sm font-mono text-[#FFD700]">${a.label_earnings.toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr className="bg-white/5">
+                        <td className="py-3 px-4 text-sm font-bold text-white">Total</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono font-bold text-white">${royalties.summary.total_revenue.toFixed(2)}</td>
+                        <td />
+                        <td className="py-3 px-4 text-right text-sm font-mono font-bold text-[#1DB954]">${royalties.summary.total_artist_payouts.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-right text-sm font-mono font-bold text-[#FFD700]">${royalties.summary.total_label_earnings.toFixed(2)}</td>
+                      </tr>
+                    </tfoot>
                   </table>
-                </div>
-              )}
-            </div>
-
-            {/* Import Detail Modal */}
-            {selectedImport && (
-              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { setSelectedImport(null); setImportDetail(null); }}
-                data-testid="import-detail-modal">
-                <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                  {/* Modal Header */}
-                  <div className="p-5 border-b border-white/10 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-bold text-white">Import Details</h3>
-                      {importDetail?.import && (
-                        <p className="text-xs text-gray-500 mt-0.5">{importDetail.import.filename} — {importDetail.import.total_rows} rows</p>
-                      )}
-                    </div>
-                    <button onClick={() => { setSelectedImport(null); setImportDetail(null); }}
-                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg" data-testid="close-import-detail">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {loadingDetail ? (
-                    <div className="flex items-center justify-center py-16">
-                      <div className="w-8 h-8 border-2 border-[#E040FB] border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : importDetail ? (
-                    <div className="overflow-auto max-h-[calc(85vh-80px)]">
-                      {/* Summary Stats */}
-                      <div className="grid grid-cols-4 gap-4 p-5 border-b border-white/5">
-                        <div className="text-center">
-                          <p className="text-lg font-bold font-mono text-white">{importDetail.import?.total_rows}</p>
-                          <p className="text-[10px] text-gray-500">Total</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold font-mono text-[#1DB954]">{importDetail.import?.matched}</p>
-                          <p className="text-[10px] text-gray-500">Matched</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold font-mono text-[#FF6B6B]">{importDetail.import?.unmatched}</p>
-                          <p className="text-[10px] text-gray-500">Unmatched</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-lg font-bold font-mono text-[#FFD700]">${importDetail.import?.total_revenue?.toFixed(2)}</p>
-                          <p className="text-[10px] text-gray-500">Revenue</p>
-                        </div>
-                      </div>
-
-                      {/* Entries Table */}
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="sticky top-0">
-                            <tr className="border-b border-white/5 bg-[#0A0A0A]">
-                              <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Status</th>
-                              <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Artist (Raw)</th>
-                              <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Matched To</th>
-                              <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Track</th>
-                              <th className="text-left py-3 px-4 text-xs text-gray-500 font-medium">Platform</th>
-                              <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Streams</th>
-                              <th className="text-right py-3 px-4 text-xs text-gray-500 font-medium">Revenue</th>
-                              <th className="text-center py-3 px-4 text-xs text-gray-500 font-medium">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {importDetail.entries?.map((entry) => (
-                              <tr key={entry.id} className={`border-b border-white/5 transition-colors ${entry.status === 'unmatched' ? 'bg-[#FF6B6B]/[0.03]' : 'hover:bg-white/5'}`}
-                                data-testid={`entry-row-${entry.id}`}>
-                                <td className="py-3 px-4">
-                                  {entry.status === 'matched' ? (
-                                    <span className="inline-flex items-center gap-1 text-xs text-[#1DB954]">
-                                      <CheckCircle className="w-3.5 h-3.5" weight="fill" /> Matched
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 text-xs text-[#FF6B6B]">
-                                      <WarningCircle className="w-3.5 h-3.5" weight="fill" /> Unmatched
-                                    </span>
-                                  )}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-300">{entry.artist_name_raw}</td>
-                                <td className="py-3 px-4 text-sm text-white">
-                                  {entry.matched_artist_name || <span className="text-gray-500 italic">—</span>}
-                                </td>
-                                <td className="py-3 px-4 text-xs text-gray-400 max-w-[120px] truncate">{entry.track || '—'}</td>
-                                <td className="py-3 px-4 text-xs text-gray-400">{entry.platform || '—'}</td>
-                                <td className="py-3 px-4 text-right text-sm font-mono text-gray-300">{entry.streams?.toLocaleString()}</td>
-                                <td className="py-3 px-4 text-right text-sm font-mono text-[#FFD700]">${entry.revenue?.toFixed(4)}</td>
-                                <td className="py-3 px-4 text-center">
-                                  {entry.status === 'unmatched' && (
-                                    assigningEntry === entry.id ? (
-                                      <div className="flex items-center gap-2 justify-center">
-                                        <select value={assignArtistId} onChange={(e) => setAssignArtistId(e.target.value)}
-                                          className="bg-[#141414] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-[#7C4DFF] max-w-[140px]"
-                                          data-testid={`assign-select-${entry.id}`}>
-                                          <option value="">Select artist</option>
-                                          {artists.map(a => (
-                                            <option key={a.id} value={a.id}>{a.artist_name || a.name}</option>
-                                          ))}
-                                        </select>
-                                        <button onClick={() => handleAssign(entry.id)}
-                                          className="p-1 text-[#1DB954] hover:bg-[#1DB954]/10 rounded" data-testid={`confirm-assign-${entry.id}`}>
-                                          <CheckCircle className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => { setAssigningEntry(null); setAssignArtistId(''); }}
-                                          className="p-1 text-gray-500 hover:bg-white/10 rounded">
-                                          <X className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button onClick={() => { setAssigningEntry(entry.id); setAssignArtistId(''); }}
-                                        className="text-xs text-[#E040FB] hover:text-[#E040FB]/80 underline underline-offset-2"
-                                        data-testid={`assign-btn-${entry.id}`}>
-                                        Assign
-                                      </button>
-                                    )
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ) : null}
                 </div>
               </div>
             )}

@@ -2743,6 +2743,179 @@ async def label_assign_unmatched(entry_id: str, data: AssignEntryInput, request:
         await db.royalty_imports.update_one({"id": entry["import_id"]}, {"$inc": {"matched": 1, "unmatched": -1}})
     return {"message": "Entry assigned successfully"}
 
+# ============= ADMIN ROYALTY IMPORT =============
+
+@api_router.post("/admin/royalties/import")
+async def admin_import_royalties(request: Request):
+    """Admin: Import royalty CSV — matches against ALL platform users"""
+    user = await require_admin(request)
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")
+    except:
+        text = content.decode("latin-1")
+
+    reader = csv_module.reader(io.StringIO(text))
+    rows = list(reader)
+    if len(rows) < 2:
+        raise HTTPException(status_code=400, detail="CSV must have a header row and at least one data row")
+
+    headers = rows[0]
+    col_map = detect_columns(headers)
+    if "artist" not in col_map:
+        raise HTTPException(status_code=400, detail=f"Could not detect 'Artist' column. Headers found: {headers}")
+
+    # Build lookup of ALL users on the platform
+    all_users = {}
+    async for u in db.users.find({}, {"_id": 0, "id": 1, "artist_name": 1, "name": 1, "email": 1}):
+        all_users[u["id"]] = u.get("artist_name", u.get("name", ""))
+
+    # Also build splits from any label_artists records
+    all_splits = {}
+    async for r in db.label_artists.find({"status": "active"}, {"_id": 0}):
+        all_splits[r["artist_id"]] = {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)}
+
+    import_id = f"imp_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    matched = 0
+    unmatched = 0
+    total_revenue = 0
+    entries = []
+    notifications = {}
+
+    for row in rows[1:]:
+        if not row or len(row) <= max(col_map.values(), default=0):
+            continue
+
+        artist_name_raw = row[col_map["artist"]].strip() if "artist" in col_map else ""
+        track = row[col_map["track"]].strip() if "track" in col_map and col_map["track"] < len(row) else ""
+        platform = row[col_map["platform"]].strip() if "platform" in col_map and col_map["platform"] < len(row) else ""
+        country = row[col_map["country"]].strip() if "country" in col_map and col_map["country"] < len(row) else ""
+        period = row[col_map["period"]].strip() if "period" in col_map and col_map["period"] < len(row) else ""
+
+        try:
+            streams_val = int(float(row[col_map["streams"]].strip().replace(",", ""))) if "streams" in col_map and col_map["streams"] < len(row) else 0
+        except:
+            streams_val = 0
+        try:
+            rev_val = float(row[col_map["revenue"]].strip().replace(",", "").replace("$", "")) if "revenue" in col_map and col_map["revenue"] < len(row) else 0
+        except:
+            rev_val = 0
+
+        matched_id = fuzzy_match_artist(artist_name_raw, all_users, 0.7)
+
+        entry = {
+            "id": f"ir_{uuid.uuid4().hex[:12]}", "import_id": import_id,
+            "admin_id": user["id"], "artist_name_raw": artist_name_raw,
+            "matched_artist_id": matched_id, "track": track,
+            "platform": platform, "country": country, "streams": streams_val,
+            "revenue": round(rev_val, 4), "period": period,
+            "status": "matched" if matched_id else "unmatched",
+            "created_at": now,
+        }
+        entries.append(entry)
+        total_revenue += rev_val
+
+        if matched_id:
+            matched += 1
+            sp = all_splits.get(matched_id, {"a": 100, "l": 0})
+            artist_earn = round(rev_val * sp["a"] / 100, 2)
+            if matched_id not in notifications:
+                notifications[matched_id] = {"total": 0, "name": ""}
+            notifications[matched_id]["total"] += artist_earn
+            u = await db.users.find_one({"id": matched_id}, {"_id": 0, "artist_name": 1, "name": 1, "email": 1})
+            if u:
+                notifications[matched_id]["name"] = u.get("artist_name", u.get("name", ""))
+                notifications[matched_id]["email"] = u.get("email", "")
+        else:
+            unmatched += 1
+
+    if entries:
+        await db.imported_royalties.insert_many(entries)
+
+    await db.royalty_imports.insert_one({
+        "id": import_id, "admin_id": user["id"],
+        "filename": file.filename, "total_rows": len(entries),
+        "matched": matched, "unmatched": unmatched,
+        "total_revenue": round(total_revenue, 2),
+        "column_mapping": {k: headers[v] for k, v in col_map.items()},
+        "created_at": now,
+    })
+
+    # Send email notifications to matched artists
+    for a_id, notif in notifications.items():
+        if notif.get("email") and notif["total"] > 0:
+            try:
+                from routes.email_routes import send_email, email_base
+                body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">Hey {notif['name']}!</p>
+                <p style="color:#999;font-size:14px;line-height:1.7;margin:0 0 20px;">New royalty data has been uploaded. Here's your earnings update:</p>
+                <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
+                <p style="color:#1DB954;font-size:36px;font-weight:bold;margin:0;">${notif['total']:.2f}</p>
+                <p style="color:#999;font-size:13px;margin:4px 0 0;">New earnings added to your account</p>
+                </div>
+                <div style="text-align:center;margin:20px 0;">
+                <a href="{os.environ.get('FRONTEND_URL', '')}/revenue" style="background:linear-gradient(90deg,#7C4DFF,#E040FB);color:white;padding:12px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">View Your Revenue</a>
+                </div>"""
+                html = email_base("linear-gradient(135deg,#1DB954 0%,#4CAF50 100%)", "New Royalty Earnings!", body, "Distributed via Kalmori")
+                import asyncio
+                asyncio.ensure_future(send_email(notif["email"], f"New royalty earnings: ${notif['total']:.2f}", html))
+            except Exception as e:
+                logger.warning(f"Royalty notification email failed: {e}")
+
+    return {
+        "message": f"Import complete. {matched} matched, {unmatched} unmatched.",
+        "import_id": import_id, "total_rows": len(entries),
+        "matched": matched, "unmatched": unmatched,
+        "total_revenue": round(total_revenue, 2),
+        "column_mapping": {k: headers[v] for k, v in col_map.items()},
+    }
+
+@api_router.get("/admin/royalties/imports")
+async def admin_list_imports(request: Request):
+    """Admin: List all royalty imports"""
+    await require_admin(request)
+    imports = await db.royalty_imports.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"imports": imports}
+
+@api_router.get("/admin/royalties/imports/{import_id}")
+async def admin_get_import_detail(import_id: str, request: Request):
+    """Admin: Get details of a specific import"""
+    await require_admin(request)
+    imp = await db.royalty_imports.find_one({"id": import_id}, {"_id": 0})
+    if not imp:
+        raise HTTPException(status_code=404, detail="Import not found")
+    entries = await db.imported_royalties.find({"import_id": import_id}, {"_id": 0}).to_list(1000)
+    for e in entries:
+        if e.get("matched_artist_id"):
+            u = await db.users.find_one({"id": e["matched_artist_id"]}, {"_id": 0, "artist_name": 1, "name": 1})
+            e["matched_artist_name"] = u.get("artist_name", u.get("name", "Unknown")) if u else "Unknown"
+    return {"import": imp, "entries": entries}
+
+@api_router.put("/admin/royalties/entries/{entry_id}/assign")
+async def admin_assign_unmatched(entry_id: str, data: AssignEntryInput, request: Request):
+    """Admin: Manually assign an unmatched entry to any user"""
+    await require_admin(request)
+    entry = await db.imported_royalties.find_one({"id": entry_id})
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    await db.imported_royalties.update_one({"id": entry_id}, {"$set": {"matched_artist_id": data.artist_id, "status": "matched"}})
+    imp = await db.royalty_imports.find_one({"id": entry.get("import_id")})
+    if imp:
+        await db.royalty_imports.update_one({"id": entry["import_id"]}, {"$inc": {"matched": 1, "unmatched": -1}})
+    return {"message": "Entry assigned successfully"}
+
+@api_router.get("/admin/royalties/users")
+async def admin_get_all_users_for_assign(request: Request):
+    """Admin: Get all users for assignment dropdown"""
+    await require_admin(request)
+    users = await db.users.find({}, {"_id": 0, "id": 1, "artist_name": 1, "name": 1, "email": 1}).to_list(500)
+    return {"users": users}
+
 # ============= ARTIST PUBLIC PROFILE =============
 import re
 
