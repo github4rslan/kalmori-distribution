@@ -2409,6 +2409,340 @@ async def label_get_royalties(request: Request):
         "artists": artists_data,
     }
 
+# ============= PAYOUT EXPORT & ROYALTY IMPORT =============
+import csv as csv_module
+import io
+from difflib import SequenceMatcher
+from fastapi.responses import StreamingResponse
+
+@api_router.get("/label/royalties/export/csv")
+async def label_export_csv(request: Request):
+    """Export royalty report as CSV"""
+    user = await get_current_user(request)
+    roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
+    artist_ids = [r["artist_id"] for r in roster]
+    splits = {r["artist_id"]: {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)} for r in roster}
+
+    output = io.StringIO()
+    writer = csv_module.writer(output)
+    writer.writerow(["Artist", "Platform", "Country", "Streams", "Gross Revenue", "Artist %", "Artist Earnings", "Label %", "Label Earnings", "Period"])
+
+    for a_id in artist_ids:
+        u = await db.users.find_one({"id": a_id}, {"_id": 0, "artist_name": 1, "name": 1})
+        name = u.get("artist_name", u.get("name", "Unknown")) if u else "Unknown"
+        sp = splits.get(a_id, {"a": 70, "l": 30})
+
+        pipeline = [
+            {"$match": {"artist_id": a_id}},
+            {"$group": {"_id": {"platform": "$platform", "country": "$country"}, "streams": {"$sum": 1}, "revenue": {"$sum": {"$ifNull": ["$revenue", 0]}}}}
+        ]
+        data = await db.stream_events.aggregate(pipeline).to_list(500)
+        for d in data:
+            rev = round(d.get("revenue", 0), 4)
+            writer.writerow([name, d["_id"].get("platform", ""), d["_id"].get("country", ""), d["streams"], f"{rev:.4f}", f"{sp['a']}%", f"{round(rev * sp['a']/100, 4):.4f}", f"{sp['l']}%", f"{round(rev * sp['l']/100, 4):.4f}", datetime.now(timezone.utc).strftime("%Y-%m")])
+
+        # Include imported royalties
+        imported = await db.imported_royalties.find({"matched_artist_id": a_id}, {"_id": 0}).to_list(500)
+        for imp in imported:
+            rev = imp.get("revenue", 0)
+            writer.writerow([name, imp.get("platform", ""), imp.get("country", ""), imp.get("streams", 0), f"{rev:.4f}", f"{sp['a']}%", f"{round(rev * sp['a']/100, 4):.4f}", f"{sp['l']}%", f"{round(rev * sp['l']/100, 4):.4f}", imp.get("period", "")])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=kalmori_payout_report_{datetime.now(timezone.utc).strftime('%Y%m%d')}.csv"}
+    )
+
+@api_router.get("/label/royalties/export/pdf")
+async def label_export_pdf(request: Request):
+    """Export royalty report as PDF"""
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+    user = await get_current_user(request)
+    roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
+    splits = {r["artist_id"]: {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)} for r in roster}
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=landscape(letter), topMargin=30, bottomMargin=30)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("Title", parent=styles["Title"], fontSize=18, textColor=colors.HexColor("#7C4DFF"))
+    elements = []
+
+    elements.append(Paragraph("KALMORI — Payout Report", title_style))
+    elements.append(Paragraph(f"Generated: {datetime.now(timezone.utc).strftime('%B %d, %Y')}", styles["Normal"]))
+    elements.append(Spacer(1, 20))
+
+    total_gross = 0
+    total_artist = 0
+    total_label = 0
+
+    for entry in roster:
+        a_id = entry["artist_id"]
+        sp = splits.get(a_id, {"a": 70, "l": 30})
+        u = await db.users.find_one({"id": a_id}, {"_id": 0, "artist_name": 1, "name": 1})
+        name = u.get("artist_name", u.get("name", "Unknown")) if u else "Unknown"
+
+        rev_result = await db.stream_events.aggregate([
+            {"$match": {"artist_id": a_id, "revenue": {"$exists": True}}},
+            {"$group": {"_id": None, "total": {"$sum": "$revenue"}, "streams": {"$sum": 1}}}
+        ]).to_list(1)
+        gross = round(rev_result[0]["total"] if rev_result else 0, 2)
+        streams = rev_result[0]["streams"] if rev_result else 0
+
+        # Add imported royalties
+        imp_result = await db.imported_royalties.aggregate([
+            {"$match": {"matched_artist_id": a_id}},
+            {"$group": {"_id": None, "total": {"$sum": "$revenue"}, "streams": {"$sum": "$streams"}}}
+        ]).to_list(1)
+        gross += round(imp_result[0]["total"] if imp_result else 0, 2)
+        streams += imp_result[0]["streams"] if imp_result else 0
+
+        artist_earn = round(gross * sp["a"] / 100, 2)
+        label_earn = round(gross * sp["l"] / 100, 2)
+        total_gross += gross
+        total_artist += artist_earn
+        total_label += label_earn
+
+        elements.append(Paragraph(f"<b>{name}</b> — Split: {sp['a']}% Artist / {sp['l']}% Label", styles["Heading3"]))
+        data = [["Metric", "Value"], ["Total Streams", f"{streams:,}"], ["Gross Revenue", f"${gross:.2f}"], ["Artist Earnings", f"${artist_earn:.2f}"], ["Label Earnings", f"${label_earn:.2f}"]]
+        t = Table(data, colWidths=[200, 200])
+        t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#7C4DFF")), ("TEXTCOLOR", (0, 0), (-1, 0), colors.white), ("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("FONTSIZE", (0, 0), (-1, -1), 10)]))
+        elements.append(t)
+        elements.append(Spacer(1, 15))
+
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("<b>Summary</b>", styles["Heading2"]))
+    summary = [["", "Amount"], ["Total Gross Revenue", f"${total_gross:.2f}"], ["Total Artist Payouts", f"${total_artist:.2f}"], ["Total Label Earnings", f"${total_label:.2f}"]]
+    st = Table(summary, colWidths=[200, 200])
+    st.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#FFD700")), ("TEXTCOLOR", (0, 0), (-1, 0), colors.black), ("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("FONTSIZE", (0, 0), (-1, -1), 11), ("FONTNAME", (0, 1), (-1, -1), "Helvetica-Bold")]))
+    elements.append(st)
+
+    doc.build(elements)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=kalmori_payout_report_{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"}
+    )
+
+def fuzzy_match_artist(name: str, roster_names: dict, threshold: float = 0.7) -> str:
+    """Find best matching artist from roster using fuzzy matching"""
+    name_lower = name.strip().lower()
+    best_match = None
+    best_score = 0
+    for artist_id, artist_name in roster_names.items():
+        score = SequenceMatcher(None, name_lower, artist_name.lower()).ratio()
+        if score > best_score and score >= threshold:
+            best_score = score
+            best_match = artist_id
+    return best_match
+
+COMMON_CSV_COLUMNS = {
+    "artist": ["artist", "artist name", "artist_name", "performer", "primary artist"],
+    "track": ["track", "track name", "track_name", "title", "song", "song title", "song_title"],
+    "platform": ["platform", "store", "store name", "dsp", "service", "streaming service"],
+    "country": ["country", "territory", "region", "market", "country/territory"],
+    "streams": ["streams", "quantity", "plays", "units", "stream count", "total streams"],
+    "revenue": ["revenue", "earnings", "royalties", "amount", "net revenue", "total revenue", "payout", "total"],
+    "period": ["period", "date", "month", "reporting period", "sale month", "statement period", "reporting_period"],
+}
+
+def detect_columns(headers: list) -> dict:
+    """Auto-detect column mapping from CSV headers"""
+    mapping = {}
+    headers_lower = [h.strip().lower() for h in headers]
+    for field, aliases in COMMON_CSV_COLUMNS.items():
+        for alias in aliases:
+            for i, h in enumerate(headers_lower):
+                if alias == h or alias in h:
+                    mapping[field] = i
+                    break
+            if field in mapping:
+                break
+    return mapping
+
+@api_router.post("/label/royalties/import")
+async def label_import_royalties(request: Request):
+    """Import royalty CSV from external distributor"""
+    user = await get_current_user(request)
+    form = await request.form()
+    file = form.get("file")
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    content = await file.read()
+    try:
+        text = content.decode("utf-8-sig")
+    except:
+        text = content.decode("latin-1")
+
+    reader = csv_module.reader(io.StringIO(text))
+    rows = list(reader)
+    if len(rows) < 2:
+        raise HTTPException(status_code=400, detail="CSV must have a header row and at least one data row")
+
+    headers = rows[0]
+    col_map = detect_columns(headers)
+    if "artist" not in col_map:
+        raise HTTPException(status_code=400, detail=f"Could not detect 'Artist' column. Headers found: {headers}")
+
+    # Build roster name lookup
+    roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
+    splits = {r["artist_id"]: {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)} for r in roster}
+    roster_names = {}
+    for r in roster:
+        u = await db.users.find_one({"id": r["artist_id"]}, {"_id": 0, "artist_name": 1, "name": 1})
+        if u:
+            roster_names[r["artist_id"]] = u.get("artist_name", u.get("name", ""))
+
+    # Also match all users (not just roster)
+    all_users_cursor = db.users.find({}, {"_id": 0, "id": 1, "artist_name": 1, "name": 1})
+    all_users = {}
+    async for u in all_users_cursor:
+        all_users[u["id"]] = u.get("artist_name", u.get("name", ""))
+
+    import_id = f"imp_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    matched = 0
+    unmatched = 0
+    total_revenue = 0
+    entries = []
+    notifications = {}
+
+    for row in rows[1:]:
+        if not row or len(row) <= max(col_map.values(), default=0):
+            continue
+
+        artist_name_raw = row[col_map["artist"]].strip() if "artist" in col_map else ""
+        track = row[col_map["track"]].strip() if "track" in col_map and col_map["track"] < len(row) else ""
+        platform = row[col_map["platform"]].strip() if "platform" in col_map and col_map["platform"] < len(row) else ""
+        country = row[col_map["country"]].strip() if "country" in col_map and col_map["country"] < len(row) else ""
+        period = row[col_map["period"]].strip() if "period" in col_map and col_map["period"] < len(row) else ""
+
+        try:
+            streams_val = int(float(row[col_map["streams"]].strip().replace(",", ""))) if "streams" in col_map and col_map["streams"] < len(row) else 0
+        except:
+            streams_val = 0
+        try:
+            rev_val = float(row[col_map["revenue"]].strip().replace(",", "").replace("$", "")) if "revenue" in col_map and col_map["revenue"] < len(row) else 0
+        except:
+            rev_val = 0
+
+        # Try matching to roster first, then all users
+        matched_id = fuzzy_match_artist(artist_name_raw, roster_names, 0.7)
+        if not matched_id:
+            matched_id = fuzzy_match_artist(artist_name_raw, all_users, 0.7)
+
+        entry = {
+            "id": f"ir_{uuid.uuid4().hex[:12]}", "import_id": import_id,
+            "label_id": user["id"], "artist_name_raw": artist_name_raw,
+            "matched_artist_id": matched_id, "track": track,
+            "platform": platform, "country": country, "streams": streams_val,
+            "revenue": round(rev_val, 4), "period": period,
+            "status": "matched" if matched_id else "unmatched",
+            "created_at": now,
+        }
+        entries.append(entry)
+        total_revenue += rev_val
+
+        if matched_id:
+            matched += 1
+            sp = splits.get(matched_id, {"a": 70, "l": 30})
+            artist_earn = round(rev_val * sp["a"] / 100, 2)
+            if matched_id not in notifications:
+                notifications[matched_id] = {"total": 0, "name": ""}
+            notifications[matched_id]["total"] += artist_earn
+            u = await db.users.find_one({"id": matched_id}, {"_id": 0, "artist_name": 1, "name": 1, "email": 1})
+            if u:
+                notifications[matched_id]["name"] = u.get("artist_name", u.get("name", ""))
+                notifications[matched_id]["email"] = u.get("email", "")
+        else:
+            unmatched += 1
+
+    if entries:
+        await db.imported_royalties.insert_many(entries)
+
+    # Save import record
+    await db.royalty_imports.insert_one({
+        "id": import_id, "label_id": user["id"],
+        "filename": file.filename, "total_rows": len(entries),
+        "matched": matched, "unmatched": unmatched,
+        "total_revenue": round(total_revenue, 2),
+        "column_mapping": {k: headers[v] for k, v in col_map.items()},
+        "created_at": now,
+    })
+
+    # Send email notifications to matched artists
+    for a_id, notif in notifications.items():
+        if notif.get("email") and notif["total"] > 0:
+            try:
+                from routes.email_routes import send_email, email_base
+                body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">Hey {notif['name']}!</p>
+                <p style="color:#999;font-size:14px;line-height:1.7;margin:0 0 20px;">Your label just uploaded new royalty data. Here's your cut:</p>
+                <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
+                <p style="color:#1DB954;font-size:36px;font-weight:bold;margin:0;">${notif['total']:.2f}</p>
+                <p style="color:#999;font-size:13px;margin:4px 0 0;">New earnings added to your account</p>
+                </div>
+                <div style="text-align:center;margin:20px 0;">
+                <a href="{os.environ.get('FRONTEND_URL', '')}/revenue" style="background:linear-gradient(90deg,#7C4DFF,#E040FB);color:white;padding:12px 32px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">View Your Revenue</a>
+                </div>"""
+                html = email_base("linear-gradient(135deg,#1DB954 0%,#4CAF50 100%)", "New Royalty Earnings!", body, "Distributed via Kalmori")
+                import asyncio
+                asyncio.ensure_future(send_email(notif["email"], f"New royalty earnings: ${notif['total']:.2f}", html))
+            except Exception as e:
+                logger.warning(f"Royalty notification email failed: {e}")
+
+    return {
+        "message": f"Import complete. {matched} matched, {unmatched} unmatched.",
+        "import_id": import_id, "total_rows": len(entries),
+        "matched": matched, "unmatched": unmatched,
+        "total_revenue": round(total_revenue, 2),
+        "column_mapping": {k: headers[v] for k, v in col_map.items()},
+    }
+
+@api_router.get("/label/royalties/imports")
+async def label_list_imports(request: Request):
+    """List all royalty imports"""
+    user = await get_current_user(request)
+    imports = await db.royalty_imports.find({"label_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"imports": imports}
+
+@api_router.get("/label/royalties/imports/{import_id}")
+async def label_get_import_detail(import_id: str, request: Request):
+    """Get details of a specific import including unmatched entries"""
+    user = await get_current_user(request)
+    imp = await db.royalty_imports.find_one({"id": import_id, "label_id": user["id"]}, {"_id": 0})
+    if not imp:
+        raise HTTPException(status_code=404, detail="Import not found")
+    entries = await db.imported_royalties.find({"import_id": import_id}, {"_id": 0}).to_list(1000)
+    # Enrich matched entries with artist names
+    for e in entries:
+        if e.get("matched_artist_id"):
+            u = await db.users.find_one({"id": e["matched_artist_id"]}, {"_id": 0, "artist_name": 1, "name": 1})
+            e["matched_artist_name"] = u.get("artist_name", u.get("name", "Unknown")) if u else "Unknown"
+    return {"import": imp, "entries": entries}
+
+class AssignEntryInput(BaseModel):
+    artist_id: str
+
+@api_router.put("/label/royalties/entries/{entry_id}/assign")
+async def label_assign_unmatched(entry_id: str, data: AssignEntryInput, request: Request):
+    """Manually assign an unmatched entry to an artist"""
+    user = await get_current_user(request)
+    entry = await db.imported_royalties.find_one({"id": entry_id, "label_id": user["id"]})
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    await db.imported_royalties.update_one({"id": entry_id}, {"$set": {"matched_artist_id": data.artist_id, "status": "matched"}})
+    # Update import stats
+    imp = await db.royalty_imports.find_one({"id": entry.get("import_id")})
+    if imp:
+        await db.royalty_imports.update_one({"id": entry["import_id"]}, {"$inc": {"matched": 1, "unmatched": -1}})
+    return {"message": "Entry assigned successfully"}
+
 # ============= ARTIST PUBLIC PROFILE =============
 import re
 
