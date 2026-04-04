@@ -30,6 +30,7 @@ import AdminUserDetailPage from './pages/AdminUserDetailPage';
 import AdminCampaignsPage from './pages/AdminCampaignsPage';
 import AdminLeadsPage from './pages/AdminLeadsPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import AgreementPage from './pages/AgreementPage';
 import PricingPage from './pages/PricingPage';
 import ServicesPage from './pages/ServicesPage';
 import AboutPage from './pages/AboutPage';
@@ -295,6 +296,7 @@ const AppRouter = () => {
               <Route path="/admin/campaigns" element={<AdminRoute><AdminCampaignsPage /></AdminRoute>} />
               <Route path="/admin/leads" element={<AdminRoute><AdminLeadsPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/agreement" element={<AgreementPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/about" element={<AboutPage />} />

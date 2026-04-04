@@ -122,107 +122,117 @@ const RegisterPage = () => {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
-  const inputCls = "w-full bg-white border border-[#d0d5dd] rounded-lg px-4 py-3 text-black text-sm focus:outline-none focus:border-[#00BCD4] focus:ring-2 focus:ring-[#00BCD4]/20 transition-all";
+  const inputCls = "w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0095FF] focus:ring-2 focus:ring-[#0095FF]/20 transition-all placeholder-gray-500";
 
   return (
     <div className="min-h-screen relative flex items-start justify-center overflow-y-auto">
-      {/* Dark abstract background */}
-      <div className="absolute inset-0 bg-[#0a0a14]" />
-      <div className="absolute inset-0 opacity-30" style={{
-        background: 'radial-gradient(ellipse at 50% 80%, rgba(0,188,212,0.15) 0%, transparent 60%), radial-gradient(ellipse at 20% 20%, rgba(124,77,255,0.1) 0%, transparent 50%)'
-      }} />
+      {/* Same gradient background as login */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #7C4DFF 0%, #9C27B0 30%, #E040FB 70%, #FF4081 100%)' }} />
+      <div className="absolute inset-0 bg-black/50" />
+
+      <style>{`
+        @keyframes shimmer-blue {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .btn-animated-blue {
+          background: linear-gradient(90deg, #0095FF, #7468F8, #0095FF, #7468F8);
+          background-size: 300% 100%;
+          animation: shimmer-blue 3s ease-in-out infinite;
+        }
+        .logo-animated-blue {
+          background: linear-gradient(90deg, #0095FF, #7468F8, #0095FF, #7468F8);
+          background-size: 300% 100%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer-blue 3s ease-in-out infinite;
+        }
+      `}</style>
 
       <div className="relative z-10 w-full max-w-lg mx-auto px-4 py-10">
         {/* Step 1: Email + Password */}
         {step === 1 && (
           <div className="text-center">
-            {/* Header */}
             <div className="flex items-center justify-center gap-2 mb-6">
-              <MusicNotes className="w-6 h-6 text-[#E040FB]" weight="fill" />
-              <span className="text-sm font-black tracking-[4px] text-white/60">KALMORI</span>
+              <MusicNotes className="w-6 h-6 text-[#0095FF]" weight="fill" />
+              <span className="text-sm font-black tracking-[4px] logo-animated-blue">KALMORI</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#FFD700] mb-1">Sign up for free.</h1>
-            <p className="text-white text-lg mb-8">Create your Kalmori account.</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-1">Sign up for free.</h1>
+            <p className="text-gray-300 text-lg mb-8">Create your Kalmori account.</p>
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm text-left" data-testid="register-error">{error}</div>
             )}
 
-            {/* White card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 text-left shadow-2xl">
+            <div className="bg-black/30 backdrop-blur-md rounded-2xl p-6 sm:p-8 text-left border border-white/10">
               <form onSubmit={handleStep1} className="space-y-5">
-                {/* Email */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Email</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Email</label>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     className={inputCls} required data-testid="register-email-input" />
                 </div>
 
-                {/* Password */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Password</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Password</label>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                       className={`${inputCls} pr-10`} required data-testid="register-password-input" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
                       data-testid="toggle-password-visibility">
                       {showPassword ? <EyeSlash className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Password Requirements Box */}
-                <div className="bg-[#E0F7FA] rounded-xl p-4 space-y-2" data-testid="password-requirements">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2" data-testid="password-requirements">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className={`w-5 h-5 flex-shrink-0 ${password.length > 0 && pwChecks.length && pwChecks.number && pwChecks.capital ? 'text-[#4CAF50]' : 'text-gray-400'}`} weight="fill" />
-                    <span className="text-sm font-semibold text-gray-800">Your Password must use:</span>
+                    <CheckCircle className={`w-5 h-5 flex-shrink-0 ${password.length > 0 && pwChecks.length && pwChecks.number && pwChecks.capital ? 'text-[#0095FF]' : 'text-gray-500'}`} weight="fill" />
+                    <span className="text-sm font-semibold text-gray-300">Your Password must use:</span>
                   </div>
                   <ul className="ml-7 space-y-1">
-                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.length ? 'text-[#4CAF50]' : 'text-gray-600'}`}>
+                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.length ? 'text-[#0095FF]' : 'text-gray-500'}`}>
                       {pwChecks.length && <Check className="w-3 h-3" weight="bold" />} at least 12 characters
                     </li>
-                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.number ? 'text-[#4CAF50]' : 'text-gray-600'}`}>
+                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.number ? 'text-[#0095FF]' : 'text-gray-500'}`}>
                       {pwChecks.number && <Check className="w-3 h-3" weight="bold" />} at least 1 number
                     </li>
-                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.capital ? 'text-[#4CAF50]' : 'text-gray-600'}`}>
+                    <li className={`text-sm flex items-center gap-1.5 ${pwChecks.capital ? 'text-[#0095FF]' : 'text-gray-500'}`}>
                       {pwChecks.capital && <Check className="w-3 h-3" weight="bold" />} at least 1 capital letter
                     </li>
                   </ul>
                   <div className="flex items-center gap-2 mt-2">
                     <WarningCircle className={`w-5 h-5 flex-shrink-0 ${password.length > 0 && !pwChecks.noSpaces ? 'text-red-500' : 'text-red-400'}`} weight="fill" />
-                    <span className="text-sm font-semibold text-gray-800">Do NOT use spaces or a recently used password</span>
+                    <span className="text-sm font-semibold text-gray-300">Do NOT use spaces or a recently used password</span>
                   </div>
                 </div>
 
-                {/* Terms */}
                 <div className="flex items-start gap-3">
                   <button type="button" onClick={() => setAgreedToTerms(!agreedToTerms)}
                     className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-all ${
-                      agreedToTerms ? 'bg-[#00BCD4] border-[#00BCD4]' : 'border-gray-300 hover:border-gray-400'
+                      agreedToTerms ? 'bg-[#0095FF] border-[#0095FF]' : 'border-gray-500 hover:border-gray-300'
                     }`} data-testid="terms-checkbox">
                     {agreedToTerms && <Check className="w-3.5 h-3.5 text-white" weight="bold" />}
                   </button>
-                  <span className="text-sm text-gray-600 leading-relaxed">
+                  <span className="text-sm text-gray-400 leading-relaxed">
                     I have read, understood, and agree to the{' '}
-                    <Link to="/terms" className="text-[#00BCD4] font-semibold hover:underline">Terms of Service</Link>,{' '}
-                    <Link to="/privacy" className="text-[#00BCD4] font-semibold hover:underline">Privacy Policy</Link>, and{' '}
-                    <Link to="/agreement" className="text-[#00BCD4] font-semibold hover:underline">Kalmori Artist Agreement</Link>, and I am at least 13 years old.
+                    <Link to="/terms" className="text-[#0095FF] font-semibold hover:underline">Terms of Service</Link>,{' '}
+                    <Link to="/privacy" className="text-[#0095FF] font-semibold hover:underline">Privacy Policy</Link>, and{' '}
+                    <Link to="/agreement" className="text-[#0095FF] font-semibold hover:underline">Kalmori Artist Agreement</Link>, and I am at least 13 years old.
                   </span>
                 </div>
 
-                {/* reCAPTCHA */}
                 {process.env.REACT_APP_RECAPTCHA_SITE_KEY && (
                   <div className="flex justify-center" data-testid="recaptcha-container">
                     <ReCAPTCHA ref={recaptchaRef} sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
                       onChange={(token) => setRecaptchaToken(token)} onExpired={() => setRecaptchaToken(null)}
-                      theme="light" size="normal" />
+                      theme="dark" size="normal" />
                   </div>
                 )}
 
-                {/* Submit */}
                 <button type="submit"
-                  className="w-full bg-[#FFD700] hover:bg-[#FFC107] text-black text-base font-bold py-3.5 rounded-full transition-all active:scale-[0.98]"
+                  className="w-full btn-animated-blue text-white text-base font-bold py-3.5 rounded-full transition-all active:scale-[0.98]"
                   data-testid="register-submit-btn">
                   Sign Up
                 </button>
@@ -230,17 +240,16 @@ const RegisterPage = () => {
             </div>
 
             <p className="mt-5 text-sm text-gray-400">
-              Already have an account? <Link to="/login" className="text-[#FFD700] hover:underline" data-testid="login-link">Log in</Link>
+              Already have an account? <Link to="/login" className="text-[#0095FF] hover:underline font-semibold" data-testid="login-link">Log in</Link>
             </p>
 
-            {/* Divider */}
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700" /></div>
-              <div className="relative flex justify-center"><span className="px-4 bg-[#0a0a14] text-xs text-gray-500">or</span></div>
+              <div className="relative flex justify-center"><span className="px-4 bg-black/30 text-xs text-gray-500 backdrop-blur-sm">or</span></div>
             </div>
 
             <button type="button" onClick={handleGoogleLogin}
-              className="w-full border border-gray-600 hover:border-gray-400 text-white py-3 rounded-full flex items-center justify-center gap-2 transition-all text-sm font-medium"
+              className="w-full border border-gray-600 hover:border-[#0095FF] text-white py-3 rounded-full flex items-center justify-center gap-2 transition-all text-sm font-medium"
               data-testid="google-register-btn">
               <GoogleLogo className="w-5 h-5" weight="bold" /> Continue with Google
             </button>
@@ -250,64 +259,59 @@ const RegisterPage = () => {
         {/* Step 2: Personal Details */}
         {step === 2 && (
           <div className="text-center">
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <MusicNotes className="w-5 h-5 text-[#E040FB]" weight="fill" />
-                <span className="text-xs font-black tracking-[4px] text-white/60">KALMORI</span>
+                <MusicNotes className="w-5 h-5 text-[#0095FF]" weight="fill" />
+                <span className="text-xs font-black tracking-[4px] logo-animated-blue">KALMORI</span>
               </div>
               <button onClick={() => { setStep(1); setError(''); }} className="text-sm text-gray-400 hover:text-white transition-colors" data-testid="back-to-step1">
                 Back
               </button>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#FFD700] mb-1">You're one step closer.</h1>
-            <p className="text-white text-lg mb-8">Let's finish creating your account.</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-1">You're one step closer.</h1>
+            <p className="text-gray-300 text-lg mb-8">Let's finish creating your account.</p>
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm text-left" data-testid="register-error-step2">{error}</div>
             )}
 
-            {/* White card */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 text-left shadow-2xl">
+            <div className="bg-black/30 backdrop-blur-md rounded-2xl p-6 sm:p-8 text-left border border-white/10">
               <form onSubmit={handleStep2} className="space-y-5">
                 {/* First Name */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">First name</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">First name</label>
                   <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
                     className={inputCls} required data-testid="register-first-name" />
                 </div>
 
-                {/* Last Name */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Last name</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Last name</label>
                   <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}
                     className={inputCls} required data-testid="register-last-name" />
                 </div>
 
-                {/* Add Company/Record Label */}
                 {!showCompany ? (
                   <button type="button" onClick={() => setShowCompany(true)}
-                    className="flex items-center gap-2 text-[#00BCD4] text-sm font-semibold hover:underline"
+                    className="flex items-center gap-2 text-[#0095FF] text-sm font-semibold hover:underline"
                     data-testid="add-company-btn">
-                    <div className="w-6 h-6 rounded-full bg-[#00BCD4] flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-[#0095FF] flex items-center justify-center">
                       <Plus className="w-3.5 h-3.5 text-white" weight="bold" />
                     </div>
                     Add a company or record label
                   </button>
                 ) : (
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-1.5">Company / Record Label</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-1.5">Company / Record Label</label>
                     <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
                       className={inputCls} placeholder="Enter company or label name" data-testid="register-company" />
                   </div>
                 )}
 
-                {/* Country */}
                 <div className="relative">
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Country of residence</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Country of residence</label>
                   <button type="button" onClick={() => setShowCountryPicker(!showCountryPicker)}
-                    className="w-full flex items-center justify-between bg-white border border-[#d0d5dd] rounded-lg px-4 py-3 text-left hover:border-[#00BCD4] transition-colors"
+                    className="w-full flex items-center justify-between bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-left hover:border-[#0095FF] transition-colors"
                     data-testid="register-country-picker">
                     <span className={`text-sm ${country ? 'text-black' : 'text-gray-400'}`}>
                       {country || '- Select a Country -'}
@@ -353,7 +357,7 @@ const RegisterPage = () => {
                   </button>
                 ) : (
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-1.5">Address line 2</label>
+                    <label className="block text-gray-400 text-sm font-medium mb-1.5">Address line 2</label>
                     <input type="text" value={address2} onChange={(e) => setAddress2(e.target.value)}
                       className={inputCls} data-testid="register-address2" />
                   </div>
@@ -361,21 +365,21 @@ const RegisterPage = () => {
 
                 {/* City / Town */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">City / Town</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">City / Town</label>
                   <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
                     className={inputCls} data-testid="register-city" />
                 </div>
 
                 {/* State / Province */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">State / Province / Territory</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">State / Province / Territory</label>
                   <input type="text" value={state} onChange={(e) => setState(e.target.value)}
                     className={inputCls} data-testid="register-state" />
                 </div>
 
                 {/* ZIP / Postal Code */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">ZIP / Postal Code</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">ZIP / Postal Code</label>
                   <input type="text" value={postCode} onChange={(e) => setPostCode(e.target.value)}
                     className={inputCls} data-testid="register-postcode" />
                 </div>
@@ -389,9 +393,9 @@ const RegisterPage = () => {
 
                 {/* Submit */}
                 <button type="submit" disabled={loading}
-                  className="w-full bg-[#FFD700] hover:bg-[#FFC107] text-black text-base font-bold py-3.5 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full btn-animated-blue text-white text-base font-bold py-3.5 rounded-full transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                   data-testid="complete-signup-btn">
-                  {loading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <>Complete Sign-Up <ArrowRight className="w-5 h-5" /></>}
+                  {loading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <>Complete Sign-Up <ArrowRight className="w-5 h-5" /></>}
                 </button>
               </form>
             </div>
