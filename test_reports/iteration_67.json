@@ -1,0 +1,127 @@
+{
+  "summary": "Iteration 67 - Testing 3 NEW Features: (1) Reset to Default button in Page Builder, (2) Pre-built feature template library with 10 templates, (3) Account level gating on new features. All 17 backend tests passed (100%). All 11 frontend tests passed (100%).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend: GET /api/subscriptions/plans returns all 3 plans (free, rise, pro)",
+    "Backend: Free plan locks spotify_data, beat_marketplace, messaging, royalty_splits",
+    "Backend: Rise plan locks ai_strategy, content_id, spotify_canvas, spotify_data, royalty_splits",
+    "Backend: Rise plan unlocks beat_marketplace and messaging",
+    "Backend: Pro plan has no locked features (empty locked array)",
+    "Backend: Free plan features list is correct",
+    "Backend: Rise plan features include messaging and beat marketplace",
+    "Backend: Pro plan features include Spotify Data and Royalty Splits",
+    "Backend: POST /api/admin/pages/landing/seed-defaults resets to 14 blocks",
+    "Backend: POST /api/admin/pages/about/seed-defaults resets to 5 blocks",
+    "Backend: POST /api/admin/pages/pricing/seed-defaults resets to 4 blocks",
+    "Backend: Reset endpoint requires admin authentication (401 without auth)",
+    "Backend: Reset invalid page returns 400",
+    "Backend: Reset content verified - Landing page has G.O.A.T hero",
+    "Backend: POST /api/admin/pages/{slug}/add-block adds new block",
+    "Backend: DELETE /api/admin/pages/{slug}/blocks/{block_id} deletes block",
+    "Backend: GET /api/admin/pages/block-templates/all returns 12 templates",
+    "Frontend: Page Builder loads at /admin/page-builder/landing",
+    "Frontend: BLOCKS and TEMPLATES tabs present in sidebar",
+    "Frontend: BLOCKS tab shows 12 basic block types (Hero Banner, Text Block, Image, Feature Grid, Call to Action, Testimonials, Stats Row, Spacer, Two Columns, Pricing, Logo Bar, Video Embed)",
+    "Frontend: TEMPLATES tab shows 10 feature templates (Beat Marketplace, Spotify Integration, AI Features, Collaboration Hub, Royalty Splits, Artist Profile, Leaderboard, Distribution CTA, Subscription Plans, Content Protection)",
+    "Frontend: Clicking a template adds a block to the canvas (14 -> 15 blocks)",
+    "Frontend: Reset button in toolbar shows confirmation dialog",
+    "Frontend: Reset confirmation message: 'Reset this page to the original default layout? This will replace all current blocks.'",
+    "Frontend: Reset button resets page to default 14 blocks",
+    "Frontend: Page switcher navigates to About page (5 blocks)",
+    "Frontend: Page switcher navigates to Pricing page (4 blocks)",
+    "Frontend: Save Draft, Publish, Preview buttons present in toolbar"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_iteration67_new_features.py",
+    "/app/test_reports/pytest/pytest_results_iteration67.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SUBSCRIPTION_PLANS correctly updated with new locked features for each tier",
+    "Free plan locks: spotify_data, beat_marketplace, messaging, royalty_splits (all 4 new features)",
+    "Rise plan locks: spotify_data, royalty_splits but unlocks beat_marketplace, messaging",
+    "Pro plan has empty locked array (all features available)",
+    "TEMPLATE_BLOCKS array in PageBuilderPage.jsx contains all 10 feature templates with correct icons and descriptions",
+    "resetToDefault() function correctly calls seed-defaults endpoint and shows confirmation dialog",
+    "sidebarTab state properly toggles between 'blocks' and 'templates' tabs"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration67_new_features.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 passed)",
+    "frontend": "100% (11/11 tests passed)"
+  },
+  "test_credentials": {
+    "admin": {
+      "email": "submitkalmori@gmail.com",
+      "password": "Admin123!",
+      "role": "admin"
+    },
+    "secondary_admin": {
+      "email": "admin@kalmori.com",
+      "password": "Admin123!",
+      "role": "admin"
+    }
+  },
+  "seed_data_creation": "None - used existing admin accounts and page builder seeding endpoints",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 67 tested 3 NEW features: (1) Reset to Default button - works correctly with confirmation dialog, resets pages to original content (Landing: 14 blocks, About: 5 blocks, Pricing: 4 blocks). (2) Template library - 10 feature templates in TEMPLATES tab (Beat Marketplace, Spotify Integration, AI Features, Collaboration Hub, Royalty Splits, Artist Profile, Leaderboard, Distribution CTA, Subscription Plans, Content Protection). Clicking a template adds a pre-configured block to the canvas. (3) Subscription tier gating - Free plan locks spotify_data, beat_marketplace, messaging, royalty_splits. Rise plan locks spotify_data, royalty_splits but unlocks beat_marketplace, messaging. Pro plan has no locked features.",
+  "mocked_apis": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  },
+  "features_verified": {
+    "reset_to_default": {
+      "status": "Working",
+      "endpoint": "POST /api/admin/pages/{slug}/seed-defaults",
+      "confirmation_dialog": "Yes - 'Reset this page to the original default layout? This will replace all current blocks.'",
+      "landing_blocks": 14,
+      "about_blocks": 5,
+      "pricing_blocks": 4
+    },
+    "template_library": {
+      "status": "Working",
+      "location": "Left sidebar under TEMPLATES tab",
+      "template_count": 10,
+      "templates": [
+        "Beat Marketplace - Showcase your beat catalog",
+        "Spotify Integration - Spotify analytics showcase",
+        "AI Features - AI-powered tools showcase",
+        "Collaboration Hub - Artist collaboration showcase",
+        "Royalty Splits - Revenue sharing feature",
+        "Artist Profile - Public profile showcase",
+        "Leaderboard - Performance rankings",
+        "Distribution CTA - Call-to-action for distribution",
+        "Subscription Plans - Full pricing table",
+        "Content Protection - Rights & protection showcase"
+      ],
+      "click_behavior": "Adds pre-configured block to canvas"
+    },
+    "subscription_tier_gating": {
+      "status": "Working",
+      "endpoint": "GET /api/subscriptions/plans",
+      "free_plan_locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaborations", "spotify_data", "beat_marketplace", "messaging", "royalty_splits"],
+      "rise_plan_locked": ["ai_strategy", "content_id", "spotify_canvas", "leaderboard", "presave", "royalty_splits", "spotify_data"],
+      "pro_plan_locked": []
+    },
+    "page_builder_blocks_tab": {
+      "status": "Working",
+      "block_count": 12,
+      "block_types": ["Hero Banner", "Text Block", "Image", "Feature Grid", "Call to Action", "Testimonials", "Stats Row", "Spacer", "Two Columns", "Pricing", "Logo Bar", "Video Embed"]
+    },
+    "page_switcher": {
+      "status": "Working",
+      "pages": ["Landing", "About", "Pricing"]
+    }
+  }
+}

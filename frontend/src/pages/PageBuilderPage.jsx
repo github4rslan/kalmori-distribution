@@ -10,7 +10,9 @@ import {
   Plus, Trash, DotsSixVertical, FloppyDisk, Rocket, Eye, ArrowLeft,
   TextT, Image as ImageIcon, Rows, ChatTeardropDots, ChartBar, ArrowsOutSimple,
   Star, CurrencyDollar, VideoCamera, MusicNotes, Columns, PaintBrush,
-  X, PencilSimple, Check, CopySimple, Code, Upload, CaretDown, FileCss
+  X, PencilSimple, Check, CopySimple, Code, Upload, CaretDown, FileCss,
+  ArrowCounterClockwise, Lightning, SpotifyLogo, Headphones, HandCoins,
+  ChatCircleDots, Target, Trophy, ShieldCheck, Users, Globe, Palette
 } from '@phosphor-icons/react';
 
 const BLOCK_TYPES = [
@@ -26,6 +28,126 @@ const BLOCK_TYPES = [
   { key: 'pricing', label: 'Pricing', icon: <CurrencyDollar className="w-4 h-4" weight="fill" />, color: '#FFD700' },
   { key: 'logo_bar', label: 'Logo Bar', icon: <MusicNotes className="w-4 h-4" weight="fill" />, color: '#E040FB' },
   { key: 'video', label: 'Video Embed', icon: <VideoCamera className="w-4 h-4" weight="fill" />, color: '#FF5722' },
+];
+
+/* Pre-built feature-specific template blocks */
+const TEMPLATE_BLOCKS = [
+  {
+    key: 'tpl_beat_marketplace', label: 'Beat Marketplace', icon: <Headphones className="w-4 h-4" weight="fill" />, color: '#9C27B0',
+    desc: 'Showcase your beat catalog',
+    block: { type: 'features', content: {
+      heading: 'Beat Marketplace', subtitle: 'Professional instrumentals for every artist',
+      items: [
+        { icon: 'MusicNotes', title: '4-Tier Licensing', description: 'Basic, Premium, Exclusive, and Unlimited licensing options for every budget.', color: '#9C27B0' },
+        { icon: 'ShieldCheck', title: 'Auto Contracts', description: 'Every purchase generates a legally-binding PDF contract with e-signatures.', color: '#FF6B6B' },
+        { icon: 'MusicNotes', title: 'AI Voice Tags', description: 'AI-generated watermarks protect your beats. Clean versions unlock after purchase.', color: '#00BCD4' },
+      ]
+    }, styles: { backgroundColor: '#0a0a0a', textColor: '#FFFFFF', padding: '80', columns: '3' } }
+  },
+  {
+    key: 'tpl_spotify_stats', label: 'Spotify Integration', icon: <SpotifyLogo className="w-4 h-4" weight="fill" />, color: '#1DB954',
+    desc: 'Spotify analytics showcase',
+    block: { type: 'features', content: {
+      heading: 'Real Spotify Data', subtitle: 'Connect your Spotify account for live analytics',
+      items: [
+        { icon: 'ChartLineUp', title: 'Live Followers', description: 'Track your Spotify follower growth and popularity score in real-time.', color: '#1DB954' },
+        { icon: 'MusicNotes', title: 'Top Tracks', description: 'See which tracks are performing best with popularity rankings.', color: '#7C4DFF' },
+        { icon: 'Globe', title: 'Related Artists', description: 'Discover similar artists and understand your position in the market.', color: '#E040FB' },
+      ]
+    }, styles: { backgroundColor: '#000000', textColor: '#FFFFFF', padding: '80', columns: '3' } }
+  },
+  {
+    key: 'tpl_ai_features', label: 'AI Features', icon: <Lightning className="w-4 h-4" weight="fill" />, color: '#E040FB',
+    desc: 'AI-powered tools showcase',
+    block: { type: 'features', content: {
+      heading: 'AI-Powered Music Tools', subtitle: 'Leverage artificial intelligence to grow your career',
+      items: [
+        { icon: 'Lightning', title: 'AI Release Strategy', description: 'Get personalized release plans with optimal timing and playlist targeting.', color: '#E040FB' },
+        { icon: 'ChartLineUp', title: 'Smart Analytics', description: 'AI identifies trends in your streaming data and recommends actions.', color: '#1DB954' },
+        { icon: 'MusicNotes', title: 'Audio Watermarking', description: 'AI-generated voice tags automatically protect your beat previews.', color: '#00BCD4' },
+        { icon: 'Target', title: 'Goal Tracking', description: 'Set stream goals and milestones. AI tracks your progress and celebrates wins.', color: '#FFD700' },
+      ]
+    }, styles: { backgroundColor: '#0a0a0a', textColor: '#FFFFFF', padding: '80', columns: '2' } }
+  },
+  {
+    key: 'tpl_collab_hub', label: 'Collaboration Hub', icon: <Users className="w-4 h-4" weight="fill" />, color: '#2196F3',
+    desc: 'Artist collaboration showcase',
+    block: { type: 'two_column', content: {
+      leftHeading: 'Collaboration Hub',
+      leftBody: 'Find collaborators, build your network, and create music together — all from one platform.\n\n- Post collab opportunities\n- Find producers, vocalists & engineers\n- Direct messaging built-in\n- Share files and audio clips',
+      rightHeading: 'In-App Messaging',
+      rightBody: 'Real-time chat with everything you need to work together seamlessly.\n\n- Read receipts & typing indicators\n- File and audio sharing\n- Direct messages from any profile\n- Full conversation history',
+    }, styles: { backgroundColor: '#000000', textColor: '#FFFFFF', padding: '80' } }
+  },
+  {
+    key: 'tpl_royalty_splits', label: 'Royalty Splits', icon: <HandCoins className="w-4 h-4" weight="fill" />, color: '#FF9800',
+    desc: 'Revenue sharing feature',
+    block: { type: 'two_column', content: {
+      leftHeading: 'Producer Royalty Splits',
+      leftBody: 'Automatically calculate and distribute royalties between producers and artists on every stream and purchase.\n\n- Auto-calculated splits\n- Direct wallet credits\n- Transparent tracking\n- Admin payout dashboard',
+      rightHeading: 'Revenue Analytics',
+      rightBody: 'Deep insights into your earnings across all platforms with our powerful analytics dashboard.\n\n- Per-stream revenue breakdown\n- Platform comparison charts\n- What-if royalty calculator\n- Monthly/quarterly reports',
+    }, styles: { backgroundColor: '#0a0a0a', textColor: '#FFFFFF', padding: '80' } }
+  },
+  {
+    key: 'tpl_artist_profile', label: 'Artist Profile', icon: <Palette className="w-4 h-4" weight="fill" />, color: '#00BCD4',
+    desc: 'Public profile showcase',
+    block: { type: 'features', content: {
+      heading: 'Your Link-in-Bio, Powered by Music', subtitle: 'Every artist gets a beautiful, shareable public profile',
+      items: [
+        { icon: 'MusicNotes', title: 'Audio Previews', description: 'Fans can listen to your tracks directly on your profile page.', color: '#00BCD4' },
+        { icon: 'Star', title: 'Custom Themes', description: 'Match your brand with custom theme colors and styling.', color: '#E040FB' },
+        { icon: 'Globe', title: 'QR Code Sharing', description: 'Generate QR codes for merch, shows, and social media.', color: '#7C4DFF' },
+      ]
+    }, styles: { backgroundColor: '#111111', textColor: '#FFFFFF', padding: '80', columns: '3' } }
+  },
+  {
+    key: 'tpl_leaderboard', label: 'Leaderboard', icon: <Trophy className="w-4 h-4" weight="fill" />, color: '#FFD700',
+    desc: 'Performance rankings',
+    block: { type: 'stats', content: {
+      items: [
+        { value: '#1', label: 'Top Release' },
+        { value: 'HOT', label: 'Momentum' },
+        { value: '500K+', label: 'Total Streams' },
+        { value: '15', label: 'Countries' },
+      ]
+    }, styles: { backgroundColor: '#111111', textColor: '#FFFFFF', accentColor: '#FFD700', padding: '60' } }
+  },
+  {
+    key: 'tpl_distribution_cta', label: 'Distribution CTA', icon: <Globe className="w-4 h-4" weight="fill" />, color: '#E040FB',
+    desc: 'Call-to-action for distribution',
+    block: { type: 'cta', content: {
+      heading: 'Distribute Your Music to 150+ Stores',
+      subtitle: 'Spotify, Apple Music, YouTube, TikTok, Amazon, and more. Keep 100% of your royalties.',
+      buttonText: 'START DISTRIBUTING NOW',
+      buttonUrl: '/register',
+    }, styles: { backgroundColor: '#111111', textColor: '#FFFFFF', accentColor: '#E040FB', padding: '100' } }
+  },
+  {
+    key: 'tpl_subscription_plans', label: 'Subscription Plans', icon: <CurrencyDollar className="w-4 h-4" weight="fill" />, color: '#FFD700',
+    desc: 'Full pricing table',
+    block: { type: 'pricing', content: {
+      heading: 'Choose Your Plan', subtitle: 'Transparent pricing for every stage of your career',
+      items: [
+        { name: 'Free', price: '$0', period: '', features: ['All platforms', '15-20% rev share', 'Basic analytics', 'Community support'], buttonText: 'Start Free', highlighted: false },
+        { name: 'Rise', price: '$20', period: '/yr', features: ['Up to 3 tracks', '100% royalties', 'Free ISRC codes', 'AI strategy', 'Fan analytics'], buttonText: 'Get Rise', highlighted: false },
+        { name: 'Pro', price: '$75', period: '/yr', features: ['Unlimited tracks', '100% royalties', 'Priority support', 'Beat marketplace', 'Revenue analytics'], buttonText: 'Go Pro', highlighted: true },
+      ]
+    }, styles: { backgroundColor: '#0a0a0a', textColor: '#FFFFFF', accentColor: '#FFD700', padding: '80' } }
+  },
+  {
+    key: 'tpl_content_protection', label: 'Content Protection', icon: <ShieldCheck className="w-4 h-4" weight="fill" />, color: '#FF6B6B',
+    desc: 'Rights & protection showcase',
+    block: { type: 'features', content: {
+      heading: 'Your Music, Your Rights', subtitle: 'Full protection and ownership guaranteed',
+      items: [
+        { icon: 'ShieldCheck', title: '100% Ownership', description: 'You always keep full ownership of your master recordings and compositions.', color: '#1DB954' },
+        { icon: 'ShieldCheck', title: 'Digital Contracts', description: 'Legally-binding contracts generated for every transaction with e-signatures.', color: '#FF6B6B' },
+        { icon: 'ShieldCheck', title: 'AI Watermarking', description: 'Protect your beats with AI-generated voice tags before purchase.', color: '#00BCD4' },
+        { icon: 'ShieldCheck', title: 'ISRC & UPC Codes', description: 'Free International Standard Recording Codes included with every release.', color: '#7C4DFF' },
+      ]
+    }, styles: { backgroundColor: '#000000', textColor: '#FFFFFF', padding: '80', columns: '2' } }
+  },
 ];
 
 const EDITABLE_PAGES = [
@@ -454,6 +576,7 @@ const PageBuilderPage = () => {
   const [showPageSwitcher, setShowPageSwitcher] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const [sidebarTab, setSidebarTab] = useState('blocks'); // 'blocks' | 'templates'
 
   useEffect(() => { fetchLayout(); }, [slug]);
 
@@ -552,6 +675,27 @@ const PageBuilderPage = () => {
     } catch { toast.error('Failed to unpublish'); }
   };
 
+  const resetToDefault = async () => {
+    if (!window.confirm('Reset this page to the original default layout? This will replace all current blocks.')) return;
+    try {
+      await axios.post(`${API}/admin/pages/${slug}/seed-defaults`, {}, { withCredentials: true });
+      toast.success('Page reset to defaults!');
+      await fetchLayout();
+    } catch { toast.error('Failed to reset'); }
+  };
+
+  const addTemplateBlock = (template) => {
+    const newBlock = {
+      id: `blk_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`,
+      type: template.block.type,
+      order: blocks.length,
+      content: JSON.parse(JSON.stringify(template.block.content)),
+      styles: { ...template.block.styles },
+    };
+    setBlocks(prev => [...prev, newBlock]);
+    toast.success(`Added: ${template.label}`);
+  };
+
   if (loading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" /></div>;
 
   const selectedBlockData = styleBlock ? blocks.find(b => b.id === styleBlock) : null;
@@ -592,6 +736,10 @@ const PageBuilderPage = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={resetToDefault} title="Reset to default"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-lg text-xs text-white/50 hover:text-white hover:bg-white/10" data-testid="reset-btn">
+            <ArrowCounterClockwise className="w-3.5 h-3.5" /> Reset
+          </button>
           <a href={slug === 'landing' ? '/' : `/${slug}`} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-lg text-xs text-white/60 hover:text-white hover:bg-white/10" data-testid="preview-btn">
             <Eye className="w-3.5 h-3.5" /> Preview
@@ -613,20 +761,59 @@ const PageBuilderPage = () => {
       </div>
 
       <div className="flex" onClick={() => showPageSwitcher && setShowPageSwitcher(false)}>
-        {/* Left Sidebar — Add Blocks */}
-        <div className="w-56 flex-shrink-0 bg-[#0A0A0A] border-r border-white/10 p-3 h-[calc(100vh-53px)] overflow-y-auto sticky top-[53px]" data-testid="block-palette">
-          <p className="text-[10px] uppercase tracking-[2px] text-white/30 font-bold mb-3 px-1">Add Blocks</p>
-          <div className="space-y-1">
-            {BLOCK_TYPES.map(bt => (
-              <button key={bt.key} onClick={() => addBlock(bt.key)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left text-xs font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all group"
-                data-testid={`add-block-${bt.key}`}>
-                <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ backgroundColor: `${bt.color}20`, color: bt.color }}>
-                  {bt.icon}
+        {/* Left Sidebar — Blocks + Templates */}
+        <div className="w-56 flex-shrink-0 bg-[#0A0A0A] border-r border-white/10 h-[calc(100vh-53px)] overflow-y-auto sticky top-[53px]" data-testid="block-palette">
+          {/* Tabs */}
+          <div className="flex border-b border-white/10 sticky top-0 bg-[#0A0A0A] z-10">
+            <button onClick={() => setSidebarTab('blocks')}
+              className={`flex-1 py-2.5 text-[10px] uppercase tracking-[1.5px] font-bold text-center transition-colors ${sidebarTab === 'blocks' ? 'text-[#7C4DFF] border-b-2 border-[#7C4DFF]' : 'text-white/30 hover:text-white/50'}`}
+              data-testid="tab-blocks">
+              Blocks
+            </button>
+            <button onClick={() => setSidebarTab('templates')}
+              className={`flex-1 py-2.5 text-[10px] uppercase tracking-[1.5px] font-bold text-center transition-colors ${sidebarTab === 'templates' ? 'text-[#E040FB] border-b-2 border-[#E040FB]' : 'text-white/30 hover:text-white/50'}`}
+              data-testid="tab-templates">
+              Templates
+            </button>
+          </div>
+
+          <div className="p-3">
+            {sidebarTab === 'blocks' ? (
+              <>
+                <p className="text-[10px] uppercase tracking-[2px] text-white/30 font-bold mb-3 px-1">Add Blocks</p>
+                <div className="space-y-1">
+                  {BLOCK_TYPES.map(bt => (
+                    <button key={bt.key} onClick={() => addBlock(bt.key)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left text-xs font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all group"
+                      data-testid={`add-block-${bt.key}`}>
+                      <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform" style={{ backgroundColor: `${bt.color}20`, color: bt.color }}>
+                        {bt.icon}
+                      </div>
+                      {bt.label}
+                    </button>
+                  ))}
                 </div>
-                {bt.label}
-              </button>
-            ))}
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-[2px] text-white/30 font-bold mb-3 px-1">Feature Templates</p>
+                <div className="space-y-1.5">
+                  {TEMPLATE_BLOCKS.map(tpl => (
+                    <button key={tpl.key} onClick={() => addTemplateBlock(tpl)}
+                      className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-left text-xs font-medium text-white/70 hover:bg-white/5 hover:text-white transition-all group"
+                      data-testid={`add-template-${tpl.key}`}>
+                      <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" style={{ backgroundColor: `${tpl.color}20`, color: tpl.color }}>
+                        {tpl.icon}
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium">{tpl.label}</p>
+                        <p className="text-[10px] text-white/30 leading-tight mt-0.5">{tpl.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

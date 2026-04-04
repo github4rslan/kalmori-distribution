@@ -1558,18 +1558,18 @@ SUBSCRIPTION_PLANS = {
         "name": "Free", "price": 0, "revenue_share": 20,
         "max_releases": 1,
         "features": ["1 release per year", "150+ streaming platforms", "Free ISRC codes", "Basic analytics", "Standard support"],
-        "locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaborations"]
+        "locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaborations", "spotify_data", "beat_marketplace", "messaging", "royalty_splits"]
     },
     "rise": {
         "name": "Rise", "price": 9.99, "revenue_share": 10,
         "max_releases": -1,
-        "features": ["Unlimited releases", "150+ streaming platforms", "Free ISRC & UPC codes", "Advanced analytics", "Revenue dashboard", "Priority support"],
-        "locked": ["ai_strategy", "content_id", "spotify_canvas", "leaderboard", "presave"]
+        "features": ["Unlimited releases", "150+ streaming platforms", "Free ISRC & UPC codes", "Advanced analytics", "Revenue dashboard", "Fan analytics", "In-App messaging", "Beat marketplace access", "Priority support"],
+        "locked": ["ai_strategy", "content_id", "spotify_canvas", "leaderboard", "presave", "royalty_splits", "spotify_data"]
     },
     "pro": {
         "name": "Pro", "price": 19.99, "revenue_share": 0,
         "max_releases": -1,
-        "features": ["Everything in Rise", "Keep 100% royalties", "AI Release Strategy", "Revenue Export (PDF/CSV)", "YouTube Content ID", "Spotify Canvas", "Release Leaderboard", "Goal Tracking", "Pre-Save Campaigns", "Collaborations & Splits", "Fan Analytics", "Dedicated support"],
+        "features": ["Everything in Rise", "Keep 100% royalties", "AI Release Strategy", "Revenue Export (PDF/CSV)", "YouTube Content ID", "Spotify Canvas", "Spotify Data (Real API)", "Release Leaderboard", "Goal Tracking", "Pre-Save Campaigns", "Collaborations & Splits", "Producer Royalty Splits", "Fan Analytics", "Beat Marketplace", "In-App Messaging", "Dedicated support"],
         "locked": []
     },
 }
@@ -1596,8 +1596,12 @@ def check_feature_access(user_plan: str, feature: str):
     plan = SUBSCRIPTION_PLANS.get(user_plan, SUBSCRIPTION_PLANS["free"])
     locked = plan.get("locked", [])
     if feature in locked:
-        plan_names = {"ai_strategy": "Pro", "revenue_export": "Pro", "content_id": "Pro", "spotify_canvas": "Pro",
-                      "leaderboard": "Pro", "goals": "Pro", "presave": "Pro", "fan_analytics": "Pro", "collaborations": "Pro"}
+        plan_names = {
+            "ai_strategy": "Pro", "revenue_export": "Pro", "content_id": "Pro", "spotify_canvas": "Pro",
+            "leaderboard": "Pro", "goals": "Pro", "presave": "Pro", "fan_analytics": "Rise",
+            "collaborations": "Rise", "spotify_data": "Pro", "beat_marketplace": "Rise",
+            "messaging": "Rise", "royalty_splits": "Pro"
+        }
         required = plan_names.get(feature, "Pro")
         raise HTTPException(status_code=403, detail=f"This feature requires the {required} plan. Upgrade at /pricing")
 
