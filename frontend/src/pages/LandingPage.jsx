@@ -665,7 +665,7 @@ const LandingPage = () => {
             ))}
           </div>
           <div className="text-center mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#E53935] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E53935]/20" data-testid="home-start-free-btn">
+            <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="home-start-free-btn">
               START FREE <ArrowRight className="w-4 h-4" />
             </button>
             <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full border-2 border-[#E53935] text-[#E53935] text-sm font-bold tracking-[2px] hover:bg-[#E53935]/10 transition-all" data-testid="home-pricing-btn">
