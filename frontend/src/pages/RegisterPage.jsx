@@ -313,7 +313,7 @@ const RegisterPage = () => {
                   <button type="button" onClick={() => setShowCountryPicker(!showCountryPicker)}
                     className="w-full flex items-center justify-between bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-left hover:border-[#0095FF] transition-colors"
                     data-testid="register-country-picker">
-                    <span className={`text-sm ${country ? 'text-black' : 'text-gray-400'}`}>
+                    <span className={`text-sm ${country ? 'text-white' : 'text-gray-400'}`}>
                       {country || '- Select a Country -'}
                     </span>
                     <CaretDown className={`w-4 h-4 text-gray-400 transition-transform ${showCountryPicker ? 'rotate-180' : ''}`} />
@@ -340,7 +340,7 @@ const RegisterPage = () => {
 
                 {/* Address */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Address</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Address</label>
                   <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
                     className={inputCls} data-testid="register-address" />
                 </div>
@@ -386,7 +386,7 @@ const RegisterPage = () => {
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1.5">Phone</label>
+                  <label className="block text-gray-400 text-sm font-medium mb-1.5">Phone</label>
                   <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                     className={inputCls} data-testid="register-phone" />
                 </div>
