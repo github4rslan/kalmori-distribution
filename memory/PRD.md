@@ -1,7 +1,7 @@
 # Kalmori - TuneCore Clone PRD
 
 ## Original Problem Statement
-Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians with Authentication, Subscriptions, Object Storage, AI Features, Release/Track uploads with a professional Wizard, Distribution to 150+ platforms, Beat/Instrumental catalog, and dark premium UI.
+Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians with Authentication, Subscriptions, Object Storage, AI Features, Release/Track uploads, Distribution to 150+ platforms, Beat/Instrumental catalog, and dark premium UI.
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Recharts + Phosphor Icons + Framer Motion
@@ -10,11 +10,6 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **Storage**: Emergent Object Storage | **Payments**: Stripe + PayPal
 - **Auth**: JWT + Google Social Login + reCAPTCHA v2 + Email Verification
 - **AI**: OpenAI GPT-4o via Emergent LLM Key | **Email**: Resend | **PDF**: reportlab
-
-## UI Color Theme
-- **Landing page & site-wide buttons**: Purple/Pink/Magenta animated gradient (#7C4DFF -> #E040FB -> #FF4081)
-- **Button pairs**: First = filled animated, Second = outline with animated border
-- **Login & Register pages only**: Blue-to-Purple animated gradient (#0095FF -> #7468F8)
 
 ## Subscription Tiers
 | Plan | Price | Revenue Share |
@@ -31,28 +26,30 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 
 ### Email Domain Management
 - Admin page for custom Resend domain configuration
-- Add/verify/activate domains with DNS record display
 
 ### Subscription & Plan Gating
 - 3-tier system with Stripe checkout, sidebar feature gating
 
-### Promo Code / Discount System (Apr 2026)
+### Promo Code / Discount System
 - Admin CRUD: create codes with % or $ discount, plan targeting, expiry, max uses, duration
-- Public validation endpoint with discount calculation
-- Pricing page promo code input with real-time validation
-- Redemption tracking with usage counts
+- Public validation endpoint, pricing page integration
 
-### Track Editing (Apr 2026)
+### Referral Program (Apr 2026)
+- Users get unique referral code + shareable link
+- Registration detects ?ref=CODE and completes referral after signup
+- Both referrer and new user get a free month of Rise
+- Referrer notification on successful referral
+- User-facing /referrals page with stats, copy link, share button, referred users list
+- Admin /admin/referrals overview with top referrers and recent signups
+
+### Track Editing
 - Full edit form on Release Detail page with 12 fields
-- Title, Title Version, Explicit, ISRC (with generator), Dolby Atmos ISRC, ISWC
-- Language, Production, Publisher, Preview Start/End, Artists
-- Inline edit/save/cancel on each track
 - PUT /api/tracks/{id} backend endpoint
 
 ### Admin Dashboard
 - Users, Submissions, Beat Manager, Royalty Import
 - Schedules, Reconciliation, Campaigns, Leads
-- Email Settings, Promo Codes
+- Email Settings, Promo Codes, Referrals
 
 ### Client Features
 - Revenue Analytics + Export, Leaderboard, AI Strategy + PDF Export
@@ -61,11 +58,12 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 
 ### UI/UX Dark Theme
 - Animated purple/pink gradients on landing page and all buttons
+- Button pairs: filled animated + outline animated border
+- Login & Register: blue-to-purple gradient
 - Footer KALMORI logo animated, Emergent badge hidden
-- Kalmori Artist Agreement page
 
 ## All Pages & Routes
-`/` `/login` `/register` `/select-role` `/verify-email` `/pricing` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import` `/admin/campaigns` `/admin/leads` `/admin/email-settings` `/admin/promo-codes` `/agreement`
+`/` `/login` `/register` `/select-role` `/verify-email` `/pricing` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/referrals` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import` `/admin/campaigns` `/admin/leads` `/admin/email-settings` `/admin/promo-codes` `/admin/referrals` `/agreement`
 
 ## Remaining Backlog
 - P1: Real Spotify OAuth with API credentials
