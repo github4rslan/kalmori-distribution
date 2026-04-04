@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API } from '../App';
 
@@ -134,6 +134,7 @@ const DashboardLayout = ({ children }) => {
     { path: '/purchases', icon: <ShoppingBag className="w-5 h-5" />, label: 'My Purchases' },
     { path: '/collaborations', icon: <UsersThree className="w-5 h-5" />, label: 'Collaborations', feat: 'collaborations' },
     { path: '/collab-hub', icon: <Lightning className="w-5 h-5" />, label: 'Collab Hub' },
+    { path: '/messages', icon: <ChatCircle className="w-5 h-5" />, label: 'Messages' },
     { path: '/presave-manager', icon: <Megaphone className="w-5 h-5" />, label: 'Pre-Save', feat: 'presave' },
     { path: '/fan-analytics', icon: <HeartStraight className="w-5 h-5" />, label: 'Fan Analytics', feat: 'fan_analytics' },
     { path: '/leaderboard', icon: <Trophy className="w-5 h-5" />, label: 'Leaderboard', feat: 'leaderboard' },

@@ -1868,13 +1868,13 @@ async def create_collab_post(data: CollabPostCreate, request: Request):
 
 @api_router.get("/collab-hub/posts")
 async def list_collab_posts(request: Request, looking_for: str = None, genre: str = None):
-    await get_current_user(request)
-    query = {"status": "open"}
+    user = await get_current_user(request)
+    query = {"status": "open", "user_id": {"$ne": user["id"]}}
     if looking_for:
         query["looking_for"] = looking_for
     if genre:
         query["genre"] = {"$regex": genre, "$options": "i"}
-    posts = await db.collab_posts.find(query, {"_id": 0}).sort("created_at", -1).to_list(50)
+    posts = await db.collab_posts.find(query, {"_id": 0, "user_id": 0}).sort("created_at", -1).to_list(50)
     return posts
 
 @api_router.get("/collab-hub/my-posts")
@@ -1933,6 +1933,9 @@ async def send_collab_invite(request: Request):
     await db.collab_invites.insert_one(invite)
     invite.pop("_id", None)
     await db.collab_posts.update_one({"id": post_id}, {"$inc": {"responses": 1}})
+    # Remove internal user IDs from response
+    invite.pop("from_user_id", None)
+    invite.pop("to_user_id", None)
     await db.notifications.insert_one({
         "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": post["user_id"],
         "type": "collab_invite",
@@ -1944,8 +1947,8 @@ async def send_collab_invite(request: Request):
 @api_router.get("/collab-hub/invites")
 async def get_collab_invites(request: Request):
     user = await get_current_user(request)
-    received = await db.collab_invites.find({"to_user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
-    sent = await db.collab_invites.find({"from_user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    received = await db.collab_invites.find({"to_user_id": user["id"]}, {"_id": 0, "to_user_id": 0}).sort("created_at", -1).to_list(50)
+    sent = await db.collab_invites.find({"from_user_id": user["id"]}, {"_id": 0, "from_user_id": 0}).sort("created_at", -1).to_list(50)
     return {"received": received, "sent": sent}
 
 @api_router.put("/collab-hub/invites/{invite_id}")
@@ -1962,6 +1965,29 @@ async def respond_to_invite(invite_id: str, request: Request):
     await db.collab_invites.update_one({"id": invite_id}, {"$set": {"status": new_status}})
     if action == "accept":
         await db.collab_posts.update_one({"id": invite["post_id"]}, {"$set": {"status": "in_progress"}})
+        # Auto-create a conversation between the two collaborators
+        participants = sorted([user["id"], invite["from_user_id"]])
+        existing_convo = await db.conversations.find_one({"participants": participants, "invite_id": invite_id})
+        if not existing_convo:
+            convo_id = f"convo_{uuid.uuid4().hex[:12]}"
+            await db.conversations.insert_one({
+                "id": convo_id,
+                "participants": participants,
+                "invite_id": invite_id,
+                "post_title": invite.get("post_title", ""),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            })
+            # Insert a system message
+            await db.messages.insert_one({
+                "id": f"msg_{uuid.uuid4().hex[:12]}",
+                "conversation_id": convo_id,
+                "sender_id": "system",
+                "sender_name": "Kalmori",
+                "text": f"Collaboration accepted! You can now discuss \"{invite.get('post_title', 'your project')}\" here.",
+                "read": False,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
     await db.notifications.insert_one({
         "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": invite["from_user_id"],
         "type": "collab_response",
@@ -1969,6 +1995,103 @@ async def respond_to_invite(invite_id: str, request: Request):
         "read": False, "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return {"message": f"Invite {new_status}"}
+
+# ============= IN-APP MESSAGING =============
+
+@api_router.get("/messages/conversations")
+async def list_conversations(request: Request):
+    """List all conversations for the current user (only from accepted collab invites)"""
+    user = await get_current_user(request)
+    uid = user["id"]
+    convos = await db.conversations.find(
+        {"participants": uid}, {"_id": 0}
+    ).sort("updated_at", -1).to_list(50)
+    # Attach last message and unread count per conversation
+    for c in convos:
+        last_msg = await db.messages.find_one(
+            {"conversation_id": c["id"]}, {"_id": 0},
+            sort=[("created_at", -1)]
+        )
+        c["last_message"] = last_msg
+        unread = await db.messages.count_documents(
+            {"conversation_id": c["id"], "sender_id": {"$ne": uid}, "read": False}
+        )
+        c["unread_count"] = unread
+        # Resolve the other participant's name
+        other_id = [p for p in c["participants"] if p != uid]
+        if other_id:
+            other_user = await db.users.find_one({"id": other_id[0]}, {"_id": 0, "artist_name": 1, "name": 1, "email": 1})
+            c["other_user"] = {"artist_name": (other_user or {}).get("artist_name") or (other_user or {}).get("name", "Unknown"), "email": (other_user or {}).get("email", "")}
+        else:
+            c["other_user"] = {"artist_name": "Unknown", "email": ""}
+    return convos
+
+@api_router.get("/messages/unread/count")
+async def unread_message_count(request: Request):
+    """Get total unread message count for the current user"""
+    user = await get_current_user(request)
+    convos = await db.conversations.find({"participants": user["id"]}, {"id": 1, "_id": 0}).to_list(100)
+    convo_ids = [c["id"] for c in convos]
+    if not convo_ids:
+        return {"unread": 0}
+    count = await db.messages.count_documents(
+        {"conversation_id": {"$in": convo_ids}, "sender_id": {"$ne": user["id"]}, "read": False}
+    )
+    return {"unread": count}
+
+@api_router.get("/messages/{conversation_id}")
+async def get_messages(conversation_id: str, request: Request):
+    """Get messages for a conversation (only if user is a participant)"""
+    user = await get_current_user(request)
+    convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
+    if not convo:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    messages = await db.messages.find(
+        {"conversation_id": conversation_id}, {"_id": 0}
+    ).sort("created_at", 1).to_list(200)
+    # Mark messages from other user as read
+    await db.messages.update_many(
+        {"conversation_id": conversation_id, "sender_id": {"$ne": user["id"]}, "read": False},
+        {"$set": {"read": True}}
+    )
+    return messages
+
+@api_router.post("/messages/{conversation_id}")
+async def send_message(conversation_id: str, request: Request):
+    """Send a message in a conversation (only if user is a participant)"""
+    user = await get_current_user(request)
+    convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
+    if not convo:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    body = await request.json()
+    text = body.get("text", "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    msg = {
+        "id": f"msg_{uuid.uuid4().hex[:12]}",
+        "conversation_id": conversation_id,
+        "sender_id": user["id"],
+        "sender_name": user.get("artist_name") or user.get("name", ""),
+        "text": text,
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.messages.insert_one(msg)
+    msg.pop("_id", None)
+    await db.conversations.update_one(
+        {"id": conversation_id},
+        {"$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    # Send notification to the other participant
+    other_ids = [p for p in convo["participants"] if p != user["id"]]
+    for oid in other_ids:
+        await db.notifications.insert_one({
+            "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": oid,
+            "type": "new_message",
+            "message": f"New message from {user.get('artist_name', 'Someone')}",
+            "read": False, "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+    return msg
 
 # ============= RELEASE CALENDAR =============
 
