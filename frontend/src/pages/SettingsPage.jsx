@@ -73,11 +73,21 @@ const SettingsPage = () => {
     fetchSpotifyStatus();
     fetchSlug();
     fetchTheme();
+    // Handle Spotify OAuth callback
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('spotify') === 'success') {
+      toast.success('Spotify connected successfully!');
+      fetchSpotifyStatus();
+      window.history.replaceState({}, '', '/settings');
+    } else if (params.get('spotify') === 'error') {
+      toast.error(`Spotify connection failed: ${params.get('reason') || 'Unknown error'}`);
+      window.history.replaceState({}, '', '/settings');
+    }
   }, []);
 
   const fetchSpotifyStatus = async () => {
     try {
-      const res = await axios.get(`${API}/integrations/spotify/status`, { withCredentials: true });
+      const res = await axios.get(`${API}/spotify/status`, { withCredentials: true });
       setSpotifyStatus(res.data);
     } catch {}
   };
@@ -543,25 +553,69 @@ const SettingsPage = () => {
                   <div>
                     <p className="text-sm font-bold text-white">Spotify for Artists</p>
                     <p className="text-xs text-gray-500">
-                      {spotifyStatus?.connected ? `Connected as ${spotifyStatus.display_name || 'your account'}` : 'Connect to import real streaming data'}
+                      {spotifyStatus?.connected
+                        ? spotifyStatus.spotify_artist_name
+                          ? `Linked to ${spotifyStatus.spotify_artist_name} (${(spotifyStatus.spotify_artist_followers || 0).toLocaleString()} followers)`
+                          : `Connected as ${spotifyStatus.spotify_display_name || 'your account'}`
+                        : 'Connect to import real streaming data'}
                     </p>
                   </div>
                 </div>
                 {spotifyStatus?.connected ? (
-                  <button onClick={async () => {
-                    await axios.delete(`${API}/integrations/spotify/disconnect`, { withCredentials: true });
-                    setSpotifyStatus({ connected: false });
-                    toast.success('Spotify disconnected');
-                  }} className="px-4 py-2 text-xs font-medium text-red-400 border border-red-400/30 rounded-full hover:bg-red-400/10 transition-all" data-testid="disconnect-spotify">
-                    Disconnect
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {spotifyStatus.spotify_artist_image && (
+                      <img src={spotifyStatus.spotify_artist_image} alt="" className="w-8 h-8 rounded-full" />
+                    )}
+                    <button onClick={async () => {
+                      await axios.post(`${API}/spotify/disconnect`, {}, { withCredentials: true });
+                      setSpotifyStatus({ connected: false });
+                      toast.success('Spotify disconnected');
+                    }} className="px-4 py-2 text-xs font-medium text-red-400 border border-red-400/30 rounded-full hover:bg-red-400/10 transition-all" data-testid="disconnect-spotify">
+                      Disconnect
+                    </button>
+                  </div>
                 ) : (
-                  <button onClick={() => toast.info('Spotify OAuth coming soon! Connect your Spotify for Artists account for real-time streaming analytics.')}
+                  <button onClick={async () => {
+                    try {
+                      const res = await axios.get(`${API}/spotify/connect`, { withCredentials: true });
+                      if (res.data?.auth_url) window.location.href = res.data.auth_url;
+                    } catch { toast.error('Failed to start Spotify connection'); }
+                  }}
                     className="px-4 py-2 text-xs font-bold text-[#1DB954] border border-[#1DB954]/30 rounded-full hover:bg-[#1DB954]/10 transition-all flex items-center gap-2" data-testid="connect-spotify">
                     <LinkIcon className="w-3.5 h-3.5" /> Connect
                   </button>
                 )}
               </div>
+              {spotifyStatus?.connected && !spotifyStatus.spotify_artist_id && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <p className="text-xs text-yellow-400 mb-2">No artist profile linked yet. Search for your Spotify artist profile:</p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter your artist name..."
+                      className="flex-1 bg-[#0a0a0a] border-white/10 text-white text-xs"
+                      id="spotify-artist-search"
+                      data-testid="spotify-artist-search"
+                    />
+                    <button onClick={async () => {
+                      const q = document.getElementById('spotify-artist-search')?.value;
+                      if (!q) return;
+                      try {
+                        const res = await axios.post(`${API}/spotify/refresh-artist`, { artist_name: q }, { withCredentials: true });
+                        if (res.data.artists?.length) {
+                          const first = res.data.artists[0];
+                          await axios.post(`${API}/spotify/link-artist`, { artist_id: first.id }, { withCredentials: true });
+                          toast.success(`Linked to ${first.name}`);
+                          fetchSpotifyStatus();
+                        } else {
+                          toast.error('No artists found');
+                        }
+                      } catch { toast.error('Search failed'); }
+                    }} className="px-4 py-2 text-xs font-bold bg-[#1DB954] text-white rounded-lg hover:bg-[#1DB954]/80" data-testid="spotify-search-btn">
+                      Search & Link
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Apple Music */}

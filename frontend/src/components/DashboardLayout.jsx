@@ -129,6 +129,7 @@ const DashboardLayout = ({ children }) => {
     { path: '/analytics', icon: <ChartLineUp className="w-5 h-5" />, label: 'Analytics' },
     { path: '/wallet', icon: <Wallet className="w-5 h-5" />, label: 'Wallet' },
     { path: '/revenue', icon: <CurrencyDollar className="w-5 h-5" />, label: 'Revenue' },
+    { path: '/spotify', icon: <SpotifyLogo className="w-5 h-5" weight="fill" />, label: 'Spotify Data' },
     { path: '/spotify-canvas', icon: <SpotifyLogo className="w-5 h-5" />, label: 'Spotify Canvas', feat: 'spotify_canvas' },
     { path: '/content-id', icon: <YoutubeLogo className="w-5 h-5" />, label: 'Content ID', feat: 'content_id' },
     { path: '/purchases', icon: <ShoppingBag className="w-5 h-5" />, label: 'My Purchases' },
@@ -227,7 +228,7 @@ const DashboardLayout = ({ children }) => {
             <div className="flex items-center gap-3">
               <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-6 h-6" /></button>
               <span className="lg:hidden text-white text-[16px] font-bold">
-                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/purchases' ? 'My Purchases' : location.pathname === '/collaborations' ? 'Collaborations' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
+                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/purchases' ? 'My Purchases' : location.pathname === '/collaborations' ? 'Collaborations' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify' ? 'Spotify Data' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
               </span>
             </div>
             <div className="flex-1" />
