@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API } from '../App';
 
@@ -138,6 +138,7 @@ const DashboardLayout = ({ children }) => {
     { path: '/leaderboard', icon: <Trophy className="w-5 h-5" />, label: 'Leaderboard', feat: 'leaderboard' },
     { path: '/goals', icon: <Target className="w-5 h-5" />, label: 'Goals', feat: 'goals' },
     { path: '/referrals', icon: <Gift className="w-5 h-5" />, label: 'Referrals' },
+    { path: '/calendar', icon: <CalendarBlank className="w-5 h-5" />, label: 'Calendar' },
     { path: '/settings', icon: <Gear className="w-5 h-5" />, label: 'Settings' },
   ];
 

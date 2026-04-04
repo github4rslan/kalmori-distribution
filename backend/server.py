@@ -1835,6 +1835,149 @@ async def admin_referral_overview(request: Request):
         "top_referrers": top_referrers,
     }
 
+# ============= RELEASE CALENDAR =============
+
+INDUSTRY_DATES = [
+    {"title": "New Music Friday", "type": "recurring", "day_of_week": 4, "color": "#7C4DFF", "icon": "music"},
+    {"title": "Spotify Editorial Deadline", "type": "recurring", "day_of_week": 1, "color": "#1DB954", "icon": "spotify"},
+    {"title": "Apple Music Submission Window", "type": "recurring", "day_of_week": 1, "color": "#FC3C44", "icon": "apple"},
+]
+
+@api_router.get("/calendar/events")
+async def get_calendar_events(request: Request, month: int = None, year: int = None):
+    user = await get_current_user(request)
+    now = datetime.now(timezone.utc)
+    m = month or now.month
+    y = year or now.year
+
+    # Get release dates
+    releases = await db.releases.find(
+        {"artist_id": user["id"]}, {"_id": 0, "id": 1, "title": 1, "release_date": 1, "status": 1}
+    ).to_list(200)
+
+    events = []
+    for r in releases:
+        if r.get("release_date"):
+            events.append({
+                "id": f"rel_{r['id']}",
+                "title": r["title"],
+                "date": r["release_date"],
+                "type": "release",
+                "status": r.get("status", "draft"),
+                "color": "#E040FB",
+                "release_id": r["id"],
+            })
+
+    # Get custom events
+    custom = await db.calendar_events.find(
+        {"user_id": user["id"]}, {"_id": 0}
+    ).to_list(200)
+    events.extend(custom)
+
+    # Generate industry dates for the requested month
+    import calendar
+    _, days_in_month = calendar.monthrange(y, m)
+    for day in range(1, days_in_month + 1):
+        d = datetime(y, m, day)
+        for ind in INDUSTRY_DATES:
+            if ind["type"] == "recurring" and d.weekday() == ind["day_of_week"]:
+                events.append({
+                    "id": f"ind_{ind['title'][:3]}_{y}{m:02d}{day:02d}",
+                    "title": ind["title"],
+                    "date": d.strftime("%Y-%m-%d"),
+                    "type": "industry",
+                    "color": ind["color"],
+                })
+
+    return {"events": events, "month": m, "year": y}
+
+
+class CalendarEventCreate(BaseModel):
+    title: str
+    date: str  # YYYY-MM-DD
+    event_type: str = "custom"  # custom, reminder, deadline
+    color: str = "#7C4DFF"
+    notes: Optional[str] = ""
+    reminder: bool = False
+
+@api_router.post("/calendar/events")
+async def create_calendar_event(data: CalendarEventCreate, request: Request):
+    user = await get_current_user(request)
+    doc = {
+        "id": f"evt_{uuid.uuid4().hex[:12]}",
+        "user_id": user["id"],
+        "title": data.title,
+        "date": data.date,
+        "type": data.event_type,
+        "color": data.color,
+        "notes": data.notes,
+        "reminder": data.reminder,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.calendar_events.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+@api_router.put("/calendar/events/{event_id}")
+async def update_calendar_event(event_id: str, request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    allowed = {"title", "date", "color", "notes", "reminder", "type"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    result = await db.calendar_events.update_one(
+        {"id": event_id, "user_id": user["id"]}, {"$set": updates}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Event not found")
+    updated = await db.calendar_events.find_one({"id": event_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/calendar/events/{event_id}")
+async def delete_calendar_event(event_id: str, request: Request):
+    user = await get_current_user(request)
+    result = await db.calendar_events.delete_one({"id": event_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return {"message": "Event deleted"}
+
+@api_router.get("/calendar/upcoming")
+async def get_upcoming_events(request: Request):
+    """Get countdown for upcoming release dates"""
+    user = await get_current_user(request)
+    now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+
+    releases = await db.releases.find(
+        {"artist_id": user["id"], "release_date": {"$gte": today}},
+        {"_id": 0, "id": 1, "title": 1, "release_date": 1, "status": 1, "cover_url": 1}
+    ).sort("release_date", 1).to_list(10)
+
+    custom = await db.calendar_events.find(
+        {"user_id": user["id"], "date": {"$gte": today}},
+        {"_id": 0}
+    ).sort("date", 1).to_list(10)
+
+    upcoming = []
+    for r in releases:
+        rd = datetime.strptime(r["release_date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        days_until = (rd - now).days
+        upcoming.append({
+            "id": r["id"], "title": r["title"], "date": r["release_date"],
+            "days_until": max(0, days_until), "type": "release",
+            "status": r.get("status"), "cover_url": r.get("cover_url"),
+        })
+    for e in custom:
+        ed = datetime.strptime(e["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        days_until = (ed - now).days
+        upcoming.append({
+            "id": e["id"], "title": e["title"], "date": e["date"],
+            "days_until": max(0, days_until), "type": e.get("type", "custom"),
+            "color": e.get("color"),
+        })
+
+    upcoming.sort(key=lambda x: x["date"])
+    return {"upcoming": upcoming[:10]}
+
 # ============= NOTIFICATIONS =============
 @api_router.get("/notifications")
 async def get_notifications(request: Request):

@@ -59,6 +59,7 @@ import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
 import ReferralPage from './pages/ReferralPage';
 import AdminReferralsPage from './pages/AdminReferralsPage';
 import AdminAnalyticsReportsPage from './pages/AdminAnalyticsReportsPage';
+import CalendarPage from './pages/CalendarPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -288,6 +289,7 @@ const AppRouter = () => {
       <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
       <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
               <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
       <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />
       <Route path="/artist/:slug" element={<ArtistProfilePage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
