@@ -183,11 +183,11 @@ const LandingPage = () => {
             <HeroTypewriterSequence />
             <div className="mt-10 flex flex-wrap gap-4 float-up-d2">
               <Link to="/register">
-                <button className="bg-[#E53935] px-10 py-4 rounded-full text-white font-bold text-sm tracking-[2px] flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E53935]/20" data-testid="hero-cta-btn">
+                <button className="animate-btn-gradient px-10 py-4 rounded-full text-white font-bold text-sm tracking-[2px] flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="hero-cta-btn">
                   DISTRIBUTE MY MUSIC ONLINE <ArrowRight className="w-5 h-5" />
                 </button>
               </Link>
-              <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full border-2 border-white/30 text-white font-bold text-sm tracking-[2px] hover:bg-white/10 transition-all" data-testid="hero-pricing-btn">
+              <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full animate-btn-gradient text-white font-bold text-sm tracking-[2px] hover:brightness-110 transition-all" data-testid="hero-pricing-btn">
                 VIEW PRICING
               </button>
             </div>
@@ -253,7 +253,7 @@ const LandingPage = () => {
             <p className="text-lg text-gray-400 leading-relaxed mb-10">
               As a pioneer in indie music distribution, Kalmori is dedicated to making music accessible while keeping artists in full control of their creative work.
             </p>
-            <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="see-plans-btn">
+            <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="see-plans-btn">
               SEE OUR DISTRIBUTION PLANS <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -293,7 +293,7 @@ const LandingPage = () => {
               </div>
 
               <div className="mt-10">
-                <button onClick={() => navigate('/services')} className="px-10 py-4 rounded-full bg-[#7C4DFF] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all" data-testid="all-services-btn">
+                <button onClick={() => navigate('/services')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="all-services-btn">
                   ALL OUR SERVICES <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -506,7 +506,7 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('/publishing')} className="px-10 py-4 rounded-full bg-[#7C4DFF] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all" data-testid="publishing-btn">
+              <button onClick={() => navigate('/publishing')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="publishing-btn">
                 LEARN MORE <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -535,10 +535,10 @@ const LandingPage = () => {
                 Kalmori leverages innovative, in-house tools to elevate the ideal tracks for greater audience reach. Our comprehensive suite of tools, analytics, and promotion services gives you everything you need.
               </p>
               <div className="flex flex-wrap gap-4">
-                <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#7C4DFF] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all" data-testid="accelerator-signup-btn">
+                <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="accelerator-signup-btn">
                   SIGN UP <ArrowRight className="w-5 h-5" />
                 </button>
-                <button onClick={() => navigate('/about')} className="px-10 py-4 rounded-full border-2 border-[#7C4DFF] text-[#7C4DFF] text-sm font-bold tracking-[2px] hover:bg-[#7C4DFF]/10 transition-all" data-testid="accelerator-report-btn">
+                <button onClick={() => navigate('/about')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="accelerator-report-btn">
                   READ MORE
                 </button>
               </div>
@@ -620,7 +620,7 @@ const LandingPage = () => {
               ))}
             </div>
             <div className="text-center">
-              <button onClick={() => navigate('/instrumentals')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all" data-testid="browse-all-beats-btn">
+              <button onClick={() => navigate('/instrumentals')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="browse-all-beats-btn">
                 BROWSE ALL BEATS <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -668,7 +668,7 @@ const LandingPage = () => {
             <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="home-start-free-btn">
               START FREE <ArrowRight className="w-4 h-4" />
             </button>
-            <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full border-2 border-[#E53935] text-[#E53935] text-sm font-bold tracking-[2px] hover:bg-[#E53935]/10 transition-all" data-testid="home-pricing-btn">
+            <button onClick={() => navigate('/pricing')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="home-pricing-btn">
               ALL PRICING
             </button>
           </div>
@@ -685,7 +685,7 @@ const LandingPage = () => {
           </h2>
           <p className="text-lg text-gray-300 mb-10 max-w-lg mx-auto">Join thousands of artists distributing their music worldwide with Kalmori.</p>
           <Link to="/register">
-            <button className="bg-[#E040FB] text-white px-12 py-5 rounded-full font-bold text-sm tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/30" data-testid="journey-cta-btn">
+            <button className="animate-btn-gradient text-white px-12 py-5 rounded-full font-bold text-sm tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/30" data-testid="journey-cta-btn">
               GET STARTED FREE <ArrowRight className="w-5 h-5" />
             </button>
           </Link>
