@@ -66,8 +66,8 @@ const WalletPage = () => {
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawForm.amount);
     
-    if (!amount || amount < 10) {
-      toast.error('Minimum withdrawal is $10');
+    if (!amount || amount < 100) {
+      toast.error('Minimum payout threshold is $100');
       return;
     }
     
@@ -166,10 +166,11 @@ const WalletPage = () => {
         </div>
 
         {/* Withdraw Button */}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-gray-500">Minimum payout threshold: <span className="text-white font-medium">$100.00</span></p>
           <Button 
             onClick={() => setShowWithdraw(true)}
-            disabled={!wallet?.balance || wallet.balance < 10}
+            disabled={!wallet?.balance || wallet.balance < 100}
             className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
             data-testid="withdraw-btn"
           >

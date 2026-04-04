@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import { Wallet, Check, Clock, Warning, ArrowsClockwise, DownloadSimple, MagnifyingGlass, CurrencyDollar, Export } from '@phosphor-icons/react';
+import { Wallet, Check, Clock, Warning, ArrowsClockwise, MagnifyingGlass, Export, Gear, Lightning, Bell } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -21,15 +21,21 @@ export default function AdminPayoutsPage() {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(new Set());
   const [processing, setProcessing] = useState(false);
+  const [schedule, setSchedule] = useState(null);
+  const [savingSchedule, setSavingSchedule] = useState(false);
+  const [autoProcessing, setAutoProcessing] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [wRes, sRes] = await Promise.all([
+      const [wRes, sRes, schRes] = await Promise.all([
         axios.get(`${API}/api/admin/payouts?status=${filterStatus}`, { withCredentials: true }),
         axios.get(`${API}/api/admin/payouts/summary`, { withCredentials: true }),
+        axios.get(`${API}/api/admin/payouts/schedule`, { withCredentials: true }),
       ]);
       setWithdrawals(wRes.data.withdrawals || []);
       setSummary(sRes.data);
+      setSchedule(schRes.data);
     } catch (err) { console.error(err); }
     setLoading(false);
   }, [filterStatus]);
@@ -80,6 +86,26 @@ export default function AdminPayoutsPage() {
     } catch (err) { toast.error('Export failed'); }
   };
 
+  const handleSaveSchedule = async (updates) => {
+    setSavingSchedule(true);
+    try {
+      const res = await axios.put(`${API}/api/admin/payouts/schedule`, updates, { withCredentials: true });
+      setSchedule(res.data);
+      toast.success('Schedule updated');
+    } catch (err) { toast.error('Failed to save schedule'); }
+    setSavingSchedule(false);
+  };
+
+  const handleAutoProcess = async () => {
+    setAutoProcessing(true);
+    try {
+      const res = await axios.post(`${API}/api/admin/payouts/auto-process`, {}, { withCredentials: true });
+      toast.success(res.data.message);
+      fetchData();
+    } catch (err) { toast.error(err.response?.data?.detail || 'Auto-process failed'); }
+    setAutoProcessing(false);
+  };
+
   const toggleSelect = (id) => {
     const next = new Set(selected);
     next.has(id) ? next.delete(id) : next.add(id);
@@ -99,12 +125,79 @@ export default function AdminPayoutsPage() {
             <h1 className="text-2xl font-bold">Payout Dashboard</h1>
             <p className="text-gray-400 text-sm mt-1">Manage artist and producer payouts</p>
           </div>
-          <button onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7C4DFF] text-white text-sm font-medium hover:brightness-110 transition"
-            data-testid="export-csv-btn">
-            <Export className="w-4 h-4" /> Export CSV
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowSchedule(!showSchedule)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#333] text-gray-300 text-sm font-medium hover:border-[#7C4DFF] hover:text-white transition"
+              data-testid="schedule-settings-btn">
+              <Gear className="w-4 h-4" /> Schedule
+            </button>
+            <button onClick={handleAutoProcess} disabled={autoProcessing}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E040FB] text-white text-sm font-medium hover:brightness-110 disabled:opacity-40 transition"
+              data-testid="auto-process-btn">
+              {autoProcessing ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Lightning className="w-4 h-4" />}
+              Auto-Process
+            </button>
+            <button onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7C4DFF] text-white text-sm font-medium hover:brightness-110 transition"
+              data-testid="export-csv-btn">
+              <Export className="w-4 h-4" /> Export CSV
+            </button>
+          </div>
         </div>
+
+        {/* Schedule Config Panel */}
+        {showSchedule && schedule && (
+          <div className="bg-[#111] border border-[#7C4DFF]/30 rounded-xl p-5" data-testid="schedule-panel">
+            <div className="flex items-center gap-2 mb-4">
+              <Gear className="w-5 h-5 text-[#7C4DFF]" />
+              <h2 className="text-sm font-bold text-white">Payout Schedule Settings</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-xs text-gray-500 block mb-1.5">Frequency</label>
+                <select value={schedule.frequency || 'monthly'}
+                  onChange={(e) => handleSaveSchedule({ frequency: e.target.value })}
+                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-white text-sm"
+                  data-testid="schedule-frequency">
+                  <option value="monthly">Monthly</option>
+                  <option value="biweekly">Bi-Weekly</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1.5">Day of Month</label>
+                <select value={schedule.day_of_month || 1}
+                  onChange={(e) => handleSaveSchedule({ day_of_month: parseInt(e.target.value) })}
+                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-white text-sm"
+                  data-testid="schedule-day">
+                  {[1,5,10,15,20,25].map(d => <option key={d} value={d}>{d}{d===1?'st':d===5?'th':d===10?'th':d===15?'th':d===20?'th':'th'} of month</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1.5">Min Threshold ($)</label>
+                <input type="number" value={schedule.min_threshold || 100} min={10}
+                  onChange={(e) => handleSaveSchedule({ min_threshold: parseFloat(e.target.value) || 100 })}
+                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-white text-sm"
+                  data-testid="schedule-threshold" />
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={schedule.auto_process || false}
+                    onChange={(e) => handleSaveSchedule({ auto_process: e.target.checked })}
+                    className="rounded border-[#333] accent-[#7C4DFF]" data-testid="schedule-auto-process" />
+                  <span className="text-xs text-gray-300">Enable Auto-Processing</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={schedule.notify_email !== false}
+                    onChange={(e) => handleSaveSchedule({ notify_email: e.target.checked })}
+                    className="rounded border-[#333] accent-[#7C4DFF]" data-testid="schedule-notify" />
+                  <span className="text-xs text-gray-300"><Bell className="w-3 h-3 inline" /> Email Notifications</span>
+                </label>
+              </div>
+            </div>
+            {savingSchedule && <p className="text-xs text-[#7C4DFF] mt-2">Saving...</p>}
+          </div>
+        )}
 
         {/* Stats */}
         {summary && (

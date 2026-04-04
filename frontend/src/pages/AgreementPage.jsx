@@ -62,7 +62,7 @@ export default function AgreementPage() {
                     <li><strong>Pro Plan</strong>: Kalmori retains 0% of gross royalties; Artist receives 100%.</li>
                   </ul>
                 </li>
-                <li>Royalties are calculated based on reports received from DSPs and are paid monthly, subject to a minimum threshold of $10.00 USD.</li>
+                <li>Royalties are calculated based on reports received from DSPs and are paid monthly, subject to a minimum threshold of $100.00 USD.</li>
                 <li>Payments are made via the payment method on file in your Kalmori account.</li>
               </ol>
 
@@ -131,7 +131,7 @@ export default function AgreementPage() {
                   </ul>
                 </li>
                 <li>Royalty splits between Label and signed artists are configured within your Kalmori dashboard and are your responsibility to manage.</li>
-                <li>Payments are processed monthly with a minimum payout threshold of $25.00 USD.</li>
+                <li>Payments are processed monthly with a minimum payout threshold of $100.00 USD.</li>
               </ol>
 
               <h2>4. Roster Management</h2>
