@@ -58,6 +58,7 @@ import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
 import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
 import ReferralPage from './pages/ReferralPage';
 import AdminReferralsPage from './pages/AdminReferralsPage';
+import AdminAnalyticsReportsPage from './pages/AdminAnalyticsReportsPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -303,6 +304,7 @@ const AppRouter = () => {
               <Route path="/admin/email-settings" element={<AdminRoute><AdminEmailSettingsPage /></AdminRoute>} />
               <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodesPage /></AdminRoute>} />
               <Route path="/admin/referrals" element={<AdminRoute><AdminReferralsPage /></AdminRoute>} />
+              <Route path="/admin/analytics-reports" element={<AdminRoute><AdminAnalyticsReportsPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/agreement" element={<AgreementPage />} />
       <Route path="/pricing" element={<PricingPage />} />

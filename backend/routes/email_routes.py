@@ -882,6 +882,209 @@ async def send_all_lead_reminders(request: Request):
     return {"message": f"Sent {sent_count} reminder(s)", "sent_count": sent_count}
 
 
+# ============= ANALYTICS EMAIL REPORTS =============
+
+async def generate_artist_report(user_id: str, period: str = "weekly"):
+    """Generate an analytics report for a single artist"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        return None
+
+    days = 7 if period == "weekly" else 30
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    # Get stream data
+    streams = await db.stream_events.find(
+        {"user_id": user_id, "timestamp": {"$gte": cutoff}}
+    ).to_list(10000)
+
+    total_streams = len(streams)
+    total_revenue = sum(s.get("revenue", 0) for s in streams)
+
+    # Platform breakdown
+    platform_counts = {}
+    for s in streams:
+        p = s.get("platform", "Unknown")
+        platform_counts[p] = platform_counts.get(p, 0) + 1
+    top_platforms = sorted(platform_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    # Top releases
+    release_counts = {}
+    for s in streams:
+        rid = s.get("release_id", "")
+        release_counts[rid] = release_counts.get(rid, 0) + 1
+    top_release_ids = sorted(release_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    top_releases = []
+    for rid, count in top_release_ids:
+        rel = await db.releases.find_one({"id": rid}, {"_id": 0, "title": 1})
+        top_releases.append({"title": rel.get("title", "Unknown") if rel else "Unknown", "streams": count})
+
+    # Country breakdown
+    country_counts = {}
+    for s in streams:
+        c = s.get("country", "Unknown")
+        country_counts[c] = country_counts.get(c, 0) + 1
+    top_countries = sorted(country_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    return {
+        "user": user,
+        "period": period,
+        "days": days,
+        "total_streams": total_streams,
+        "total_revenue": round(total_revenue, 2),
+        "top_platforms": top_platforms,
+        "top_releases": top_releases,
+        "top_countries": top_countries,
+    }
+
+
+def build_analytics_report_email(report: dict) -> str:
+    """Build the HTML email for an analytics report"""
+    user = report["user"]
+    period_label = "Weekly" if report["period"] == "weekly" else "Monthly"
+    name = user.get("artist_name") or user.get("name", "Artist")
+
+    # Platform rows
+    platform_html = ""
+    for p, count in report["top_platforms"]:
+        platform_html += f'<tr><td style="padding:8px 0;color:#ccc;border-bottom:1px solid #222;">{p}</td><td style="padding:8px 0;text-align:right;color:#fff;font-weight:600;border-bottom:1px solid #222;">{count:,}</td></tr>'
+    if not platform_html:
+        platform_html = '<tr><td colspan="2" style="padding:8px 0;color:#666;">No streaming data yet</td></tr>'
+
+    # Release rows
+    release_html = ""
+    for r in report["top_releases"]:
+        release_html += f'<tr><td style="padding:8px 0;color:#ccc;border-bottom:1px solid #222;">{r["title"]}</td><td style="padding:8px 0;text-align:right;color:#fff;font-weight:600;border-bottom:1px solid #222;">{r["streams"]:,}</td></tr>'
+    if not release_html:
+        release_html = '<tr><td colspan="2" style="padding:8px 0;color:#666;">No releases yet</td></tr>'
+
+    # Country rows
+    country_html = ""
+    for c, count in report["top_countries"]:
+        country_html += f'<tr><td style="padding:8px 0;color:#ccc;border-bottom:1px solid #222;">{c}</td><td style="padding:8px 0;text-align:right;color:#fff;font-weight:600;border-bottom:1px solid #222;">{count:,}</td></tr>'
+
+    body = f"""
+    <p style="color:#ccc;font-size:15px;line-height:1.6;">Hey {name},</p>
+    <p style="color:#ccc;font-size:15px;line-height:1.6;">Here's your {period_label.lower()} performance summary for the last {report['days']} days:</p>
+
+    <div style="display:flex;gap:12px;margin:20px 0;">
+      <div style="flex:1;background:#111;border:1px solid #222;border-radius:12px;padding:16px;text-align:center;">
+        <p style="color:#7C4DFF;font-size:28px;font-weight:800;margin:0;">{report['total_streams']:,}</p>
+        <p style="color:#888;font-size:11px;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px;">Total Streams</p>
+      </div>
+      <div style="flex:1;background:#111;border:1px solid #222;border-radius:12px;padding:16px;text-align:center;">
+        <p style="color:#22C55E;font-size:28px;font-weight:800;margin:0;">${report['total_revenue']:,.2f}</p>
+        <p style="color:#888;font-size:11px;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px;">Revenue</p>
+      </div>
+    </div>
+
+    <h3 style="color:#E040FB;font-size:13px;letter-spacing:2px;margin:24px 0 8px;">TOP PLATFORMS</h3>
+    <table style="width:100%;border-collapse:collapse;">{platform_html}</table>
+
+    <h3 style="color:#E040FB;font-size:13px;letter-spacing:2px;margin:24px 0 8px;">TOP RELEASES</h3>
+    <table style="width:100%;border-collapse:collapse;">{release_html}</table>
+
+    {"<h3 style='color:#E040FB;font-size:13px;letter-spacing:2px;margin:24px 0 8px;'>TOP COUNTRIES</h3><table style='width:100%;border-collapse:collapse;'>" + country_html + "</table>" if country_html else ""}
+
+    <div style="text-align:center;margin:30px 0 10px;">
+      <a href="{FRONTEND_URL}/analytics" style="display:inline-block;background:#7C4DFF;color:#fff;padding:12px 32px;border-radius:50px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:1px;">VIEW FULL DASHBOARD</a>
+    </div>
+    """
+    return email_base("linear-gradient(135deg, #7C4DFF, #E040FB)", f"Your {period_label} Report", body, "Keep creating. Keep growing.")
+
+
+@email_router.post("/admin/analytics-report/send")
+async def send_analytics_reports(request: Request):
+    """Admin: Send analytics reports to all active users"""
+    from server import get_current_user
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    period = body.get("period", "weekly")
+    target = body.get("target", "all")  # "all" or specific user_id
+
+    if target != "all":
+        report = await generate_artist_report(target, period)
+        if report and report["user"].get("email"):
+            html = build_analytics_report_email(report)
+            period_label = "Weekly" if period == "weekly" else "Monthly"
+            await send_email(report["user"]["email"], f"Kalmori: Your {period_label} Analytics Report", html)
+            return {"message": f"Report sent to {report['user']['email']}", "sent_count": 1}
+        return {"message": "User not found or no email", "sent_count": 0}
+
+    users = await db.users.find({"role": {"$ne": "admin"}}, {"_id": 0, "id": 1}).to_list(1000)
+    sent = 0
+    for u in users:
+        report = await generate_artist_report(u["id"], period)
+        if report and report["user"].get("email"):
+            html = build_analytics_report_email(report)
+            period_label = "Weekly" if period == "weekly" else "Monthly"
+            success = await send_email(report["user"]["email"], f"Kalmori: Your {period_label} Analytics Report", html)
+            if success:
+                sent += 1
+    # Log
+    await db.analytics_report_log.insert_one({
+        "id": f"arlog_{uuid.uuid4().hex[:12]}",
+        "period": period,
+        "sent_count": sent,
+        "sent_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": f"Sent {sent} analytics report(s)", "sent_count": sent}
+
+
+@email_router.post("/admin/analytics-report/preview")
+async def preview_analytics_report(request: Request):
+    """Admin: Preview analytics report for a specific user or the admin themselves"""
+    from server import get_current_user
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    period = body.get("period", "weekly")
+    target_id = body.get("user_id", user["id"])
+    report = await generate_artist_report(target_id, period)
+    if not report:
+        raise HTTPException(status_code=404, detail="User not found")
+    html = build_analytics_report_email(report)
+    return {"html": html, "stats": {
+        "total_streams": report["total_streams"],
+        "total_revenue": report["total_revenue"],
+        "top_platforms": report["top_platforms"],
+        "top_releases": report["top_releases"],
+    }}
+
+
+@email_router.get("/analytics-report/preferences")
+async def get_report_preferences(request: Request):
+    """User: Get their report email preferences"""
+    from server import get_current_user
+    user = await get_current_user(request)
+    prefs = await db.report_preferences.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not prefs:
+        return {"user_id": user["id"], "weekly_report": True, "monthly_report": True}
+    return prefs
+
+
+@email_router.put("/analytics-report/preferences")
+async def update_report_preferences(request: Request):
+    """User: Update their report email preferences"""
+    from server import get_current_user
+    user = await get_current_user(request)
+    body = await request.json()
+    allowed = {"weekly_report", "monthly_report"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    await db.report_preferences.update_one(
+        {"user_id": user["id"]},
+        {"$set": updates, "$setOnInsert": {"user_id": user["id"]}},
+        upsert=True
+    )
+    return {"message": "Preferences updated"}
+
+
+
 # ============= EMAIL DOMAIN MANAGEMENT (Admin) =============
 
 class DomainInput(BaseModel):
