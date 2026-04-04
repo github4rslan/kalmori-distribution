@@ -1,37 +1,71 @@
-# Kalmori - TuneCore Clone PRD
+# Kalmori — TuneCore Clone / Digital Music Distribution Platform
 
-## Original Problem Statement
-Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians with Authentication, Subscriptions, Object Storage, AI Features, Release/Track uploads, Distribution to 150+ platforms, Beat/Instrumental catalog, and dark premium UI.
+## Problem Statement
+Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians. Core requirements include Authentication, Subscriptions, Object Storage for high-res files, AI Features, Artist/User management, Release/Track uploads, Distribution store management, Beat Marketplace, and strict Kalmori white-labeling.
 
 ## Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI + Recharts + Phosphor Icons
-- **Backend**: FastAPI (server.py + core.py + /routes/)
-- **Database**: MongoDB (30+ collections)
-- **Storage**: Emergent Object Storage | **Payments**: Stripe + PayPal
-- **Auth**: JWT + Google OAuth + reCAPTCHA v2 + Email Verification
-- **AI**: OpenAI via Emergent LLM Key (TTS voice tags, GPT strategies)
-- **Email**: Resend (support@kalmori.org) | **PDF**: reportlab
-- **Audio**: pydub + ffmpeg (watermark processing)
+- **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion
+- **Backend**: FastAPI (Python) + MongoDB
+- **Payments**: Stripe + PayPal
+- **Storage**: Emergent Object Storage
+- **AI**: Emergent LLM Key (OpenAI) for strategies, TTS for voice tags
+- **Email**: Resend API (support@kalmori.org → submitkalmori@gmail.com)
+- **Auth**: JWT + Google OAuth (Emergent)
+- **PDF**: reportlab
+- **Audio**: pydub + ffmpeg
+- **QR**: qrcode (Python)
 
-## All Completed Features
-- Auth (JWT + Google OAuth + reCAPTCHA + Email Verification)
-- Subscription tiers (Free/Rise/Pro) with Stripe, plan gating
-- Promo Codes & Referral Program
-- Analytics Email Reports (weekly/monthly, custom domain kalmori.org)
-- Track Editing (12-field form) & Release Calendar
-- Collaboration Hub (posts, invites, security-hardened)
-- In-App Messaging (file/audio sharing, read receipts, typing indicators)
-- Beat Purchase with License Contracts (4-tier, digital signature, Stripe checkout, PDF contracts)
-- Beat Preview Watermark System (OpenAI TTS voice tag, auto-overlay, clean download post-purchase)
-- Producer Royalty Split System (auto-created on license, monthly calculation, wallet credits, admin override)
-- **Admin Payout Dashboard** (batch-process payouts, individual status updates, CSV export, search/filter, stats overview, payment history tracking)
-- Admin Dashboard (users, submissions, beats, royalty import, campaigns, leads, email settings, promo codes, referrals, analytics reports, contracts, payouts)
-- Client Features (revenue analytics, leaderboard, AI strategy, fan analytics, goals, beat catalog, wallet, royalty splits, 4-tab release wizard, 150+ platforms)
-- UI Dark Theme (animated purple/pink gradients)
+## Key Credentials
+- Admin: admin@kalmori.com / MAYAsimpSON37!!
+- All system emails route to submitkalmori@gmail.com
+- Minimum withdrawal threshold: $100
 
-## All Routes
-`/` `/login` `/register` `/select-role` `/verify-email` `/pricing` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/collab-hub` `/messages` `/royalty-splits` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/referrals` `/calendar` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import` `/admin/campaigns` `/admin/leads` `/admin/email-settings` `/admin/promo-codes` `/admin/referrals` `/admin/analytics-reports` `/admin/contracts` `/admin/payouts` `/agreement`
+## Implemented Features (All Tested & Verified)
+1. Auth (JWT + Google OAuth + reCAPTCHA + Password Reset)
+2. Subscription Plans (Free/Pro/Label) with Stripe Checkout
+3. Release/Track Wizard (4-tab flow with audio upload)
+4. Distribution Management (store selection, status tracking)
+5. Fan Analytics Dashboard (streams, demographics, geo)
+6. AI Release Strategy (Emergent LLM)
+7. Save & Compare Strategies
+8. Strategy Export to PDF (reportlab)
+9. AI Smart Notifications
+10. Weekly Digest Emails (Resend)
+11. Revenue Analytics & Royalty Calculator
+12. Release Performance Leaderboard
+13. Goal Tracking & Milestones
+14. Artist Public Profile (shareable link-in-bio)
+15. Pre-Save Campaigns
+16. Beat Marketplace (4-tier licensing)
+17. Beat Purchase Contracts with E-Signatures + PDF Generation
+18. AI Audio Watermarking (OpenAI TTS voice tags + pydub)
+19. Collaboration Hub (posts, invites, messaging)
+20. In-App Messaging (real-time chat, file/audio sharing, read receipts, typing indicators)
+21. Producer Royalty Split System
+22. Admin Payout Dashboard (batch processing, CSV export)
+23. Automated Payout Scheduling ($100 threshold)
+24. **Artist Profile Enhancements** (Audio Preview Player, Custom Theme Colors, QR Code Generator) — *Apr 2026*
+25. **Landing Page Overhaul** (12 feature cards + 3 detailed highlights: Beat Marketplace, Collaboration, Artist Profiles) — *Apr 2026*
+26. **Backend Refactoring** (server.py 3962→3500 lines; extracted messages_routes.py, royalty_routes.py, payouts_routes.py) — *Apr 2026*
 
-## Remaining Backlog
-- P1: Real Spotify OAuth with API credentials
-- P2: Replace simulated DSP data with real API feeds
+## Backend Route Files
+- `server.py` — Auth, Releases, Tracks, Distribution, Analytics, Goals, Wallet, Subscriptions, Purchases, Calendar, Social, Pre-Save, Notifications, Artist Profile
+- `routes/messages_routes.py` — In-App Messaging / Chat
+- `routes/royalty_routes.py` — Producer Royalty Splits
+- `routes/payouts_routes.py` — Admin Payout Dashboard
+- `routes/ai_routes.py` — AI Strategy, Smart Insights, PDF Export
+- `routes/email_routes.py` — Email notifications, digests
+- `routes/beats_routes.py` — Beat Marketplace, watermarking
+- `routes/collab_routes.py` — Collaboration Hub
+- `routes/admin_routes.py` — Admin user management
+- `routes/content_routes.py` — Content CRUD
+- `routes/label_routes.py` — Label management
+- `routes/paypal_routes.py` — PayPal integration
+
+## DB Collections
+users, releases, tracks, stream_events, artist_profiles, beats, contracts, conversations, messages, typing_status, royalty_splits, split_earnings, wallets, withdrawals, payout_settings, goals, notifications, notification_preferences, presave_campaigns, collaboration_posts, collab_invites, saved_strategies, digest_log
+
+## Remaining / Future Tasks
+- P1: Real DSP API OAuth (Spotify/Apple Music credentials needed)
+- P2: Further server.py refactoring (analytics, purchases sections)
+- P3: Replace simulated DSP data with real API feeds
