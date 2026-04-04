@@ -330,7 +330,7 @@ const LandingPage = () => {
               <p className="text-lg text-gray-400 leading-relaxed mb-8">
                 Before platforms like Kalmori, artists needed a label to get their music sold online. We changed that. Choose an unlimited distribution plan, upload your music, and we'll do the rest. Your music will hit top digital stores in no time.
               </p>
-              <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#E53935] text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E53935]/20" data-testid="sell-music-btn">
+              <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="sell-music-btn">
                 SELL YOUR MUSIC <ArrowRight className="w-5 h-5" />
               </button>
             </div>

@@ -119,12 +119,27 @@ const PublicLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <style>{`
+        @keyframes icon-color-cycle {
+          0%, 100% { color: #7C4DFF; filter: drop-shadow(0 0 4px rgba(124,77,255,0.4)); }
+          33% { color: #E040FB; filter: drop-shadow(0 0 4px rgba(224,64,251,0.4)); }
+          66% { color: #FF4081; filter: drop-shadow(0 0 4px rgba(255,64,129,0.4)); }
+        }
+        .icon-animated-purple { animation: icon-color-cycle 6s ease-in-out infinite; }
+        @keyframes logo-color-cycle {
+          0%, 100% { color: #7C4DFF; text-shadow: 0 0 10px rgba(124,77,255,0.5), 0 0 20px rgba(124,77,255,0.3); }
+          33% { color: #E040FB; text-shadow: 0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3); }
+          66% { color: #FF4081; text-shadow: 0 0 10px rgba(255,64,129,0.5), 0 0 20px rgba(255,64,129,0.3); }
+        }
+        .logo-animated-purple { animation: logo-color-cycle 6s ease-in-out infinite; }
+      `}</style>
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]" data-testid="public-header">
         <div className="flex items-center justify-between px-4 py-3">
           {isHomePage ? (
             <button onClick={() => setMenuOpen(true)} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center" data-testid="menu-toggle">
-              <List className="w-6 h-6 text-white" />
+              <List className="w-6 h-6 icon-animated-purple" />
             </button>
           ) : (
             <button onClick={() => navigate(-1)} className="flex items-center gap-1 p-1 min-w-[44px] min-h-[44px]" data-testid="back-button">
@@ -135,7 +150,7 @@ const PublicLayout = ({ children }) => {
           {/* KALMORI logo / Page title centered */}
           {isHomePage ? (
             <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center" style={{ pointerEvents: 'none' }}>
-              <span className="text-[24px] font-extrabold tracking-[4px] text-[#E040FB] pointer-events-auto" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
+              <span className="text-[24px] font-extrabold tracking-[4px] logo-animated-purple pointer-events-auto">KALMORI</span>
               <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF] pointer-events-auto" />
             </button>
           ) : (
@@ -145,17 +160,17 @@ const PublicLayout = ({ children }) => {
           <div className="flex items-center gap-2 z-20">
             {user && (
               <button onClick={() => navigate('/releases')} className="relative p-1" data-testid="header-cart-btn">
-                <ShoppingCart className="w-6 h-6 text-[#E040FB]" />
+                <ShoppingCart className="w-6 h-6 icon-animated-purple" />
               </button>
             )}
             {isHomePage ? (
               user ? (
                 <button onClick={() => navigate('/settings')} className="p-1" data-testid="header-profile-btn">
-                  <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                  <User className="w-6 h-6 icon-animated-purple" weight="fill" />
                 </button>
               ) : (
                 <button onClick={() => navigate('/login')} className="p-1" data-testid="header-account-btn">
-                  <User className="w-6 h-6 text-[#E040FB]" weight="fill" />
+                  <User className="w-6 h-6 icon-animated-purple" weight="fill" />
                 </button>
               )
             ) : (
