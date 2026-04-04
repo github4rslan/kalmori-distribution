@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
-import { useAuth } from '../App';
+import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
+import { useAuth, API } from '../App';
 import { Check, X, ArrowRight, Star, Crown, Lightning, Rocket, ShieldCheck, CurrencyDollar, ChartLineUp, MusicNote, Sparkle, Tag } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -89,9 +90,19 @@ export default function PricingPage() {
   const [promoResult, setPromoResult] = useState(null);
   const [promoError, setPromoError] = useState('');
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [customPage, setCustomPage] = useState(null);
+  const [checkingCustom, setCheckingCustom] = useState(true);
 
   const currentPlan = user?.plan || 'free';
   const planOrder = ['free', 'rise', 'pro'];
+
+  useEffect(() => {
+    fetch(`${API}/pages/pricing`)
+      .then(r => r.json())
+      .then(data => { if (data.published && data.blocks?.length) setCustomPage(data); })
+      .catch(() => {})
+      .finally(() => setCheckingCustom(false));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -149,6 +160,17 @@ export default function PricingPage() {
     if (planId === currentPlan) return 'CURRENT PLAN';
     return planOrder.indexOf(planId) > planOrder.indexOf(currentPlan) ? 'UPGRADE NOW' : 'DOWNGRADE';
   };
+
+  if (!checkingCustom && customPage) {
+    return (
+      <PublicLayout>
+        <DynamicPageRenderer slug="pricing" />
+        <GlobalFooter />
+      </PublicLayout>
+    );
+  }
+
+  if (checkingCustom) return null;
 
   return (
     <PublicLayout>

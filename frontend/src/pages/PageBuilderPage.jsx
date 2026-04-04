@@ -86,7 +86,7 @@ const BlockPreview = ({ block, onUpdate }) => {
   if (type === 'image') return wrapWithCss(
     <div style={{ backgroundColor: bg, padding: `${pad} 24px`, textAlign: 'center' }}>
       {content.imageUrl ? (
-        <img src={content.imageUrl.startsWith('http') ? content.imageUrl : `${BACKEND_URL}/api/files/${content.imageUrl}`} alt={content.altText}
+        <img src={content.imageUrl.startsWith('http') ? content.imageUrl : `${BACKEND_URL}/api/public/files/${content.imageUrl}`} alt={content.altText}
           className="max-w-full mx-auto" style={{ borderRadius: `${s.borderRadius || 16}px`, maxWidth: `${s.maxWidth || 900}px` }} />
       ) : (
         <div className="border-2 border-dashed border-white/20 rounded-2xl py-16 px-8 mx-auto" style={{ maxWidth: `${s.maxWidth || 900}px` }}>

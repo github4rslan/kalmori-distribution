@@ -1,11 +1,11 @@
 """Page Builder Routes — Admin-only CMS for drag-and-drop page editing"""
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, File, UploadFile, Response
 from datetime import datetime, timezone
 import uuid
 import logging
 import copy
 
-from core import db, require_admin
+from core import db, require_admin, APP_NAME, put_object, get_object
 
 logger = logging.getLogger(__name__)
 page_builder_router = APIRouter(prefix="/api")
@@ -231,6 +231,34 @@ async def delete_block(slug: str, block_id: str, request: Request):
         {"$pull": {"blocks": {"id": block_id}}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"message": "Block deleted", "block_id": block_id}
+
+
+# ===== FILE UPLOAD for page builder (admin only) =====
+@page_builder_router.post("/files/upload")
+async def upload_page_file(request: Request, file: UploadFile = File(...)):
+    """Admin: Upload an image/file for use in page builder blocks"""
+    await require_admin(request)
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    path = f"{APP_NAME}/page-builder/{uuid.uuid4().hex}.{ext}"
+    data = await file.read()
+    result = put_object(path, data, file.content_type)
+    return {"path": result["path"], "url": result.get("url", result["path"])}
+
+
+# ===== PUBLIC file serving for page builder assets =====
+@page_builder_router.get("/public/files/{path:path}")
+async def serve_public_file(path: str):
+    """Public: Serve files uploaded via page builder (no auth required)"""
+    if not path.startswith(f"{APP_NAME}/page-builder/"):
+        raise HTTPException(status_code=403, detail="Access denied")
+    try:
+        data, content_type = get_object(path)
+        return Response(content=data, media_type=content_type)
+    except Exception as e:
+        logger.error(f"Public file serve error: {e}")
+        raise HTTPException(status_code=404, detail="File not found")
 
 
 # ===== PUBLIC endpoint (no auth) =====

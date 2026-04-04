@@ -17,7 +17,7 @@ const ICON_MAP = {
 const resolveUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
-  return `${BACKEND_URL}/api/files/${url}`;
+  return `${BACKEND_URL}/api/public/files/${url}`;
 };
 
 const DynamicBlock = ({ block }) => {
@@ -65,7 +65,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'features') return (
+  if (type === 'features') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px` }}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
@@ -90,7 +90,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'cta') return (
+  if (type === 'cta') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px`, textAlign: 'center' }}>
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: tc }}>{content.heading}</h2>
@@ -103,7 +103,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'testimonials') return (
+  if (type === 'testimonials') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px` }}>
       <div className="max-w-5xl mx-auto">
         <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-center" style={{ color: tc }}>{content.heading}</h2>
@@ -120,7 +120,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'stats') return (
+  if (type === 'stats') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px` }}>
       <div className="flex flex-wrap justify-center gap-12 max-w-4xl mx-auto">
         {(content.items || []).map((item, i) => (
@@ -133,9 +133,9 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'spacer') return <div style={{ height: `${s.height || 60}px`, backgroundColor: s.backgroundColor || 'transparent' }} />;
+  if (type === 'spacer') return wrap(<div style={{ height: `${s.height || 60}px`, backgroundColor: s.backgroundColor || 'transparent' }} />);
 
-  if (type === 'two_column') return (
+  if (type === 'two_column') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px` }}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
         <div>
@@ -150,7 +150,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'logo_bar') return (
+  if (type === 'logo_bar') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px`, textAlign: 'center' }}>
       <p className="text-xs uppercase tracking-[4px] mb-6 opacity-30 font-bold" style={{ color: tc }}>{content.heading}</p>
       <div className="flex flex-wrap justify-center gap-8">
@@ -168,7 +168,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'pricing') return (
+  if (type === 'pricing') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px` }}>
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
@@ -195,7 +195,7 @@ const DynamicBlock = ({ block }) => {
     </section>
   );
 
-  if (type === 'video') return (
+  if (type === 'video') return wrap(
     <section style={{ backgroundColor: bg, padding: `${pad} 24px`, textAlign: 'center' }}>
       {content.videoUrl && (
         <div className="aspect-video mx-auto rounded-2xl overflow-hidden" style={{ maxWidth: `${s.maxWidth || 900}px` }}>

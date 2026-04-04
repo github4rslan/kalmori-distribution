@@ -2,7 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
+import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
 import { Heart, ShieldCheck, Lightning, Users, ArrowRight } from '@phosphor-icons/react';
+import { useState, useEffect } from 'react';
+import { API } from '../App';
 
 const values = [
   { icon: <Heart className="w-7 h-7" />, title: 'Artist First', desc: 'Every decision we make puts artists first', color: '#E53935' },
@@ -13,6 +16,28 @@ const values = [
 
 export default function AboutPage() {
   const navigate = useNavigate();
+  const [customPage, setCustomPage] = useState(null);
+  const [checkingCustom, setCheckingCustom] = useState(true);
+
+  useEffect(() => {
+    fetch(`${API}/pages/about`)
+      .then(r => r.json())
+      .then(data => { if (data.published && data.blocks?.length) setCustomPage(data); })
+      .catch(() => {})
+      .finally(() => setCheckingCustom(false));
+  }, []);
+
+  if (!checkingCustom && customPage) {
+    return (
+      <PublicLayout>
+        <DynamicPageRenderer slug="about" />
+        <GlobalFooter />
+      </PublicLayout>
+    );
+  }
+
+  if (checkingCustom) return null;
+
   return (
     <PublicLayout>
       <div className="max-w-2xl mx-auto" data-testid="about-page">
