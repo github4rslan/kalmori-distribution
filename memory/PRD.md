@@ -23,6 +23,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Collaboration Hub (post opportunities, browse/filter by role & genre, send/accept/decline invites)
 - Collab Hub Security (user_ids stripped from browse, own posts excluded, ownership enforcement)
 - In-App Messaging (auto-conversation on invite accept, private chat, polling, unread counts, notifications)
+- File/Audio Sharing in Chat (upload stems/beats/images/files, audio player, image preview, download links, 50MB max, privacy-enforced)
 - Admin Dashboard (users, submissions, beats, royalty import, schedules, reconciliation, campaigns, leads, email settings, promo codes, referrals, analytics reports)
 - Client Features (revenue analytics, leaderboard, AI strategy, fan analytics, goals, beat catalog, wallet, 4-tab release wizard, 150+ platforms)
 - UI Dark Theme (animated purple/pink gradients)
