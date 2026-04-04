@@ -59,6 +59,7 @@ import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
 import ReferralPage from './pages/ReferralPage';
 import AdminReferralsPage from './pages/AdminReferralsPage';
 import AdminAnalyticsReportsPage from './pages/AdminAnalyticsReportsPage';
+import AdminContractsPage from './pages/AdminContractsPage';
 import CalendarPage from './pages/CalendarPage';
 import CollabHubPage from './pages/CollabHubPage';
 import MessagesPage from './pages/MessagesPage';
@@ -311,6 +312,7 @@ const AppRouter = () => {
               <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodesPage /></AdminRoute>} />
               <Route path="/admin/referrals" element={<AdminRoute><AdminReferralsPage /></AdminRoute>} />
               <Route path="/admin/analytics-reports" element={<AdminRoute><AdminAnalyticsReportsPage /></AdminRoute>} />
+              <Route path="/admin/contracts" element={<AdminRoute><AdminContractsPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/agreement" element={<AgreementPage />} />
       <Route path="/pricing" element={<PricingPage />} />

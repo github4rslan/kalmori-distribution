@@ -61,6 +61,10 @@ export default function InstrumentalsPage() {
   const { user } = useAuth();
   const [selectedLicense, setSelectedLicense] = useState('');
   const [selectedBeat, setSelectedBeat] = useState(null);
+  const [purchaseStep, setPurchaseStep] = useState('license'); // license, contract, processing
+  const [signerName, setSignerName] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [signingContract, setSigningContract] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
@@ -68,7 +72,6 @@ export default function InstrumentalsPage() {
   const [playingBeat, setPlayingBeat] = useState(null);
   const [beats, setBeats] = useState([]);
   const [loadingBeats, setLoadingBeats] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterKey, setFilterKey] = useState('');
   const [bpmRange, setBpmRange] = useState([60, 200]);
@@ -91,19 +94,45 @@ export default function InstrumentalsPage() {
 
   const handleBuyBeat = async (beat, licenseType) => {
     if (!user) { navigate('/login'); return; }
-    setPurchasing(true);
+    if (!signerName.trim() || !agreedToTerms) {
+      toast.error('Please sign the contract first');
+      return;
+    }
+    setSigningContract(true);
     try {
       const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
         || localStorage.getItem('access_token');
+      const headers = { Authorization: `Bearer ${token}` };
+      // Step 1: Sign the contract
+      const contractRes = await axios.post(`${API_URL}/api/beats/contract/sign`, {
+        beat_id: beat.id, license_type: licenseType, signer_name: signerName.trim(),
+      }, { headers, withCredentials: true });
+      const contractId = contractRes.data.id;
+      // Step 2: Create checkout session with contract
       const res = await axios.post(`${API_URL}/api/beats/purchase/checkout`, {
-        beat_id: beat.id, license_type: licenseType, origin_url: window.location.origin,
-      }, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+        beat_id: beat.id, license_type: licenseType, contract_id: contractId, origin_url: window.location.origin,
+      }, { headers, withCredentials: true });
       if (res.data.checkout_url) {
         window.location.href = res.data.checkout_url;
       }
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to start checkout');
-    } finally { setPurchasing(false); }
+      toast.error(err.response?.data?.detail || 'Failed to process order');
+    } finally { setSigningContract(false); }
+  };
+
+  const openPurchaseModal = (beat) => {
+    setSelectedBeat(beat);
+    setSelectedLicense('basic_lease');
+    setPurchaseStep('license');
+    setSignerName('');
+    setAgreedToTerms(false);
+  };
+
+  const licenseTermsMap = {
+    basic_lease: { name: 'Basic Lease', rights: 'Non-exclusive license', files: 'MP3 (320kbps)', streams: 'Up to 5,000', sales: 'Up to 500', video: 'Not included', credit: 'Required', ownership: 'Producer retains ownership', duration: 'Perpetual (non-exclusive)' },
+    premium_lease: { name: 'Premium Lease', rights: 'Non-exclusive license', files: 'WAV + MP3 + Trackouts', streams: 'Up to 50,000', sales: 'Up to 5,000', video: '1 music video', credit: 'Required', ownership: 'Producer retains ownership', duration: 'Perpetual (non-exclusive)' },
+    unlimited_lease: { name: 'Unlimited Lease', rights: 'Non-exclusive license', files: 'WAV + MP3 + Stems', streams: 'Unlimited', sales: 'Unlimited', video: 'Unlimited', credit: 'Required', ownership: 'Producer retains ownership', duration: 'Perpetual (non-exclusive)' },
+    exclusive: { name: 'Exclusive Rights', rights: 'Full ownership transfer', files: 'All files + Stems + Sessions', streams: 'Unlimited', sales: 'Unlimited', video: 'Unlimited', credit: 'Not required', ownership: 'Full ownership to buyer', duration: 'Perpetual (exclusive)' },
   };
 
   const fetchBeats = async (params = {}) => {
@@ -366,7 +395,7 @@ export default function InstrumentalsPage() {
                     <button onClick={() => sharebeat(beat)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all" data-testid={`share-beat-${beat.id}`}>
                       <ShareNetwork className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => { setSelectedBeat(beat); setSelectedLicense('basic_lease'); }}
+                    <button onClick={() => { openPurchaseModal(beat); }}
                       className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#E040FB] hover:brightness-110 text-white text-xs font-bold transition-all"
                       data-testid={`buy-beat-${beat.id}`}>
                       <ShoppingCart className="w-3.5 h-3.5" /> ${beat.prices?.basic_lease || '29.99'}
@@ -491,37 +520,151 @@ export default function InstrumentalsPage() {
           )}
         </div>
 
-        {/* Beat Purchase Modal */}
+        {/* Beat Purchase Modal — Multi-Step */}
         {selectedBeat && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedBeat(null)}>
-            <div className="bg-[#111] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="purchase-modal">
+            <div className="bg-[#111] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="purchase-modal">
               <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5 sm:hidden" />
+
+              {/* Steps Indicator */}
+              <div className="flex items-center justify-center gap-2 mb-5">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${purchaseStep === 'license' ? 'bg-[#7C4DFF] text-white' : 'bg-[#7C4DFF]/20 text-[#7C4DFF]'}`}>1</div>
+                <div className="w-8 h-0.5 bg-[#333]" />
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${purchaseStep === 'contract' ? 'bg-[#E040FB] text-white' : 'bg-[#333] text-gray-500'}`}>2</div>
+                <div className="w-8 h-0.5 bg-[#333]" />
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-[#333] text-gray-500">3</div>
+              </div>
+
               <h3 className="text-lg font-extrabold text-white mb-1">{selectedBeat.title}</h3>
               <p className="text-sm text-gray-400 mb-5">{selectedBeat.genre} &middot; {selectedBeat.bpm} BPM &middot; Key: {selectedBeat.key}</p>
-              <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">SELECT LICENSE</p>
-              <div className="space-y-2.5 mb-5">
-                {licenseTiers.map(tier => (
-                  <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                      selectedLicense === tier.id ? 'border-opacity-100 bg-white/5' : 'border-opacity-20'
-                    }`} style={{ borderColor: tier.color }}
-                    data-testid={`modal-tier-${tier.id}`}>
-                    <div>
-                      <p className="text-sm font-bold text-white">{tier.name}</p>
-                      <p className="text-xs text-gray-500">{tier.desc}</p>
-                    </div>
-                    <span className="text-lg font-extrabold" style={{ color: tier.color }}>
-                      ${selectedBeat.prices?.[tier.id] || tier.price}
-                    </span>
+
+              {/* Step 1: License Selection */}
+              {purchaseStep === 'license' && (
+                <>
+                  <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">SELECT LICENSE</p>
+                  <div className="space-y-2.5 mb-5">
+                    {licenseTiers.map(tier => (
+                      <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                          selectedLicense === tier.id ? 'border-opacity-100 bg-white/5' : 'border-opacity-20'
+                        }`} style={{ borderColor: tier.color }}
+                        data-testid={`modal-tier-${tier.id}`}>
+                        <div>
+                          <p className="text-sm font-bold text-white">{tier.name}</p>
+                          <p className="text-xs text-gray-500">{tier.desc}</p>
+                        </div>
+                        <span className="text-lg font-extrabold" style={{ color: tier.color }}>
+                          ${selectedBeat.prices?.[tier.id] || tier.price}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => { if (!user) { navigate('/login'); return; } setPurchaseStep('contract'); }}
+                    disabled={!selectedLicense}
+                    className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] hover:brightness-110 transition-all disabled:opacity-40"
+                    data-testid="proceed-to-contract-btn">
+                    REVIEW CONTRACT
                   </button>
-                ))}
-              </div>
-              <button onClick={() => handleBuyBeat(selectedBeat, selectedLicense)} disabled={purchasing}
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-                data-testid="confirm-purchase-btn">
-                {purchasing ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> :
-                  <><ShoppingCart className="w-5 h-5" /> BUY NOW — ${selectedBeat.prices?.[selectedLicense] || '29.99'}</>}
-              </button>
+                </>
+              )}
+
+              {/* Step 2: Contract Review & Sign */}
+              {purchaseStep === 'contract' && (() => {
+                const terms = licenseTermsMap[selectedLicense] || {};
+                const price = selectedBeat.prices?.[selectedLicense] || licenseTiers.find(t => t.id === selectedLicense)?.price || 0;
+                return (
+                  <>
+                    <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">LICENSE AGREEMENT</p>
+
+                    {/* Order Summary */}
+                    <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-4 mb-4">
+                      <p className="text-xs text-gray-500 mb-2 font-semibold tracking-wider">ORDER SUMMARY</p>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-300">{selectedBeat.title}</span>
+                        <span className="text-sm font-bold text-white">${price}</span>
+                      </div>
+                      <p className="text-xs text-[#7C4DFF] font-medium">{terms.name}</p>
+                    </div>
+
+                    {/* License Terms */}
+                    <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-4 mb-4">
+                      <p className="text-xs text-gray-500 mb-3 font-semibold tracking-wider">LICENSE TERMS</p>
+                      <div className="space-y-2">
+                        {[
+                          ['Rights', terms.rights],
+                          ['Files Delivered', terms.files],
+                          ['Streams', terms.streams],
+                          ['Sales', terms.sales],
+                          ['Music Video', terms.video],
+                          ['Credit', terms.credit],
+                          ['Ownership', terms.ownership],
+                          ['Duration', terms.duration],
+                        ].map(([label, val]) => (
+                          <div key={label} className="flex justify-between text-xs">
+                            <span className="text-gray-500">{label}</span>
+                            <span className="text-gray-300 text-right max-w-[60%]">{val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Binding Terms */}
+                    <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-4 mb-4">
+                      <p className="text-xs text-gray-500 mb-2 font-semibold tracking-wider">BINDING TERMS</p>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        By signing below, you ("Licensee") agree to the terms of this license agreement with the producer ("Licensor").
+                        This agreement grants you the rights described above for the beat "{selectedBeat.title}".
+                        {selectedLicense === 'exclusive' ? ' Upon payment, full ownership transfers to the Licensee and the beat will be removed from the catalog.' : ' The Licensor retains ownership and may continue licensing this beat to others.'}
+                        {' '}Violation of these terms may result in legal action. This contract is legally binding upon digital signature and payment.
+                      </p>
+                    </div>
+
+                    {/* Digital Signature */}
+                    <div className="bg-[#0a0a0a] border border-[#222] rounded-xl p-4 mb-4">
+                      <p className="text-xs text-gray-500 mb-3 font-semibold tracking-wider">DIGITAL SIGNATURE</p>
+                      <label className="block text-xs text-gray-400 mb-1.5">Full Legal Name *</label>
+                      <input
+                        type="text"
+                        value={signerName}
+                        onChange={(e) => setSignerName(e.target.value)}
+                        placeholder="Type your full name to sign"
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#7C4DFF] placeholder-gray-600 mb-3"
+                        data-testid="signer-name-input"
+                      />
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={agreedToTerms}
+                          onChange={(e) => setAgreedToTerms(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 rounded border-[#333] bg-[#111] accent-[#7C4DFF]"
+                          data-testid="agree-terms-checkbox"
+                        />
+                        <span className="text-xs text-gray-400 leading-relaxed">
+                          I have read and agree to the license terms above. I understand this is a legally binding agreement.
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button onClick={() => setPurchaseStep('license')}
+                        className="flex-1 py-4 rounded-full border border-[#333] text-gray-400 font-bold text-sm hover:border-white hover:text-white transition-all"
+                        data-testid="back-to-license-btn">
+                        BACK
+                      </button>
+                      <button
+                        onClick={() => handleBuyBeat(selectedBeat, selectedLicense)}
+                        disabled={!signerName.trim() || !agreedToTerms || signingContract}
+                        className="flex-[2] py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-40"
+                        data-testid="confirm-purchase-btn"
+                      >
+                        {signingContract ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> :
+                          <><ShoppingCart className="w-5 h-5" /> SIGN &amp; PAY — ${price}</>}
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+
               <button onClick={() => setSelectedBeat(null)} className="w-full py-3 text-gray-400 text-sm mt-2 hover:text-white transition-colors">Cancel</button>
             </div>
           </div>

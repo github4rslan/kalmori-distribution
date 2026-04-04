@@ -20,7 +20,7 @@ const LICENSE_COLORS = {
   exclusive: '#FFD700',
 };
 
-const PurchaseCard = ({ purchase, onDownload, downloading, playingId, onTogglePlay, audioRef }) => {
+const PurchaseCard = ({ purchase, onDownload, onDownloadContract, downloading, downloadingContract, playingId, onTogglePlay, audioRef }) => {
   const beat = purchase.beat || {};
   const isPaid = purchase.payment_status === 'paid';
   const isPlaying = playingId === purchase.id;
@@ -98,6 +98,21 @@ const PurchaseCard = ({ purchase, onDownload, downloading, playingId, onTogglePl
               Download
             </button>
           )}
+          {isPaid && purchase.contract_id && (
+            <button
+              onClick={() => onDownloadContract(purchase)}
+              disabled={downloadingContract === purchase.id}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#7C4DFF] text-[#7C4DFF] text-[11px] font-bold transition-all hover:bg-[#7C4DFF]/10"
+              data-testid={`download-contract-${purchase.id}`}
+            >
+              {downloadingContract === purchase.id ? (
+                <div className="w-3 h-3 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Receipt className="w-3.5 h-3.5" />
+              )}
+              Contract
+            </button>
+          )}
           {!isPaid && (
             <span className="text-xs text-gray-500">Awaiting payment</span>
           )}
@@ -119,6 +134,7 @@ export default function MyPurchasesPage() {
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(null);
+  const [downloadingContract, setDownloadingContract] = useState(null);
   const [playingId, setPlayingId] = useState(null);
   const audioRef = useRef(null);
 
@@ -203,6 +219,30 @@ export default function MyPurchasesPage() {
     }
   };
 
+  const handleDownloadContract = async (purchase) => {
+    if (!purchase.contract_id) return;
+    setDownloadingContract(purchase.id);
+    try {
+      const res = await axios.get(`${API}/beats/contract/${purchase.contract_id}/pdf`, {
+        withCredentials: true,
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Kalmori_License_${purchase.contract_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Contract downloaded!');
+    } catch (err) {
+      toast.error('Failed to download contract');
+    } finally {
+      setDownloadingContract(null);
+    }
+  };
+
   const paidPurchases = purchases.filter(p => p.payment_status === 'paid');
   const pendingPurchases = purchases.filter(p => p.payment_status !== 'paid');
 
@@ -280,8 +320,8 @@ export default function MyPurchasesPage() {
                 <h2 className="text-sm font-bold text-[#4CAF50] tracking-[2px]">READY TO DOWNLOAD</h2>
                 <div className="space-y-3">
                   {paidPurchases.map(p => (
-                    <PurchaseCard key={p.id} purchase={p} onDownload={handleDownload}
-                      downloading={downloading} playingId={playingId} onTogglePlay={togglePlay} audioRef={audioRef} />
+                    <PurchaseCard key={p.id} purchase={p} onDownload={handleDownload} onDownloadContract={handleDownloadContract}
+                      downloading={downloading} downloadingContract={downloadingContract} playingId={playingId} onTogglePlay={togglePlay} audioRef={audioRef} />
                   ))}
                 </div>
               </>
@@ -291,8 +331,8 @@ export default function MyPurchasesPage() {
                 <h2 className="text-sm font-bold text-[#FFD700] tracking-[2px] mt-8">PENDING</h2>
                 <div className="space-y-3">
                   {pendingPurchases.map(p => (
-                    <PurchaseCard key={p.id} purchase={p} onDownload={handleDownload}
-                      downloading={downloading} playingId={playingId} onTogglePlay={togglePlay} audioRef={audioRef} />
+                    <PurchaseCard key={p.id} purchase={p} onDownload={handleDownload} onDownloadContract={handleDownloadContract}
+                      downloading={downloading} downloadingContract={downloadingContract} playingId={playingId} onTogglePlay={togglePlay} audioRef={audioRef} />
                   ))}
                 </div>
               </>

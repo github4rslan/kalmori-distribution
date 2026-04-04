@@ -640,9 +640,13 @@ async def stripe_webhook(request: Request):
             if purchase_type == "beat_purchase":
                 beat_id = metadata.get("beat_id")
                 user_id = metadata.get("user_id")
+                contract_id = metadata.get("contract_id")
                 if beat_id and user_id:
                     await db.beat_purchases.update_one({"session_id": webhook_response.session_id},
                         {"$set": {"payment_status": "paid", "paid_at": now}})
+                    # Update contract payment status
+                    if contract_id:
+                        await db.beat_contracts.update_one({"id": contract_id}, {"$set": {"payment_status": "paid", "paid_at": now}})
                     # Send receipt
                     purchase = await db.beat_purchases.find_one({"session_id": webhook_response.session_id}, {"_id": 0})
                     user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
@@ -655,6 +659,31 @@ async def stripe_webhook(request: Request):
                                 purchase.get("amount", 0), receipt_id)
                         except Exception as e:
                             logger.warning(f"Webhook receipt email failed: {e}")
+                        # Email signed contract PDF to buyer
+                        if contract_id:
+                            try:
+                                contract = await db.beat_contracts.find_one({"id": contract_id}, {"_id": 0})
+                                if contract:
+                                    from routes.email_routes import send_email
+                                    contract["payment_status"] = "paid"
+                                    pdf_bytes = _generate_contract_pdf(contract)
+                                    import base64
+                                    pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                                    await send_email(user["email"],
+                                        f"Your Kalmori License Agreement - {contract.get('beat_title', 'Beat')}",
+                                        f"""<div style="font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#000;color:#fff;border-radius:16px;overflow:hidden;">
+                                        <div style="background:linear-gradient(135deg,#7C4DFF,#E040FB);padding:30px;text-align:center;">
+                                        <h1 style="color:white;margin:0 0 4px;font-size:11px;letter-spacing:5px;font-weight:800;text-transform:uppercase;opacity:0.85;">KALMORI</h1>
+                                        <h2 style="color:white;margin:0;font-size:22px;">License Agreement Confirmed</h2>
+                                        </div>
+                                        <div style="padding:30px;">
+                                        <p style="color:#ccc;font-size:15px;">Your {contract.get('license_name', 'license')} for <b>"{contract.get('beat_title', '')}"</b> has been confirmed.</p>
+                                        <p style="color:#888;font-size:13px;">Contract ID: {contract_id}</p>
+                                        <p style="color:#888;font-size:13px;">You can download your signed contract from your Purchases page.</p>
+                                        <p style="color:#555;font-size:12px;margin-top:28px;padding-top:16px;border-top:1px solid #222;text-align:center;">Kalmori Digital Distribution</p>
+                                        </div></div>""")
+                            except Exception as e:
+                                logger.warning(f"Contract email failed: {e}")
             # Handle subscriptions
             elif purchase_type == "subscription":
                 plan = metadata.get("plan")
@@ -2401,33 +2430,263 @@ async def delete_split(track_id: str, request: Request):
     await db.splits.delete_one({"track_id": track_id})
     return {"message": "Split agreement removed"}
 
-# ============= BEAT PURCHASES =============
+# ============= BEAT PURCHASES & CONTRACTS =============
+
+LICENSE_TERMS = {
+    "basic_lease": {
+        "name": "Basic Lease",
+        "rights": "Non-exclusive license",
+        "file_types": "MP3 (320kbps)",
+        "streams": "Up to 5,000 streams",
+        "sales": "Up to 500 sales",
+        "music_video": "Not included",
+        "credit": "Credit to producer required",
+        "ownership": "Producer retains full ownership",
+        "duration": "Perpetual (non-exclusive)",
+    },
+    "premium_lease": {
+        "name": "Premium Lease",
+        "rights": "Non-exclusive license",
+        "file_types": "WAV + MP3 + Trackouts",
+        "streams": "Up to 50,000 streams",
+        "sales": "Up to 5,000 sales",
+        "music_video": "1 music video allowed",
+        "credit": "Credit to producer required",
+        "ownership": "Producer retains full ownership",
+        "duration": "Perpetual (non-exclusive)",
+    },
+    "unlimited_lease": {
+        "name": "Unlimited Lease",
+        "rights": "Non-exclusive license",
+        "file_types": "WAV + MP3 + Stems",
+        "streams": "Unlimited streams",
+        "sales": "Unlimited sales",
+        "music_video": "Unlimited music videos",
+        "credit": "Credit to producer required",
+        "ownership": "Producer retains full ownership",
+        "duration": "Perpetual (non-exclusive)",
+    },
+    "exclusive": {
+        "name": "Exclusive Rights",
+        "rights": "Exclusive license — full ownership transfer",
+        "file_types": "All files + Stems + Session files",
+        "streams": "Unlimited",
+        "sales": "Unlimited",
+        "music_video": "Unlimited",
+        "credit": "No credit required",
+        "ownership": "Full ownership transfers to buyer. Beat removed from catalog.",
+        "duration": "Perpetual (exclusive)",
+    },
+}
+
+class ContractSign(PydanticBaseModel):
+    beat_id: str
+    license_type: str
+    signer_name: str
+
+@api_router.post("/beats/contract/sign")
+async def sign_beat_contract(data: ContractSign, request: Request):
+    """Sign a license contract before checkout"""
+    user = await get_current_user(request)
+    beat = await db.beats.find_one({"id": data.beat_id}, {"_id": 0})
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+    terms = LICENSE_TERMS.get(data.license_type)
+    if not terms:
+        raise HTTPException(status_code=400, detail="Invalid license type")
+    prices = beat.get("prices", {})
+    amount = prices.get(data.license_type)
+    if not amount:
+        raise HTTPException(status_code=400, detail="Price not available for this license")
+    contract_id = f"contract_{uuid.uuid4().hex[:12]}"
+    contract = {
+        "id": contract_id,
+        "user_id": user["id"],
+        "buyer_email": user.get("email", ""),
+        "buyer_name": user.get("artist_name") or user.get("name", ""),
+        "signer_name": data.signer_name.strip(),
+        "beat_id": data.beat_id,
+        "beat_title": beat.get("title", ""),
+        "beat_genre": beat.get("genre", ""),
+        "beat_bpm": beat.get("bpm", 0),
+        "beat_key": beat.get("key", ""),
+        "producer_name": beat.get("artist_name") or beat.get("producer", "Kalmori"),
+        "license_type": data.license_type,
+        "license_name": terms["name"],
+        "license_terms": terms,
+        "amount": amount,
+        "currency": "usd",
+        "signed_at": datetime.now(timezone.utc).isoformat(),
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.beat_contracts.insert_one(contract)
+    contract.pop("_id", None)
+    return contract
+
+@api_router.get("/beats/contract/{contract_id}")
+async def get_contract(contract_id: str, request: Request):
+    """Get a signed contract"""
+    user = await get_current_user(request)
+    contract = await db.beat_contracts.find_one({"id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract["user_id"] != user["id"] and user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    return contract
+
+@api_router.get("/beats/contract/{contract_id}/pdf")
+async def download_contract_pdf(contract_id: str, request: Request):
+    """Download a signed contract as PDF"""
+    user = await get_current_user(request)
+    contract = await db.beat_contracts.find_one({"id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if contract["user_id"] != user["id"] and user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Access denied")
+    pdf_bytes = _generate_contract_pdf(contract)
+    return StreamingResponse(
+        BytesIO(pdf_bytes), media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="Kalmori_License_{contract_id}.pdf"'}
+    )
+
+@api_router.get("/admin/contracts")
+async def admin_list_contracts(request: Request):
+    """Admin: List all signed contracts"""
+    await require_admin(request)
+    contracts = await db.beat_contracts.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return {"contracts": contracts}
+
+def _generate_contract_pdf(contract):
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6*inch, bottomMargin=0.6*inch, leftMargin=0.75*inch, rightMargin=0.75*inch)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('Title2', parent=styles['Title'], fontSize=20, spaceAfter=6, textColor=colors.HexColor('#7C4DFF'))
+    sub_style = ParagraphStyle('Sub', parent=styles['Normal'], fontSize=10, textColor=colors.grey, spaceAfter=16)
+    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontSize=13, textColor=colors.HexColor('#7C4DFF'), spaceAfter=8, spaceBefore=16)
+    body_style = ParagraphStyle('Body2', parent=styles['Normal'], fontSize=10, leading=14, spaceAfter=6)
+    small_style = ParagraphStyle('Small', parent=styles['Normal'], fontSize=8, textColor=colors.grey, spaceAfter=4)
+    terms = contract.get("license_terms", {})
+    elements = []
+    elements.append(Paragraph("KALMORI", ParagraphStyle('Brand', parent=styles['Title'], fontSize=14, textColor=colors.HexColor('#7C4DFF'), spaceAfter=2, tracking=6)))
+    elements.append(Paragraph("Beat License Agreement", title_style))
+    elements.append(Paragraph(f"Contract ID: {contract['id']} | Date: {contract.get('signed_at', '')[:10]}", sub_style))
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#333333')))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("Parties", heading_style))
+    party_data = [
+        ["", "Licensor (Producer)", "Licensee (Buyer)"],
+        ["Name", contract.get("producer_name", "N/A"), contract.get("signer_name", "N/A")],
+        ["Email", "—", contract.get("buyer_email", "N/A")],
+    ]
+    party_table = Table(party_data, colWidths=[0.8*inch, 2.7*inch, 2.7*inch])
+    party_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a1a1a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#333333')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#0d0d0d'), colors.HexColor('#111111')]),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#cccccc')),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(party_table)
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("Beat Details", heading_style))
+    beat_data = [
+        ["Title", contract.get("beat_title", "N/A")],
+        ["Genre", contract.get("beat_genre", "N/A")],
+        ["BPM", str(contract.get("beat_bpm", "N/A"))],
+        ["Key", contract.get("beat_key", "N/A")],
+    ]
+    beat_table = Table(beat_data, colWidths=[1.5*inch, 4.7*inch])
+    beat_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#333333')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#7C4DFF')),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#cccccc')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.HexColor('#0d0d0d'), colors.HexColor('#111111')]),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(beat_table)
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("License Terms", heading_style))
+    terms_data = [
+        ["License Type", terms.get("name", "N/A")],
+        ["Rights", terms.get("rights", "N/A")],
+        ["File Types", terms.get("file_types", "N/A")],
+        ["Streams", terms.get("streams", "N/A")],
+        ["Sales", terms.get("sales", "N/A")],
+        ["Music Video", terms.get("music_video", "N/A")],
+        ["Credit", terms.get("credit", "N/A")],
+        ["Ownership", terms.get("ownership", "N/A")],
+        ["Duration", terms.get("duration", "N/A")],
+        ["Price", f"${contract.get('amount', 0):.2f} USD"],
+    ]
+    terms_table = Table(terms_data, colWidths=[1.5*inch, 4.7*inch])
+    terms_table.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#333333')),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#7C4DFF')),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#cccccc')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.HexColor('#0d0d0d'), colors.HexColor('#111111')]),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(terms_table)
+    elements.append(Spacer(1, 16))
+    elements.append(Paragraph("Digital Signature", heading_style))
+    elements.append(Paragraph(f"Signed by: <b>{contract.get('signer_name', 'N/A')}</b>", body_style))
+    elements.append(Paragraph(f"Date: {contract.get('signed_at', '')[:10]}", body_style))
+    elements.append(Paragraph(f"Payment Status: {contract.get('payment_status', 'pending').upper()}", body_style))
+    elements.append(Spacer(1, 20))
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#333333')))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph("This agreement is binding upon signing. The Licensee agrees to the terms above.", small_style))
+    elements.append(Paragraph("Kalmori Digital Distribution Platform | support@kalmori.org", small_style))
+    doc.build(elements)
+    return buf.getvalue()
+
 class BeatPurchaseCheckout(PydanticBaseModel):
     beat_id: str
-    license_type: str  # basic_lease, premium_lease, unlimited_lease, exclusive
+    license_type: str
+    contract_id: str
     origin_url: str
 
 @api_router.post("/beats/purchase/checkout")
 async def create_beat_purchase_checkout(data: BeatPurchaseCheckout, request: Request):
     from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
     user = await get_current_user(request)
+    # Verify signed contract exists
+    contract = await db.beat_contracts.find_one({"id": data.contract_id, "user_id": user["id"], "payment_status": "pending"})
+    if not contract:
+        raise HTTPException(status_code=400, detail="Valid signed contract required before checkout")
     beat = await db.beats.find_one({"id": data.beat_id}, {"_id": 0})
-    if not beat: raise HTTPException(status_code=404, detail="Beat not found")
-    prices = beat.get("prices", {})
-    amount = prices.get(data.license_type)
-    if not amount: raise HTTPException(status_code=400, detail="Invalid license type")
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+    amount = contract["amount"]
     stripe_api_key = os.environ.get("STRIPE_API_KEY")
     host_url = str(request.base_url)
     stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
     session = await stripe_checkout.create_checkout_session(CheckoutSessionRequest(
         amount=amount, currency="usd",
-        success_url=f"{data.origin_url}/purchases?purchase=success&beat_id={data.beat_id}&license={data.license_type}&session_id={{CHECKOUT_SESSION_ID}}",
+        success_url=f"{data.origin_url}/purchases?purchase=success&beat_id={data.beat_id}&license={data.license_type}&contract_id={data.contract_id}&session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{data.origin_url}/instrumentals?purchase=cancelled",
-        metadata={"beat_id": data.beat_id, "user_id": user["id"], "license_type": data.license_type, "type": "beat_purchase"}))
+        metadata={"beat_id": data.beat_id, "user_id": user["id"], "license_type": data.license_type, "contract_id": data.contract_id, "type": "beat_purchase"}))
     await db.beat_purchases.insert_one({
         "id": f"bp_{uuid.uuid4().hex[:12]}", "session_id": session.session_id,
         "user_id": user["id"], "beat_id": data.beat_id, "beat_title": beat["title"],
-        "license_type": data.license_type, "amount": amount, "currency": "usd",
+        "license_type": data.license_type, "contract_id": data.contract_id,
+        "amount": amount, "currency": "usd",
         "payment_status": "pending", "created_at": datetime.now(timezone.utc).isoformat()})
     return {"checkout_url": session.url, "session_id": session.session_id, "amount": amount}
 
