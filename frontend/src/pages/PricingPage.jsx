@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { useAuth } from '../App';
-import { Check, X, ArrowRight, Star, Crown, Lightning, Rocket, ShieldCheck, CurrencyDollar, ChartLineUp, MusicNote, Sparkle } from '@phosphor-icons/react';
+import { Check, X, ArrowRight, Star, Crown, Lightning, Rocket, ShieldCheck, CurrencyDollar, ChartLineUp, MusicNote, Sparkle, Tag } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -85,6 +85,10 @@ export default function PricingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [upgrading, setUpgrading] = useState(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoResult, setPromoResult] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   const currentPlan = user?.plan || 'free';
   const planOrder = ['free', 'rise', 'pro'];
@@ -292,6 +296,48 @@ export default function PricingPage() {
               </div>
             );
           })}
+        </div>
+
+        {/* Promo Code Section */}
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-5 mb-10" data-testid="promo-section">
+          <div className="flex items-center gap-4 max-w-lg mx-auto">
+            <Tag className="w-5 h-5 text-[#E040FB] shrink-0" />
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoResult(null); }}
+              placeholder="Have a promo code?"
+              className="flex-1 bg-black border border-[#333] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF] placeholder-gray-600"
+              data-testid="promo-code-checkout-input"
+            />
+            <button
+              onClick={async () => {
+                if (!promoCode.trim()) return;
+                setApplyingPromo(true); setPromoError(''); setPromoResult(null);
+                try {
+                  const res = await axios.post(`${API_URL}/api/promo-codes/validate`, { code: promoCode, plan: 'pro' });
+                  setPromoResult(res.data);
+                } catch (e) { setPromoError(e.response?.data?.detail || 'Invalid code'); }
+                setApplyingPromo(false);
+              }}
+              disabled={applyingPromo || !promoCode.trim()}
+              className="px-5 py-2.5 rounded-lg bg-[#7C4DFF] text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 whitespace-nowrap"
+              data-testid="apply-promo-btn"
+            >
+              {applyingPromo ? 'Checking...' : 'Apply'}
+            </button>
+          </div>
+          {promoResult && (
+            <div className="mt-3 text-center text-sm" data-testid="promo-result">
+              <span className="text-green-400 font-medium">
+                Code applied! {promoResult.discount_type === 'percent' ? `${promoResult.discount_value}% off` : `$${promoResult.discount_value} off`}
+                {promoResult.duration_months > 0 ? ` for ${promoResult.duration_months} months` : ' forever'}
+              </span>
+            </div>
+          )}
+          {promoError && (
+            <p className="mt-2 text-center text-sm text-red-400" data-testid="promo-error">{promoError}</p>
+          )}
         </div>
 
         {/* Why Upgrade Section */}

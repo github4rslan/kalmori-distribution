@@ -20,9 +20,206 @@ import {
   MusicNotes,
   SpotifyLogo,
   AppleLogo,
-  YoutubeLogo
+  YoutubeLogo,
+  PencilSimple,
+  FloppyDisk,
+  X
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+
+const LANGUAGES = [
+  'English', 'Spanish', 'French', 'Portuguese', 'German', 'Italian', 'Japanese',
+  'Korean', 'Chinese', 'Arabic', 'Hindi', 'Russian', 'Dutch', 'Swedish',
+  'Norwegian', 'Danish', 'Finnish', 'Polish', 'Turkish', 'Indonesian',
+];
+
+const TrackForm = ({ track, onChange, onSave, onCancel, onGenerateISRC, isNew, saving, trackId }) => {
+  const inputCls = "w-full bg-[#141414] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF] placeholder-gray-600";
+  const labelCls = "text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1";
+
+  return (
+    <div className="p-4 bg-[#0A0A0A] border-t border-white/5 space-y-4" data-testid={isNew ? "new-track-form" : `edit-track-form-${trackId}`}>
+      {/* Title Section */}
+      <div className="space-y-2">
+        <p className={labelCls}>TITLE</p>
+        <input
+          className={inputCls}
+          placeholder="Track title *"
+          value={track.title || ''}
+          onChange={(e) => onChange('title', e.target.value)}
+          data-testid={isNew ? "new-track-title-input" : `edit-title-${trackId}`}
+        />
+        <input
+          className={inputCls}
+          placeholder="Title Version (e.g. Remix, Acoustic)"
+          value={track.title_version || ''}
+          onChange={(e) => onChange('title_version', e.target.value)}
+          data-testid={isNew ? "new-track-version" : `edit-version-${trackId}`}
+        />
+      </div>
+
+      {/* Audio Upload (new tracks only) */}
+      {isNew && (
+        <div className="flex items-center gap-3">
+          <label className={`flex-1 flex items-center gap-2 ${inputCls} cursor-pointer`}>
+            <UploadSimple className="w-4 h-4 text-gray-500" />
+            <span className="text-gray-500">Upload audio (WAV, MP3, FLAC)</span>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-400">
+            <input
+              type="checkbox"
+              checked={track.explicit || false}
+              onChange={(e) => onChange('explicit', e.target.checked)}
+              className="rounded border-white/20 bg-transparent"
+              data-testid="new-track-explicit"
+            />
+            Explicit
+          </label>
+        </div>
+      )}
+
+      {!isNew && (
+        <label className="flex items-center gap-2 text-sm text-gray-400">
+          <input
+            type="checkbox"
+            checked={track.explicit || false}
+            onChange={(e) => onChange('explicit', e.target.checked)}
+            className="rounded border-white/20 bg-transparent"
+            data-testid={`edit-explicit-${trackId}`}
+          />
+          Explicit
+        </label>
+      )}
+
+      {/* Information Section */}
+      <div className="space-y-2">
+        <p className={labelCls}>INFORMATION</p>
+        <div className="flex gap-2">
+          <input
+            className={`flex-1 ${inputCls}`}
+            placeholder="Audio ISRC *"
+            value={track.isrc || ''}
+            onChange={(e) => onChange('isrc', e.target.value)}
+            data-testid={isNew ? "new-track-isrc" : `edit-isrc-${trackId}`}
+          />
+          <button
+            type="button"
+            onClick={() => onGenerateISRC('isrc')}
+            className="px-3 py-2 bg-[#7C4DFF]/20 text-[#7C4DFF] text-xs font-bold rounded-lg hover:bg-[#7C4DFF]/30 whitespace-nowrap"
+            data-testid={isNew ? "new-generate-isrc" : `edit-generate-isrc-${trackId}`}
+          >
+            Generate ISRC
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <input
+            className={`flex-1 ${inputCls}`}
+            placeholder="Dolby Atmos ISRC"
+            value={track.dolby_atmos_isrc || ''}
+            onChange={(e) => onChange('dolby_atmos_isrc', e.target.value)}
+            data-testid={isNew ? "new-track-dolby-isrc" : `edit-dolby-isrc-${trackId}`}
+          />
+          <button
+            type="button"
+            onClick={() => onGenerateISRC('dolby_atmos_isrc')}
+            className="px-3 py-2 bg-[#7C4DFF]/20 text-[#7C4DFF] text-xs font-bold rounded-lg hover:bg-[#7C4DFF]/30 whitespace-nowrap"
+          >
+            Generate ISRC
+          </button>
+        </div>
+        <input
+          className={inputCls}
+          placeholder="ISWC"
+          value={track.iswc || ''}
+          onChange={(e) => onChange('iswc', e.target.value)}
+          data-testid={isNew ? "new-track-iswc" : `edit-iswc-${trackId}`}
+        />
+        <select
+          className={inputCls}
+          value={track.audio_language || 'English'}
+          onChange={(e) => onChange('audio_language', e.target.value)}
+          data-testid={isNew ? "new-track-language" : `edit-language-${trackId}`}
+        >
+          {LANGUAGES.map(lang => (
+            <option key={lang} value={lang} className="bg-black text-white">{lang}</option>
+          ))}
+        </select>
+        <input
+          className={inputCls}
+          placeholder="Production"
+          value={track.production || ''}
+          onChange={(e) => onChange('production', e.target.value)}
+          data-testid={isNew ? "new-track-production" : `edit-production-${trackId}`}
+        />
+        <input
+          className={inputCls}
+          placeholder="Publisher"
+          value={track.publisher || ''}
+          onChange={(e) => onChange('publisher', e.target.value)}
+          data-testid={isNew ? "new-track-publisher" : `edit-publisher-${trackId}`}
+        />
+      </div>
+
+      {/* Preview Times */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className={labelCls}>Preview Start Time *</p>
+          <input
+            className={inputCls}
+            placeholder="00:30"
+            value={track.preview_start || '00:30'}
+            onChange={(e) => onChange('preview_start', e.target.value)}
+            data-testid={isNew ? "new-track-preview-start" : `edit-preview-start-${trackId}`}
+          />
+        </div>
+        <div>
+          <p className={labelCls}>Preview End Time</p>
+          <input
+            className={inputCls}
+            placeholder="00:00"
+            value={track.preview_end || '00:00'}
+            onChange={(e) => onChange('preview_end', e.target.value)}
+            data-testid={isNew ? "new-track-preview-end" : `edit-preview-end-${trackId}`}
+          />
+        </div>
+      </div>
+
+      {/* Artists */}
+      <div className="space-y-2">
+        <p className={labelCls}>ARTISTS *</p>
+        <input
+          className={inputCls}
+          placeholder="Enter the name of the main artist"
+          value={track.main_artist || ''}
+          onChange={(e) => onChange('main_artist', e.target.value)}
+          data-testid={isNew ? "new-track-artist" : `edit-artist-${trackId}`}
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-2 pt-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onCancel}
+          className="text-gray-400 hover:text-white"
+          data-testid={isNew ? "cancel-new-track" : `cancel-edit-${trackId}`}
+        >
+          <X className="w-4 h-4 mr-1" /> Cancel
+        </Button>
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={saving}
+          className="bg-[#22C55E] hover:bg-[#22C55E]/90 text-white"
+          data-testid={isNew ? "save-track-btn" : `save-edit-${trackId}`}
+        >
+          <FloppyDisk className="w-4 h-4 mr-1" /> {saving ? 'Saving...' : 'Save'}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const ReleaseDetailPage = () => {
   const { id } = useParams();
@@ -36,8 +233,16 @@ const ReleaseDetailPage = () => {
   const [distributing, setDistributing] = useState(false);
   const [storeSearch, setStoreSearch] = useState('');
   const [storeRegion, setStoreRegion] = useState('All');
-  const [newTrack, setNewTrack] = useState({ title: '', track_number: 1 });
+  const [newTrack, setNewTrack] = useState({
+    title: '', title_version: '', track_number: 1, explicit: false,
+    isrc: '', dolby_atmos_isrc: '', iswc: '', audio_language: 'English',
+    production: '', publisher: '', preview_start: '00:30', preview_end: '00:00',
+    main_artist: ''
+  });
   const [showAddTrack, setShowAddTrack] = useState(false);
+  const [editingTrack, setEditingTrack] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [savingTrack, setSavingTrack] = useState(null);
   const [playingTrack, setPlayingTrack] = useState(null);
   const [audioRef] = useState(new Audio());
 
@@ -130,15 +335,66 @@ const ReleaseDetailPage = () => {
       await axios.post(`${API}/tracks`, {
         release_id: id,
         title: newTrack.title,
-        track_number: release.tracks?.length + 1 || 1
+        title_version: newTrack.title_version,
+        track_number: release.tracks?.length + 1 || 1,
+        explicit: newTrack.explicit,
+        isrc: newTrack.isrc,
+        dolby_atmos_isrc: newTrack.dolby_atmos_isrc,
+        iswc: newTrack.iswc,
+        audio_language: newTrack.audio_language,
+        production: newTrack.production,
+        publisher: newTrack.publisher,
+        preview_start: newTrack.preview_start,
+        preview_end: newTrack.preview_end,
+        main_artist: newTrack.main_artist,
       });
       toast.success('Track added!');
-      setNewTrack({ title: '', track_number: 1 });
+      setNewTrack({
+        title: '', title_version: '', track_number: 1, explicit: false,
+        isrc: '', dolby_atmos_isrc: '', iswc: '', audio_language: 'English',
+        production: '', publisher: '', preview_start: '00:30', preview_end: '00:00',
+        main_artist: ''
+      });
       setShowAddTrack(false);
       fetchRelease();
     } catch (error) {
       toast.error('Failed to add track');
     }
+  };
+
+  const generateISRC = () => {
+    return 'US' + 'KAL' + new Date().getFullYear().toString().slice(-2) + Math.floor(10000 + Math.random() * 90000);
+  };
+
+  const startEditTrack = (track) => {
+    setEditingTrack(track.id);
+    setEditForm({
+      title: track.title || '',
+      title_version: track.title_version || '',
+      explicit: track.explicit || false,
+      isrc: track.isrc || '',
+      dolby_atmos_isrc: track.dolby_atmos_isrc || '',
+      iswc: track.iswc || '',
+      audio_language: track.audio_language || 'English',
+      production: track.production || '',
+      publisher: track.publisher || '',
+      preview_start: track.preview_start || '00:30',
+      preview_end: track.preview_end || '00:00',
+      main_artist: track.main_artist || '',
+    });
+  };
+
+  const handleUpdateTrack = async (trackId) => {
+    setSavingTrack(trackId);
+    try {
+      await axios.put(`${API}/tracks/${trackId}`, editForm);
+      toast.success('Track updated!');
+      setEditingTrack(null);
+      fetchRelease();
+    } catch (error) {
+      toast.error('Failed to update track');
+    }
+    setSavingTrack(null);
   };
 
   const handleAudioUpload = async (trackId, file) => {
@@ -355,18 +611,14 @@ const ReleaseDetailPage = () => {
           </div>
 
           {showAddTrack && (
-            <div className="flex gap-3 mb-6 p-4 bg-[#0A0A0A] rounded-md">
-              <Input
-                placeholder="Track title"
-                value={newTrack.title}
-                onChange={(e) => setNewTrack({ ...newTrack, title: e.target.value })}
-                className="bg-[#141414] border-white/10 text-white"
-                data-testid="new-track-title-input"
-              />
-              <Button onClick={handleAddTrack} className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white" data-testid="save-track-btn">
-                Save
-              </Button>
-            </div>
+            <TrackForm
+              track={newTrack}
+              onChange={(field, val) => setNewTrack(prev => ({ ...prev, [field]: val }))}
+              onSave={handleAddTrack}
+              onCancel={() => setShowAddTrack(false)}
+              onGenerateISRC={(field) => setNewTrack(prev => ({ ...prev, [field]: generateISRC() }))}
+              isNew
+            />
           )}
 
           {release.tracks?.length === 0 ? (
@@ -375,67 +627,90 @@ const ReleaseDetailPage = () => {
               <p>No tracks yet. Add your first track above.</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {release.tracks?.map((track, index) => (
-                <div 
-                  key={track.id}
-                  className="flex items-center gap-4 p-3 rounded-md hover:bg-white/5 transition-colors"
-                >
-                  <span className="w-6 text-center text-sm text-[#71717A] font-mono">
-                    {index + 1}
-                  </span>
-                  
-                  {track.audio_url ? (
-                    <button
-                      onClick={() => togglePlay(track)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FF3B30] hover:bg-[#FF3B30]/80 transition-colors"
-                      data-testid={`play-track-${track.id}`}
-                    >
-                      {playingTrack === track.id ? (
-                        <Pause className="w-4 h-4 text-white" weight="fill" />
-                      ) : (
-                        <Play className="w-4 h-4 text-white" weight="fill" />
-                      )}
-                    </button>
-                  ) : (
-                    <label className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors">
-                      <UploadSimple className="w-4 h-4" />
-                      <input
-                        type="file"
-                        accept="audio/*"
-                        onChange={(e) => handleAudioUpload(track.id, e.target.files?.[0])}
-                        className="hidden"
-                        data-testid={`upload-audio-${track.id}`}
-                      />
-                    </label>
-                  )}
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{track.title}</p>
-                    <p className="text-xs text-[#71717A] font-mono">{track.isrc}</p>
-                  </div>
-                  
-                  {track.duration && (
-                    <span className="text-sm text-[#71717A] font-mono">
-                      {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
+                <div key={track.id} className="border border-white/10 rounded-lg overflow-hidden">
+                  {/* Track header row */}
+                  <div className="flex items-center gap-4 p-3 bg-[#0A0A0A]">
+                    <span className="w-6 text-center text-sm text-[#71717A] font-mono">
+                      {index + 1}
                     </span>
+                    
+                    {track.audio_url ? (
+                      <button
+                        onClick={() => togglePlay(track)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FF3B30] hover:bg-[#FF3B30]/80 transition-colors"
+                        data-testid={`play-track-${track.id}`}
+                      >
+                        {playingTrack === track.id ? (
+                          <Pause className="w-4 h-4 text-white" weight="fill" />
+                        ) : (
+                          <Play className="w-4 h-4 text-white" weight="fill" />
+                        )}
+                      </button>
+                    ) : (
+                      <label className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 cursor-pointer transition-colors">
+                        <UploadSimple className="w-4 h-4" />
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          onChange={(e) => handleAudioUpload(track.id, e.target.files?.[0])}
+                          className="hidden"
+                          data-testid={`upload-audio-${track.id}`}
+                        />
+                      </label>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{track.title}</p>
+                      <p className="text-xs text-[#71717A] font-mono">{track.isrc}</p>
+                    </div>
+                    
+                    {track.duration > 0 && (
+                      <span className="text-sm text-[#71717A] font-mono">
+                        {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
+                      </span>
+                    )}
+                    
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      track.status === 'ready' ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#FFCC00]/10 text-[#FFCC00]'
+                    }`}>
+                      {track.status}
+                    </span>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => editingTrack === track.id ? setEditingTrack(null) : startEditTrack(track)}
+                      className={editingTrack === track.id ? 'text-[#7C4DFF]' : 'text-[#71717A] hover:text-[#7C4DFF]'}
+                      data-testid={`edit-track-${track.id}`}
+                    >
+                      <PencilSimple className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteTrack(track.id)}
+                      className="text-[#71717A] hover:text-[#FF3B30]"
+                      data-testid={`delete-track-${track.id}`}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Expanded edit form */}
+                  {editingTrack === track.id && (
+                    <TrackForm
+                      track={editForm}
+                      onChange={(field, val) => setEditForm(prev => ({ ...prev, [field]: val }))}
+                      onSave={() => handleUpdateTrack(track.id)}
+                      onCancel={() => setEditingTrack(null)}
+                      onGenerateISRC={(field) => setEditForm(prev => ({ ...prev, [field]: generateISRC() }))}
+                      saving={savingTrack === track.id}
+                      trackId={track.id}
+                    />
                   )}
-                  
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    track.status === 'ready' ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#FFCC00]/10 text-[#FFCC00]'
-                  }`}>
-                    {track.status}
-                  </span>
-                  
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDeleteTrack(track.id)}
-                    className="text-[#71717A] hover:text-[#FF3B30]"
-                    data-testid={`delete-track-${track.id}`}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
                 </div>
               ))}
             </div>

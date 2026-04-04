@@ -55,6 +55,7 @@ import ArtistProfilePage from './pages/ArtistProfilePage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import LabelDashboardPage from './pages/LabelDashboardPage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
+import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -297,6 +298,7 @@ const AppRouter = () => {
               <Route path="/admin/campaigns" element={<AdminRoute><AdminCampaignsPage /></AdminRoute>} />
               <Route path="/admin/leads" element={<AdminRoute><AdminLeadsPage /></AdminRoute>} />
               <Route path="/admin/email-settings" element={<AdminRoute><AdminEmailSettingsPage /></AdminRoute>} />
+              <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodesPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/agreement" element={<AgreementPage />} />
       <Route path="/pricing" element={<PricingPage />} />

@@ -114,19 +114,38 @@ class TrackCreate(BaseModel):
     lyrics: Optional[str] = None
     composers: Optional[List[str]] = []
     producers: Optional[List[str]] = []
+    title_version: Optional[str] = ""
+    isrc: Optional[str] = ""
+    dolby_atmos_isrc: Optional[str] = ""
+    iswc: Optional[str] = ""
+    audio_language: Optional[str] = "English"
+    production: Optional[str] = ""
+    publisher: Optional[str] = ""
+    preview_start: Optional[str] = "00:30"
+    preview_end: Optional[str] = "00:00"
+    main_artist: Optional[str] = ""
 
 class TrackResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    isrc: str
+    isrc: Optional[str] = ""
     release_id: str
     title: str
     track_number: int
     duration: Optional[int] = None
-    explicit: bool
+    explicit: bool = False
     audio_url: Optional[str] = None
     status: str
     created_at: str
+    title_version: Optional[str] = ""
+    dolby_atmos_isrc: Optional[str] = ""
+    iswc: Optional[str] = ""
+    audio_language: Optional[str] = "English"
+    production: Optional[str] = ""
+    publisher: Optional[str] = ""
+    preview_start: Optional[str] = "00:30"
+    preview_end: Optional[str] = "00:00"
+    main_artist: Optional[str] = ""
 
 class DistributionStore(BaseModel):
     store_id: str

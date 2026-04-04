@@ -306,9 +306,11 @@ async def create_track(track: TrackCreate, request: Request):
     release = await db.releases.find_one({"id": track.release_id, "artist_id": user["id"]})
     if not release: raise HTTPException(status_code=404, detail="Release not found")
     track_id = f"trk_{uuid.uuid4().hex[:12]}"
-    track_doc = {"id": track_id, "isrc": generate_isrc(), "artist_id": user["id"],
+    track_doc = {"id": track_id, "artist_id": user["id"],
         **track.model_dump(), "audio_url": None, "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()}
+    if not track_doc.get("isrc"):
+        track_doc["isrc"] = generate_isrc()
     await db.tracks.insert_one(track_doc)
     await db.releases.update_one({"id": track.release_id}, {"$inc": {"track_count": 1}})
     track_doc.pop("_id", None)
@@ -346,6 +348,23 @@ async def delete_track(track_id: str, request: Request):
     await db.tracks.delete_one({"id": track_id})
     await db.releases.update_one({"id": track["release_id"]}, {"$inc": {"track_count": -1}})
     return {"message": "Track deleted"}
+
+@api_router.put("/tracks/{track_id}")
+async def update_track(track_id: str, request: Request):
+    user = await get_current_user(request)
+    track = await db.tracks.find_one({"id": track_id, "artist_id": user["id"]})
+    if not track: raise HTTPException(status_code=404, detail="Track not found")
+    body = await request.json()
+    allowed_fields = {"title", "title_version", "explicit", "isrc", "dolby_atmos_isrc",
+                      "iswc", "audio_language", "production", "publisher",
+                      "preview_start", "preview_end", "main_artist", "track_number",
+                      "lyrics", "composers", "producers"}
+    updates = {k: v for k, v in body.items() if k in allowed_fields}
+    if not updates:
+        return {"message": "No valid fields to update"}
+    await db.tracks.update_one({"id": track_id}, {"$set": updates})
+    updated = await db.tracks.find_one({"id": track_id}, {"_id": 0})
+    return updated
 
 # ============= DISTRIBUTION =============
 DSP_STORES = [
@@ -548,9 +567,12 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
             "submitted_at": datetime.now(timezone.utc).isoformat(),
             "reviewed_at": None, "reviewed_by": None, "review_notes": None}}, upsert=True)
     await db.releases.update_one({"id": release_id}, {"$set": {"status": "pending_review", "submitted_stores": stores}})
-    await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": "admin",
-        "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
-        "release_id": release_id, "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
+    # Notify admin (find actual admin user)
+    admin_user = await db.users.find_one({"role": "admin"}, {"_id": 0, "id": 1})
+    if admin_user:
+        await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": admin_user["id"],
+            "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
+            "release_id": release_id, "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
     return {"message": f"Submitted for review to {len(stores)} stores", "stores": stores, "status": "pending_review"}
 
 @api_router.get("/distributions/{release_id}")
@@ -1559,6 +1581,123 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
         "plan": data.plan, "payment_status": "pending", "provider": "stripe",
         "created_at": datetime.now(timezone.utc).isoformat()})
     return {"checkout_url": session.url, "session_id": session.session_id}
+
+    return {"checkout_url": session.url, "session_id": session.session_id}
+
+# ============= PROMO CODES =============
+
+class PromoCodeCreate(BaseModel):
+    code: str
+    discount_type: str  # "percent" or "fixed"
+    discount_value: float  # e.g. 50 = 50% off or $5.00 off
+    applicable_plans: List[str] = ["rise", "pro"]
+    max_uses: int = 100
+    duration_months: int = 0  # 0 = forever, 3 = first 3 months
+    expires_at: Optional[str] = None  # ISO date
+    active: bool = True
+
+@api_router.post("/admin/promo-codes")
+async def create_promo_code(data: PromoCodeCreate, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    code_upper = data.code.strip().upper()
+    existing = await db.promo_codes.find_one({"code": code_upper})
+    if existing:
+        raise HTTPException(status_code=400, detail="Promo code already exists")
+    doc = {
+        "id": f"promo_{uuid.uuid4().hex[:12]}",
+        "code": code_upper,
+        "discount_type": data.discount_type,
+        "discount_value": data.discount_value,
+        "applicable_plans": data.applicable_plans,
+        "max_uses": data.max_uses,
+        "used_count": 0,
+        "duration_months": data.duration_months,
+        "expires_at": data.expires_at,
+        "active": data.active,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.promo_codes.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+@api_router.get("/admin/promo-codes")
+async def list_promo_codes(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    codes = await db.promo_codes.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return codes
+
+@api_router.put("/admin/promo-codes/{promo_id}")
+async def update_promo_code(promo_id: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    allowed = {"active", "max_uses", "expires_at", "discount_value", "discount_type", "applicable_plans", "duration_months"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    await db.promo_codes.update_one({"id": promo_id}, {"$set": updates})
+    updated = await db.promo_codes.find_one({"id": promo_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/admin/promo-codes/{promo_id}")
+async def delete_promo_code(promo_id: str, request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    await db.promo_codes.delete_one({"id": promo_id})
+    return {"message": "Promo code deleted"}
+
+@api_router.post("/promo-codes/validate")
+async def validate_promo_code(request: Request):
+    body = await request.json()
+    code = body.get("code", "").strip().upper()
+    plan = body.get("plan", "")
+    if not code:
+        raise HTTPException(status_code=400, detail="No code provided")
+    promo = await db.promo_codes.find_one({"code": code, "active": True}, {"_id": 0})
+    if not promo:
+        raise HTTPException(status_code=404, detail="Invalid or expired promo code")
+    if promo.get("expires_at"):
+        if datetime.fromisoformat(promo["expires_at"]) < datetime.now(timezone.utc):
+            raise HTTPException(status_code=400, detail="This promo code has expired")
+    if promo.get("max_uses") and promo.get("used_count", 0) >= promo["max_uses"]:
+        raise HTTPException(status_code=400, detail="This promo code has reached its usage limit")
+    if plan and promo.get("applicable_plans") and plan not in promo["applicable_plans"]:
+        raise HTTPException(status_code=400, detail=f"This code doesn't apply to the {plan} plan")
+    original_price = SUBSCRIPTION_PLANS.get(plan, {}).get("price", 0)
+    if promo["discount_type"] == "percent":
+        discount_amount = round(original_price * promo["discount_value"] / 100, 2)
+    else:
+        discount_amount = min(promo["discount_value"], original_price)
+    final_price = max(0, round(original_price - discount_amount, 2))
+    return {
+        "valid": True, "code": promo["code"],
+        "discount_type": promo["discount_type"], "discount_value": promo["discount_value"],
+        "duration_months": promo.get("duration_months", 0),
+        "original_price": original_price, "discount_amount": discount_amount, "final_price": final_price,
+    }
+
+@api_router.post("/promo-codes/redeem")
+async def redeem_promo_code(request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    code = body.get("code", "").strip().upper()
+    plan = body.get("plan", "")
+    promo = await db.promo_codes.find_one({"code": code, "active": True})
+    if not promo:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    await db.promo_codes.update_one({"code": code}, {"$inc": {"used_count": 1}})
+    await db.promo_redemptions.insert_one({
+        "id": f"redemption_{uuid.uuid4().hex[:12]}",
+        "user_id": user["id"], "promo_id": promo["id"], "code": code, "plan": plan,
+        "discount_type": promo["discount_type"], "discount_value": promo["discount_value"],
+        "redeemed_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": f"Promo code {code} applied successfully"}
 
 # ============= NOTIFICATIONS =============
 @api_router.get("/notifications")
