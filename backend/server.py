@@ -1835,6 +1835,141 @@ async def admin_referral_overview(request: Request):
         "top_referrers": top_referrers,
     }
 
+# ============= COLLABORATION HUB =============
+
+class CollabPostCreate(BaseModel):
+    title: str
+    looking_for: str  # "vocalist", "producer", "mixer", "songwriter", "feature", "dj", "other"
+    genre: str = ""
+    description: str = ""
+    budget: Optional[str] = ""  # "free", "negotiable", "$100-500", "$500+"
+    deadline: Optional[str] = ""
+
+@api_router.post("/collab-hub/posts")
+async def create_collab_post(data: CollabPostCreate, request: Request):
+    user = await get_current_user(request)
+    doc = {
+        "id": f"collab_{uuid.uuid4().hex[:12]}",
+        "user_id": user["id"],
+        "artist_name": user.get("artist_name") or user.get("name", ""),
+        "title": data.title,
+        "looking_for": data.looking_for,
+        "genre": data.genre,
+        "description": data.description,
+        "budget": data.budget,
+        "deadline": data.deadline,
+        "status": "open",
+        "responses": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.collab_posts.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+@api_router.get("/collab-hub/posts")
+async def list_collab_posts(request: Request, looking_for: str = None, genre: str = None):
+    await get_current_user(request)
+    query = {"status": "open"}
+    if looking_for:
+        query["looking_for"] = looking_for
+    if genre:
+        query["genre"] = {"$regex": genre, "$options": "i"}
+    posts = await db.collab_posts.find(query, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return posts
+
+@api_router.get("/collab-hub/my-posts")
+async def my_collab_posts(request: Request):
+    user = await get_current_user(request)
+    posts = await db.collab_posts.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return posts
+
+@api_router.put("/collab-hub/posts/{post_id}")
+async def update_collab_post(post_id: str, request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    allowed = {"title", "looking_for", "genre", "description", "budget", "deadline", "status"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    result = await db.collab_posts.update_one({"id": post_id, "user_id": user["id"]}, {"$set": updates})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    updated = await db.collab_posts.find_one({"id": post_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/collab-hub/posts/{post_id}")
+async def delete_collab_post(post_id: str, request: Request):
+    user = await get_current_user(request)
+    result = await db.collab_posts.delete_one({"id": post_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    await db.collab_invites.delete_many({"post_id": post_id})
+    return {"message": "Post deleted"}
+
+@api_router.post("/collab-hub/invite")
+async def send_collab_invite(request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    post_id = body.get("post_id", "")
+    message = body.get("message", "")
+    post = await db.collab_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post["user_id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="Can't invite yourself")
+    existing = await db.collab_invites.find_one({"post_id": post_id, "from_user_id": user["id"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="Already sent an invite for this post")
+    invite = {
+        "id": f"inv_{uuid.uuid4().hex[:12]}",
+        "post_id": post_id,
+        "post_title": post.get("title", ""),
+        "from_user_id": user["id"],
+        "from_artist_name": user.get("artist_name") or user.get("name", ""),
+        "to_user_id": post["user_id"],
+        "to_artist_name": post.get("artist_name", ""),
+        "message": message,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.collab_invites.insert_one(invite)
+    invite.pop("_id", None)
+    await db.collab_posts.update_one({"id": post_id}, {"$inc": {"responses": 1}})
+    await db.notifications.insert_one({
+        "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": post["user_id"],
+        "type": "collab_invite",
+        "message": f"{user.get('artist_name', 'Someone')} wants to collaborate on \"{post['title']}\"",
+        "read": False, "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return invite
+
+@api_router.get("/collab-hub/invites")
+async def get_collab_invites(request: Request):
+    user = await get_current_user(request)
+    received = await db.collab_invites.find({"to_user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    sent = await db.collab_invites.find({"from_user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return {"received": received, "sent": sent}
+
+@api_router.put("/collab-hub/invites/{invite_id}")
+async def respond_to_invite(invite_id: str, request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    action = body.get("action", "")  # "accept" or "decline"
+    if action not in ("accept", "decline"):
+        raise HTTPException(status_code=400, detail="Action must be accept or decline")
+    invite = await db.collab_invites.find_one({"id": invite_id, "to_user_id": user["id"]})
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    new_status = "accepted" if action == "accept" else "declined"
+    await db.collab_invites.update_one({"id": invite_id}, {"$set": {"status": new_status}})
+    if action == "accept":
+        await db.collab_posts.update_one({"id": invite["post_id"]}, {"$set": {"status": "in_progress"}})
+    await db.notifications.insert_one({
+        "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": invite["from_user_id"],
+        "type": "collab_response",
+        "message": f"{user.get('artist_name', 'Someone')} {new_status} your collaboration invite for \"{invite['post_title']}\"",
+        "read": False, "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": f"Invite {new_status}"}
+
 # ============= RELEASE CALENDAR =============
 
 INDUSTRY_DATES = [
