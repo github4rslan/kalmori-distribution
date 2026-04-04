@@ -9,7 +9,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **Database**: MongoDB (30+ collections)
 - **Storage**: Emergent Object Storage | **Payments**: Stripe + PayPal
 - **Auth**: JWT + Google OAuth + reCAPTCHA v2 + Email Verification
-- **AI**: OpenAI via Emergent LLM Key (TTS for voice tags, GPT for strategies)
+- **AI**: OpenAI via Emergent LLM Key (TTS voice tags, GPT strategies)
 - **Email**: Resend (support@kalmori.org) | **PDF**: reportlab
 - **Audio**: pydub + ffmpeg (watermark processing)
 
@@ -21,14 +21,15 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Track Editing (12-field form) & Release Calendar
 - Collaboration Hub (posts, invites, security-hardened)
 - In-App Messaging (file/audio sharing, read receipts, typing indicators)
-- Beat Purchase with License Contracts (4-tier: Basic/Premium/Unlimited/Exclusive, digital signature, Stripe checkout, PDF contracts, admin dashboard)
-- **Beat Preview Watermark System** (auto-generated "Kalmori" voice tag via OpenAI TTS, overlaid at 15s intervals, preview plays tagged version, purchase delivers clean untagged original)
-- Admin Dashboard (users, submissions, beats, royalty import, campaigns, leads, email settings, promo codes, referrals, analytics reports, contracts)
+- Beat Purchase with License Contracts (4-tier, digital signature, Stripe checkout, PDF contracts, admin dashboard)
+- Beat Preview Watermark System (OpenAI TTS "Kalmori" voice tag, auto-overlay at 15s intervals, clean download post-purchase)
+- **Producer Royalty Split System** (auto-created on beat license, default splits by tier: Basic 50/50, Premium 40/60, Unlimited 30/70, Exclusive 0/100, monthly revenue calculation, wallet credits, admin override, earnings history)
+- Admin Dashboard (users, submissions, beats, royalty import, campaigns, leads, email settings, promo codes, referrals, analytics reports, contracts, royalty splits)
 - Client Features (revenue analytics, leaderboard, AI strategy, fan analytics, goals, beat catalog, wallet, 4-tab release wizard, 150+ platforms)
 - UI Dark Theme (animated purple/pink gradients)
 
 ## All Routes
-`/` `/login` `/register` `/select-role` `/verify-email` `/pricing` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/collab-hub` `/messages` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/referrals` `/calendar` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import` `/admin/campaigns` `/admin/leads` `/admin/email-settings` `/admin/promo-codes` `/admin/referrals` `/admin/analytics-reports` `/admin/contracts` `/agreement`
+`/` `/login` `/register` `/select-role` `/verify-email` `/pricing` `/label` `/instrumentals` `/dashboard` `/releases` `/releases/new` `/analytics` `/wallet` `/purchases` `/collaborations` `/collab-hub` `/messages` `/royalty-splits` `/presave-manager` `/fan-analytics` `/revenue` `/leaderboard` `/goals` `/referrals` `/calendar` `/settings` `/presave/:id` `/artist/:slug` `/spotify-canvas` `/content-id` `/admin` `/admin/submissions` `/admin/users` `/admin/users/:userId` `/admin/beats` `/admin/royalty-import` `/admin/campaigns` `/admin/leads` `/admin/email-settings` `/admin/promo-codes` `/admin/referrals` `/admin/analytics-reports` `/admin/contracts` `/agreement`
 
 ## Remaining Backlog
 - P1: Real Spotify OAuth with API credentials
