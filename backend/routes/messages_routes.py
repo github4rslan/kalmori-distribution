@@ -114,7 +114,7 @@ async def send_message(conversation_id: str, request: Request):
             "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": oid,
             "type": "new_message",
             "message": f"New message from {user.get('artist_name', 'Someone')}",
-            "read": False, "created_at": datetime.now(timezone.utc).isoformat(),
+            "read": False, "action_url": "/messages", "created_at": datetime.now(timezone.utc).isoformat(),
         })
     return msg
 

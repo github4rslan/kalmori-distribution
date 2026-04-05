@@ -706,6 +706,7 @@ Be specific with numbers from the data. Don't be generic. Return ONLY the JSON a
                 "priority": insight.get("priority", "medium"),
                 "metric_value": insight.get("metric_value", ""),
                 "action_suggestion": insight.get("action_suggestion", ""),
+                "action_url": "/analytics",
                 "read": False,
                 "created_at": now.isoformat(),
             }

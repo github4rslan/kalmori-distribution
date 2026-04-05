@@ -162,7 +162,7 @@ async def review_submission(release_id: str, review: AdminReviewAction, request:
         await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "rejected"}})
         notify_msg = f"Your release was not approved. Reason: {review.notes or 'Does not meet guidelines.'}"
     await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": submission["artist_id"],
-        "type": "review_result", "message": notify_msg, "release_id": release_id, "read": False, "created_at": now})
+        "type": "review_result", "message": notify_msg, "release_id": release_id, "read": False, "action_url": f"/releases/{release_id}", "created_at": now})
     await db.admin_actions.insert_one({"id": f"act_{uuid.uuid4().hex[:12]}", "admin_id": admin["id"],
         "action": f"review_{review.action}", "target_type": "release", "target_id": release_id,
         "notes": review.notes, "created_at": now})
@@ -603,6 +603,7 @@ async def admin_import_royalties(request: Request):
                 "type": "royalty_update",
                 "message": f"New earnings of ${total_revenue:.2f} have been added to your account via Kalmori Distribution.",
                 "read": False,
+                "action_url": "/wallet",
                 "created_at": now,
             })
             try:

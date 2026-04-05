@@ -572,7 +572,7 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
     if admin_user:
         await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": admin_user["id"],
             "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
-            "release_id": release_id, "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
+            "release_id": release_id, "read": False, "action_url": "/admin", "created_at": datetime.now(timezone.utc).isoformat()})
     return {"message": f"Submitted for review to {len(stores)} stores", "stores": stores, "status": "pending_review"}
 
 @api_router.get("/distributions/{release_id}")
@@ -1089,6 +1089,7 @@ async def get_goals(request: Request):
                 "message": f"Goal achieved! {g['title']}",
                 "type": "milestone",
                 "read": False,
+                "action_url": "/goals",
                 "created_at": now.isoformat(),
             })
 

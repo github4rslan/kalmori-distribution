@@ -6,7 +6,40 @@ import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, P
 import axios from 'axios';
 import { API } from '../App';
 
-const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose }) => (
+const NOTIFICATION_ROUTES = {
+  'new_submission': '/admin',
+  'milestone': '/goals',
+  'goal_achieved': '/goals',
+  'referral_reward': '/wallet',
+  'referral_welcome': '/dashboard',
+  'ai_insight': '/analytics',
+  'smart_insight': '/analytics',
+  'release_approved': '/releases',
+  'release_rejected': '/releases',
+  'release_update': '/releases',
+  'payout': '/wallet',
+  'payout_processed': '/wallet',
+  'payment': '/wallet',
+  'message': '/messages',
+  'new_message': '/messages',
+  'collab_invite': '/collaborations',
+  'collab_accepted': '/collaborations',
+  'collab_rejected': '/collaborations',
+  'content_id_claim': '/content-id',
+  'content_id': '/content-id',
+  'campaign': '/analytics',
+  'subscription': '/settings',
+  'beat_purchase': '/wallet',
+  'beat_sold': '/wallet',
+  'contract': '/purchases',
+  'split_earned': '/wallet',
+  'royalty': '/revenue',
+  'spotify': '/spotify',
+  'weekly_digest': '/analytics',
+  'verification': '/settings',
+};
+
+const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate }) => (
   <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50" data-testid="notification-panel">
     <div className="flex items-center justify-between p-4 border-b border-white/10">
       <h3 className="text-sm font-bold text-white">Notifications</h3>
@@ -18,35 +51,42 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose }
       {notifications.length === 0 ? (
         <div className="p-6 text-center text-sm text-gray-500">No notifications yet</div>
       ) : (
-        notifications.map(n => (
-          <div key={n.id} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/5' : 'bg-[#7C4DFF]/5') : ''}`}
-            onClick={() => !n.read && onMarkRead(n.id)} data-testid={`notification-${n.id}`}>
-            <div className="flex items-start gap-3">
-              {n.type === 'ai_insight' ? (
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Lightning className="w-3 h-3 text-white" weight="fill" />
-                </div>
-              ) : (
-                !n.read && <div className="w-2 h-2 rounded-full bg-[#7C4DFF] mt-1.5 flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                {n.type === 'ai_insight' && (
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
-                    {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
+        notifications.map(n => {
+          const targetUrl = n.action_url || NOTIFICATION_ROUTES[n.type] || '/dashboard';
+          return (
+            <div key={n.id} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/5' : 'bg-[#7C4DFF]/5') : ''}`}
+              onClick={() => { if (!n.read) onMarkRead(n.id); onNavigate(targetUrl); onClose(); }}
+              data-testid={`notification-${n.id}`}>
+              <div className="flex items-start gap-3">
+                {n.type === 'ai_insight' || n.type === 'smart_insight' ? (
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Lightning className="w-3 h-3 text-white" weight="fill" />
                   </div>
+                ) : (
+                  !n.read && <div className="w-2 h-2 rounded-full bg-[#7C4DFF] mt-1.5 flex-shrink-0" />
                 )}
-                <p className="text-sm text-white leading-snug">{n.message}</p>
-                {n.action_suggestion && (
-                  <p className="text-xs text-[#7C4DFF] mt-1 leading-snug">{n.action_suggestion}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-                </p>
+                <div className="flex-1 min-w-0">
+                  {(n.type === 'ai_insight' || n.type === 'smart_insight') && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
+                      {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
+                    </div>
+                  )}
+                  <p className="text-sm text-white leading-snug">{n.message}</p>
+                  {n.action_suggestion && (
+                    <p className="text-xs text-[#7C4DFF] mt-1 leading-snug">{n.action_suggestion}</p>
+                  )}
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-500">
+                      {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                    </p>
+                    <span className="text-[10px] text-[#7C4DFF] opacity-0 group-hover:opacity-100">View &rarr;</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
     </div>
   </div>
@@ -246,7 +286,7 @@ const DashboardLayout = ({ children }) => {
                   )}
                 </button>
                 {showNotifications && (
-                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} />
+                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} />
                 )}
               </div>
               <Link to="/releases/new">

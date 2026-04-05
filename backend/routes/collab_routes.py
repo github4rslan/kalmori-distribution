@@ -76,6 +76,7 @@ async def invite_collaborator(data: CollaborationInvite, request: Request):
             "message": f"{user.get('artist_name', user.get('name', 'An artist'))} invited you to collaborate on \"{release.get('title', 'a release')}\" as {data.role} ({data.split_percentage}% split)",
             "metadata": {"collaboration_id": collab_id, "release_id": data.release_id},
             "read": False,
+            "action_url": "/collaborations",
             "created_at": now,
         })
     # Send invitation email
