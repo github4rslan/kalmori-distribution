@@ -2232,6 +2232,22 @@ async def mark_all_notifications_read(request: Request):
     result = await db.notifications.update_many({"user_id": user["id"], "read": False}, {"$set": {"read": True}})
     return {"message": f"Marked {result.modified_count} notifications as read"}
 
+
+@api_router.get("/features")
+async def get_features(request: Request):
+    """Get all feature announcements with access info for the current user"""
+    user = await get_current_user(request)
+    user_plan = user.get("plan", "free")
+    plan_hierarchy = {"free": 0, "rise": 1, "pro": 2}
+    user_level = plan_hierarchy.get(user_plan, 0)
+
+    announcements = await db.feature_announcements.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    for a in announcements:
+        min_level = plan_hierarchy.get(a.get("min_plan", "free"), 0)
+        a["has_access"] = user_level >= min_level
+        a["upgrade_plan"] = a.get("min_plan", "free").capitalize() if not a["has_access"] else None
+    return announcements
+
 # Admin routes moved to routes/admin_routes.py
 
 # ============= SPLIT PAYMENTS =============

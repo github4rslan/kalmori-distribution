@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle, Star, Sparkle } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API } from '../App';
 
@@ -62,6 +62,10 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Lightning className="w-3 h-3 text-white" weight="fill" />
                   </div>
+                ) : n.type === 'feature_announcement' ? (
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: `${n.color || '#7C4DFF'}20`, color: n.color || '#7C4DFF' }}>
+                    <Star className="w-3 h-3" weight="fill" />
+                  </div>
                 ) : (
                   !n.read && <div className="w-2 h-2 rounded-full bg-[#7C4DFF] mt-1.5 flex-shrink-0" />
                 )}
@@ -70,6 +74,16 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
                       {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
+                    </div>
+                  )}
+                  {n.type === 'feature_announcement' && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: n.color || '#7C4DFF' }}>New Feature</span>
+                      {n.has_access ? (
+                        <span className="text-[10px] font-bold text-[#1DB954] bg-[#1DB954]/10 px-1.5 py-0.5 rounded">Available</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.min_plan?.charAt(0).toUpperCase() + n.min_plan?.slice(1)} Plan</span>
+                      )}
                     </div>
                   )}
                   <p className="text-sm text-white leading-snug">{n.message}</p>
@@ -183,6 +197,7 @@ const DashboardLayout = ({ children }) => {
     { path: '/goals', icon: <Target className="w-5 h-5" />, label: 'Goals', feat: 'goals' },
     { path: '/referrals', icon: <Gift className="w-5 h-5" />, label: 'Referrals' },
     { path: '/calendar', icon: <CalendarBlank className="w-5 h-5" />, label: 'Calendar' },
+    { path: '/features', icon: <Sparkle className="w-5 h-5" />, label: "What's New" },
     { path: '/settings', icon: <Gear className="w-5 h-5" />, label: 'Settings' },
   ];
 
@@ -268,7 +283,7 @@ const DashboardLayout = ({ children }) => {
             <div className="flex items-center gap-3">
               <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-6 h-6" /></button>
               <span className="lg:hidden text-white text-[16px] font-bold">
-                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/purchases' ? 'My Purchases' : location.pathname === '/collaborations' ? 'Collaborations' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify' ? 'Spotify Data' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
+                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/purchases' ? 'My Purchases' : location.pathname === '/collaborations' ? 'Collaborations' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify' ? 'Spotify Data' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname === '/features' ? "What's New" : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
               </span>
             </div>
             <div className="flex-1" />

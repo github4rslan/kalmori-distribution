@@ -67,6 +67,7 @@ import MessagesPage from './pages/MessagesPage';
 import RoyaltySplitsPage from './pages/RoyaltySplitsPage';
 import PageBuilderPage from './pages/PageBuilderPage';
 import SpotifyAnalyticsPage from './pages/SpotifyAnalyticsPage';
+import FeaturesPage from './pages/FeaturesPage';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -306,6 +307,7 @@ const AppRouter = () => {
       <Route path="/label" element={<ProtectedRoute><LabelDashboardPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
+      <Route path="/features" element={<ProtectedRoute><FeaturesPage /></ProtectedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
       <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissionsPage /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />

@@ -1184,3 +1184,96 @@ async def bulk_assign_unmatched(data: BulkAssignInput, request: Request):
         "message": f"Assigned {result.modified_count} entries to {user.get('artist_name', user.get('name', ''))}",
         "assigned": result.modified_count,
     }
+
+
+# ==================== FEATURE ANNOUNCEMENTS ====================
+
+PLAN_HIERARCHY = {"free": 0, "rise": 1, "pro": 2}
+
+class FeatureAnnouncementCreate(BaseModel):
+    title: str
+    description: str
+    min_plan: str = "free"  # "free", "rise", or "pro"
+    category: str = "general"  # "distribution", "analytics", "ai", "marketplace", "social", "general"
+    icon: str = "Lightning"
+    color: str = "#7C4DFF"
+
+
+@admin_router.get("/feature-announcements")
+async def list_feature_announcements(request: Request):
+    """Admin: List all feature announcements"""
+    await require_admin(request)
+    announcements = await db.feature_announcements.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return announcements
+
+
+@admin_router.post("/feature-announcements")
+async def create_feature_announcement(data: FeatureAnnouncementCreate, request: Request):
+    """Admin: Create a new feature announcement and notify all users"""
+    admin = await require_admin(request)
+    now = datetime.now(timezone.utc).isoformat()
+
+    announcement = {
+        "id": f"feat_{uuid.uuid4().hex[:12]}",
+        "title": data.title,
+        "description": data.description,
+        "min_plan": data.min_plan,
+        "category": data.category,
+        "icon": data.icon,
+        "color": data.color,
+        "created_by": admin["id"],
+        "created_at": now,
+    }
+    await db.feature_announcements.insert_one(announcement)
+    announcement.pop("_id", None)
+
+    # Notify ALL users
+    all_users = await db.users.find({}, {"_id": 0, "id": 1, "plan": 1}).to_list(10000)
+    notif_count = 0
+    min_plan_level = PLAN_HIERARCHY.get(data.min_plan, 0)
+
+    for u in all_users:
+        user_plan = u.get("plan", "free")
+        user_level = PLAN_HIERARCHY.get(user_plan, 0)
+        has_access = user_level >= min_plan_level
+
+        if has_access:
+            message = f"New Feature: {data.title} — {data.description}"
+            action_suggestion = "This feature is now available in your account!"
+        else:
+            plan_name = data.min_plan.capitalize()
+            message = f"New Feature: {data.title} — {data.description}"
+            action_suggestion = f"This is a {plan_name} feature. Upgrade your plan to unlock it!"
+
+        await db.notifications.insert_one({
+            "id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": u["id"],
+            "type": "feature_announcement",
+            "message": message,
+            "action_suggestion": action_suggestion,
+            "feature_id": announcement["id"],
+            "min_plan": data.min_plan,
+            "has_access": has_access,
+            "icon": data.icon,
+            "color": data.color,
+            "read": False,
+            "action_url": "/features" if has_access else "/pricing",
+            "created_at": now,
+        })
+        notif_count += 1
+
+    return {
+        "message": f"Feature announced! {notif_count} users notified.",
+        "announcement": announcement,
+        "notified": notif_count,
+    }
+
+
+@admin_router.delete("/feature-announcements/{announcement_id}")
+async def delete_feature_announcement(announcement_id: str, request: Request):
+    """Admin: Delete a feature announcement"""
+    await require_admin(request)
+    result = await db.feature_announcements.delete_one({"id": announcement_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    return {"message": "Announcement deleted"}
