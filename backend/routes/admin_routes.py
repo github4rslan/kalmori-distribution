@@ -1186,6 +1186,22 @@ async def bulk_assign_unmatched(data: BulkAssignInput, request: Request):
     }
 
 
+# ==================== COOKIE CONSENT ADMIN ====================
+
+@admin_router.get("/cookie-consents")
+async def get_cookie_consents(request: Request):
+    """Admin: View all cookie consent records"""
+    await require_admin(request)
+    consents = await db.cookie_consents.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    stats = {
+        "total": len(consents),
+        "accepted_all": len([c for c in consents if c.get("level") == "all"]),
+        "essential_only": len([c for c in consents if c.get("level") == "essential"]),
+        "declined": len([c for c in consents if c.get("level") == "declined"]),
+    }
+    return {"stats": stats, "consents": consents}
+
+
 # ==================== FEATURE ANNOUNCEMENTS ====================
 
 PLAN_HIERARCHY = {"free": 0, "rise": 1, "pro": 2}

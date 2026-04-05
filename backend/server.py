@@ -3300,6 +3300,29 @@ async def get_artist_theme(request: Request):
     profile = await db.artist_profiles.find_one({"user_id": user["id"]}, {"_id": 0, "theme_color": 1})
     return {"theme_color": (profile or {}).get("theme_color", "#7C4DFF")}
 
+@api_router.post("/cookie-consent")
+async def log_cookie_consent(request: Request):
+    """Log cookie consent for compliance records"""
+    body = await request.json()
+    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown")
+    user = None
+    try:
+        user = await get_current_user(request)
+    except:
+        pass
+
+    await db.cookie_consents.insert_one({
+        "id": f"cc_{uuid.uuid4().hex[:12]}",
+        "user_id": user["id"] if user else None,
+        "level": body.get("level", "unknown"),
+        "ip_address": ip.split(",")[0].strip(),
+        "user_agent": body.get("userAgent", ""),
+        "timestamp": body.get("timestamp", datetime.now(timezone.utc).isoformat()),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": "Consent recorded"}
+
+
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}

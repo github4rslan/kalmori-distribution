@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
+import CookieConsent from './components/CookieConsent';
 import { api } from './services/api';
 import { CartProvider } from './context/CartContext';
 
@@ -351,6 +352,7 @@ function App() {
         <CartProvider>
           <AppRouter />
           <Toaster position="top-right" />
+          <CookieConsent />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
