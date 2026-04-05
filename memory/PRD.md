@@ -1,7 +1,7 @@
 # Kalmori — TuneCore Clone / Digital Music Distribution Platform
 
 ## Problem Statement
-Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians. Core requirements include Authentication, Subscriptions, Object Storage, AI Features, Artist management, Release/Track uploads, Distribution, Beat Marketplace, and Kalmori white-labeling. Must include Admin-only Elementor-style Page Builder with full visual control.
+Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians. Core requirements include Authentication, Subscriptions, Object Storage, AI Features, Artist management, Release/Track uploads, Distribution, Beat Marketplace, Admin Page Builder, and Kalmori white-labeling.
 
 ## Architecture
 - **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion + @dnd-kit
@@ -9,18 +9,21 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **Payments**: Stripe + PayPal | **Storage**: Emergent Object Storage
 - **AI**: Emergent LLM Key (OpenAI) | **Email**: Resend API
 - **Auth**: JWT + Google OAuth | **DSP**: Spotify Web API (spotipy)
-- **PDF**: reportlab | **Audio**: pydub + ffmpeg | **QR**: qrcode
 
 ## Implemented Features (All Tested)
 1-18. Core features (Auth, Subscriptions, Releases, Distribution, Analytics, AI, Beats, Contracts, Messaging, Royalty Splits, Payouts, Artist Profiles, etc.)
-19. **Admin Page Builder V1** — Drag-and-drop, 12 block types
-20. **Page Builder V2** — Custom CSS, Image uploads, Block duplication, Multi-page
-21. **Page Builder Auto-Seeding** — Landing (14), About (5), Pricing (4) blocks from live site
-22. **Reset to Default** — Toolbar button to revert any page to original content
-23. **Template Library** — 10 pre-built feature templates (Beat Marketplace, Spotify, AI, Collab Hub, Royalty Splits, Artist Profile, Leaderboard, Distribution CTA, Subscription Plans, Content Protection)
-24. **Spotify DSP OAuth** — Real artist data, top tracks, albums, related artists
-25. **Admin User Cleanup** — Delete all non-admin users
-26. **Updated Subscription Gating** — New features added to tier locks (spotify_data, beat_marketplace, messaging, royalty_splits)
+19. Admin Page Builder V1 — Drag-and-drop, 12 block types
+20. Page Builder V2 — Custom CSS, Image uploads, Block duplication, Multi-page
+21. Page Builder Auto-Seeding — Landing (14), About (5), Pricing (4) blocks
+22. Reset to Default button
+23. Template Library — 10 pre-built feature templates
+24. Spotify DSP OAuth Integration — Real artist data
+25. Admin User Cleanup
+26. Updated Subscription Gating (spotify_data, beat_marketplace, messaging, royalty_splits)
+27. **Clickable Notifications** — All 23+ notification types navigate to relevant page
+28. **Feature Announcements** — Admin creates announcements, all users notified with plan-gated access badges
+29. **What's New page** — /features shows Available (green ACTIVE) vs Locked (gold Upgrade) based on user plan
+30. **Reply-To Email** — All emails reply to submitkalmori@gmail.com
 
 ## Subscription Tiers
 | Feature | Free | Rise | Pro |
@@ -32,8 +35,12 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 | AI Strategy | Locked | Locked | Unlocked |
 | Fan Analytics | Locked | Unlocked | Unlocked |
 
+## DB Collections
+users, releases, tracks, stream_events, artist_profiles, beats, contracts, conversations, messages, typing_status, royalty_splits, split_earnings, wallets, withdrawals, payout_settings, goals, notifications, notification_preferences, presave_campaigns, collaboration_posts, collab_invites, saved_strategies, digest_log, page_layouts, spotify_connections, feature_announcements
+
 ## Remaining Tasks
 - P0: Deploy to kalmori.org (Save to Github)
-- P0: Add custom domain to Resend (kalmori.org) for email delivery
+- P0: Add custom domain in Resend for email delivery
+- P2: Admin UI form for creating feature announcements (currently API-only)
 - P2: Further server.py refactoring
 - P3: Apple Music / YouTube Music integration
