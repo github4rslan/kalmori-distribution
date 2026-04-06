@@ -6,13 +6,9 @@ from typing import Optional
 from datetime import datetime, timezone, timedelta
 import io, csv, uuid, random
 
-analytics_router = APIRouter(prefix="/api", tags=["Analytics"])
+from core import db, get_current_user, SUBSCRIPTION_PLANS, check_feature_access
 
-# Module-level references (set by init)
-db = None
-get_current_user = None
-check_feature_access = None
-SUBSCRIPTION_PLANS = None
+analytics_router = APIRouter(prefix="/api", tags=["Analytics"])
 
 PLATFORM_RATES = {
     "Spotify": 0.004, "Apple Music": 0.008, "YouTube Music": 0.002,
@@ -39,13 +35,6 @@ class CreateGoalInput(BaseModel):
 class RevenueCalculatorInput(BaseModel):
     streams: int = 10000
     platform_mix: Optional[dict] = None
-
-def init_analytics_routes(database, get_user_fn, check_access_fn, sub_plans):
-    global db, get_current_user, check_feature_access, SUBSCRIPTION_PLANS
-    db = database
-    get_current_user = get_user_fn
-    check_feature_access = check_access_fn
-    SUBSCRIPTION_PLANS = sub_plans
 
 
 # ============= ANALYTICS OVERVIEW =============
@@ -75,21 +64,18 @@ async def get_analytics_overview(request: Request):
     else:
         totals = stream_totals
         totals["total_downloads"] = 0
-    # Platform breakdown from stream_events (real data only)
     platform_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": "$platform", "count": {"$sum": 1}}}
     ]
     platform_result = await db.stream_events.aggregate(platform_pipeline).to_list(20)
     streams_by_store = {r["_id"]: r["count"] for r in platform_result if r["_id"]} if platform_result else {}
-    # Country breakdown from stream_events (real data only)
     country_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": "$country", "count": {"$sum": 1}}}
     ]
     country_result = await db.stream_events.aggregate(country_pipeline).to_list(20)
     streams_by_country = {r["_id"]: r["count"] for r in country_result if r["_id"]} if country_result else {}
-    # Daily streams from stream_events (real data only)
     daily_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": {"$substr": ["$timestamp", 0, 10]}, "streams": {"$sum": 1}, "earnings": {"$sum": "$revenue"}}},
@@ -107,6 +93,23 @@ async def get_analytics_overview(request: Request):
         "streams_by_store": streams_by_store,
         "streams_by_country": streams_by_country,
         "daily_streams": daily_streams,
+    }
+
+
+# ============= RELEASE ANALYTICS =============
+@analytics_router.get("/analytics/release/{release_id}")
+async def get_release_analytics(release_id: str, request: Request):
+    user = await get_current_user(request)
+    release = await db.releases.find_one({"id": release_id, "artist_id": user["id"]})
+    if not release:
+        raise HTTPException(status_code=404, detail="Release not found")
+    royalties = await db.royalties.find({"release_id": release_id}, {"_id": 0}).to_list(100)
+    return {
+        "release_id": release_id,
+        "title": release["title"],
+        "total_streams": sum(r.get("streams", 0) for r in royalties),
+        "total_earnings": round(sum(r.get("earnings", 0) for r in royalties), 2),
+        "royalties": royalties,
     }
 
 

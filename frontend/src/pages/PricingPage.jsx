@@ -368,7 +368,7 @@ export default function PricingPage() {
             <WhyCard
               icon={<CurrencyDollar className="w-6 h-6 text-[#1DB954]" weight="fill" />}
               title="Keep 100% Royalties"
-              desc="Free plan takes 20%, Rise takes 10%. Pro? You keep every single penny."
+              desc="Free plan takes 20%, Rise takes 5%. Pro? You keep every single penny."
             />
             <WhyCard
               icon={<Sparkle className="w-6 h-6 text-[#FFD700]" weight="fill" />}

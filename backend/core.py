@@ -302,3 +302,47 @@ def get_object(path: str) -> tuple:
     )
     resp.raise_for_status()
     return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+
+
+# ============= SUBSCRIPTION PLANS =============
+SUBSCRIPTION_PLANS = {
+    "free": {
+        "name": "Free", "price": 0, "revenue_share": 20,
+        "max_releases": -1,
+        "release_types": ["single", "ep", "album"],
+        "pay_per_release": False,
+        "features": ["Unlimited releases", "150+ streaming platforms", "Free ISRC codes", "Basic analytics", "Standard support", "Kalmori keeps 20% of revenue"],
+        "locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaborations", "spotify_data", "beat_marketplace", "messaging", "royalty_splits"]
+    },
+    "rise": {
+        "name": "Rise", "price": 24.99, "revenue_share": 5,
+        "max_releases": -1,
+        "release_types": ["single"],
+        "pay_per_release": True,
+        "features": ["Single releases (pay per release)", "150+ streaming platforms", "Free ISRC & UPC codes", "Advanced analytics", "Revenue dashboard", "Fan Analytics", "In-App messaging", "Beat marketplace access", "Goal Tracking", "Priority support", "Kalmori keeps only 5% of revenue"],
+        "locked": ["ai_strategy", "content_id", "spotify_canvas", "leaderboard", "presave", "royalty_splits", "spotify_data"]
+    },
+    "pro": {
+        "name": "Pro", "price": 49.99, "revenue_share": 0,
+        "max_releases": -1,
+        "release_types": ["single", "ep", "album"],
+        "pay_per_release": False,
+        "features": ["Everything in Rise", "Keep 100% of royalties", "Album & Single releases", "AI Release Strategy", "Revenue Export (PDF/CSV)", "YouTube Content ID", "Spotify Canvas", "Spotify Data (Real API)", "Release Leaderboard", "Pre-Save Campaigns", "Collaborations & Splits", "Producer Royalty Splits", "Dedicated account manager"],
+        "locked": []
+    },
+}
+
+def check_feature_access(user_plan: str, feature: str):
+    """Check if user's plan allows access to a feature"""
+    plan = SUBSCRIPTION_PLANS.get(user_plan, SUBSCRIPTION_PLANS["free"])
+    locked = plan.get("locked", [])
+    if feature in locked:
+        plan_names = {
+            "ai_strategy": "Pro", "revenue_export": "Pro", "content_id": "Pro", "spotify_canvas": "Pro",
+            "leaderboard": "Pro", "goals": "Pro", "presave": "Pro", "fan_analytics": "Rise",
+            "collaborations": "Rise", "spotify_data": "Pro", "beat_marketplace": "Rise",
+            "messaging": "Rise", "royalty_splits": "Pro"
+        }
+        required = plan_names.get(feature, "Pro")
+        raise HTTPException(status_code=403, detail=f"This feature requires the {required} plan. Upgrade at /pricing")
+
