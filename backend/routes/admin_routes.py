@@ -1293,3 +1293,44 @@ async def delete_feature_announcement(announcement_id: str, request: Request):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Announcement not found")
     return {"message": "Announcement deleted"}
+
+
+# ============= ADMIN NOTIFICATION BANK =============
+@admin_router.get("/notifications-bank")
+async def admin_notifications_bank(request: Request, page: int = 1, per_page: int = 25, search: str = "", type: str = "", read: str = ""):
+    """Admin: Browse all admin notifications with search/filter/pagination"""
+    admin = await require_admin(request)
+    query = {"user_id": admin["id"]}
+    if type:
+        query["type"] = type
+    if read == "true":
+        query["read"] = True
+    elif read == "false":
+        query["read"] = False
+    if search:
+        query["message"] = {"$regex": search, "$options": "i"}
+    total = await db.notifications.count_documents(query)
+    skip = (page - 1) * per_page
+    notifications = await db.notifications.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(per_page).to_list(per_page)
+    return {"notifications": notifications, "total": total, "page": page, "per_page": per_page}
+
+@admin_router.put("/notifications-bank/{notification_id}/read")
+async def admin_mark_notification_read(notification_id: str, request: Request):
+    """Admin: Mark a specific notification as read"""
+    admin = await require_admin(request)
+    await db.notifications.update_one({"id": notification_id, "user_id": admin["id"]}, {"$set": {"read": True}})
+    return {"message": "Marked as read"}
+
+@admin_router.put("/notifications-bank/read-all")
+async def admin_mark_all_read(request: Request):
+    """Admin: Mark all admin notifications as read"""
+    admin = await require_admin(request)
+    result = await db.notifications.update_many({"user_id": admin["id"], "read": False}, {"$set": {"read": True}})
+    return {"message": f"Marked {result.modified_count} notifications as read"}
+
+@admin_router.delete("/notifications-bank/{notification_id}")
+async def admin_delete_notification(notification_id: str, request: Request):
+    """Admin: Delete a notification"""
+    admin = await require_admin(request)
+    await db.notifications.delete_one({"id": notification_id, "user_id": admin["id"]})
+    return {"message": "Notification deleted"}

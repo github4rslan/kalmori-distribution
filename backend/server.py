@@ -115,10 +115,11 @@ class SetRoleInput(BaseModel):
 
 @api_router.put("/auth/set-role")
 async def set_user_role(data: SetRoleInput, request: Request):
-    """Set user role after registration (artist or label_producer)"""
+    """Set user role after registration (artist, producer, or label)"""
     user = await get_current_user(request)
-    if data.role not in ["artist", "label_producer"]:
-        raise HTTPException(status_code=400, detail="Role must be 'artist' or 'label_producer'")
+    valid_roles = ["artist", "producer", "label", "label_producer"]
+    if data.role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Role must be one of: {', '.join(valid_roles)}")
     await db.users.update_one({"id": user["id"]}, {"$set": {"user_role": data.role, "role": data.role if data.role == "admin" else user.get("role", "artist")}})
     # Update artist_profiles with role
     await db.artist_profiles.update_one(

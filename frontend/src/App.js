@@ -67,6 +67,7 @@ import AdminUserDetailPage from './pages/AdminUserDetailPage';
 import AdminCampaignsPage from './pages/AdminCampaignsPage';
 import AdminLeadsPage from './pages/AdminLeadsPage';
 import AdminFeatureAnnouncementsPage from './pages/AdminFeatureAnnouncementsPage';
+import AdminNotificationsPage from './pages/AdminNotificationsPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import AgreementPage from './pages/AgreementPage';
 import PricingPage from './pages/PricingPage';
@@ -363,6 +364,7 @@ const AppRouter = () => {
               <Route path="/admin/page-builder" element={<AdminRoute><PageBuilderPage /></AdminRoute>} />
               <Route path="/admin/page-builder/:slug" element={<AdminRoute><PageBuilderPage /></AdminRoute>} />
               <Route path="/admin/feature-announcements" element={<AdminRoute><AdminFeatureAnnouncementsPage /></AdminRoute>} />
+              <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/agreement" element={<AgreementPage />} />
       <Route path="/pricing" element={<PricingPage />} />

@@ -57,8 +57,9 @@ def email_base(header_gradient: str, header_title: str, body_html: str, footer_t
 
 async def send_welcome_email(user_email: str, user_name: str, user_role: str = "artist"):
     """Send a branded welcome email when a new user signs up"""
-    if user_role == "label_producer":
-        role_label = "Label / Producer"
+    role_labels = {"artist": "Artist", "producer": "Producer", "label": "Label", "label_producer": "Label / Producer"}
+    role_label = role_labels.get(user_role, user_role.replace("_", " ").title() if user_role else "Artist")
+    if user_role in ("label_producer", "label", "producer"):
         role_desc = "manage your artists, distribute catalogs, and track royalties"
         step2 = "Add your artists and start distributing their music to <strong style=\"color:#fff;\">150+ streaming platforms</strong>"
         step3 = "Use our <strong style=\"color:#fff;\">AI Release Strategy</strong> to optimize every release"
@@ -511,11 +512,12 @@ async def send_verification_email(user_email: str, user_name: str, verification_
 
 
 async def send_admin_signup_notification(user_name: str, user_email: str, user_role: str):
-    """Notify admin when a new user signs up"""
-    admin = await db.users.find_one({"role": "admin"}, {"_id": 0, "email": 1, "id": 1})
-    if not admin:
+    """Notify ALL admins when a new user signs up"""
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "email": 1, "id": 1}).to_list(50)
+    if not admins:
         return
-    role_label = "Label / Producer" if user_role == "label_producer" else "Artist"
+    role_labels = {"artist": "Artist", "producer": "Producer", "label": "Label", "label_producer": "Label / Producer"}
+    role_label = role_labels.get(user_role, user_role.replace("_", " ").title() if user_role else "Artist")
     now = datetime.now(timezone.utc).strftime("%B %d, %Y at %I:%M %p UTC")
     body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">New Sign-Up Alert</p>
     <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:16px 0;">
@@ -534,17 +536,21 @@ async def send_admin_signup_notification(user_name: str, user_email: str, user_r
         body,
         "Kalmori Admin Notification"
     )
-    await send_email(admin["email"], f"Kalmori: New {role_label} sign-up — {user_name}", html)
-    # Also create in-app notification for admin
-    await db.notifications.insert_one({
-        "id": f"notif_{uuid.uuid4().hex[:12]}",
-        "user_id": admin["id"],
-        "type": "new_signup",
-        "message": f"New {role_label} signed up: {user_name} ({user_email})",
-        "read": False,
-        "action_url": "/admin",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    })
+    # Send email and in-app notification to ALL admins
+    for admin in admins:
+        try:
+            await send_email(admin["email"], f"Kalmori: New {role_label} sign-up — {user_name}", html)
+        except Exception as e:
+            logger.warning(f"Admin email failed for {admin['email']}: {e}")
+        await db.notifications.insert_one({
+            "id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": admin["id"],
+            "type": "new_signup",
+            "message": f"New {role_label} signed up: {user_name} ({user_email})",
+            "read": False,
+            "action_url": "/admin/users",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
 
 
 @email_router.get("/auth/verify-email")

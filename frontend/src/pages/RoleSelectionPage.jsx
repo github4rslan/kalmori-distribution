@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, useAuth } from '../App';
-import { MusicNotes, Microphone, VinylRecord } from '@phosphor-icons/react';
+import { MusicNotes, Microphone, VinylRecord, Headphones } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 const RoleSelectionPage = () => {
@@ -14,8 +14,9 @@ const RoleSelectionPage = () => {
     setLoading(true);
     try {
       await axios.put(`${API}/auth/set-role`, { role }, { withCredentials: true });
+      const roleLabels = { artist: 'Artist', producer: 'Producer', label: 'Label' };
       if (setUser && user) setUser({ ...user, user_role: role });
-      toast.success(`Welcome, ${role === 'artist' ? 'Artist' : 'Label / Producer'}!`);
+      toast.success(`Welcome, ${roleLabels[role] || role}!`);
       navigate('/dashboard');
     } catch (err) {
       toast.error('Failed to set role');
@@ -66,18 +67,35 @@ const RoleSelectionPage = () => {
           </button>
 
           <button
-            onClick={() => selectRole('label_producer')}
+            onClick={() => selectRole('producer')}
             disabled={loading}
-            className="w-full group relative overflow-hidden rounded-2xl border-2 border-[#FFD700]/30 hover:border-[#FFD700] transition-all duration-300"
-            data-testid="role-label-producer-btn"
+            className="w-full group relative overflow-hidden rounded-2xl border-2 border-[#E040FB]/30 hover:border-[#E040FB] transition-all duration-300"
+            data-testid="role-producer-btn"
           >
             <div className="relative bg-[#111] hover:bg-[#1a1a1a] transition-colors px-8 py-7 flex items-center gap-5">
-              <div className="w-16 h-16 rounded-xl bg-[#FFD700]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#FFD700]/20 transition-colors">
-                <VinylRecord className="w-8 h-8 text-[#FFD700]" weight="fill" />
+              <div className="w-16 h-16 rounded-xl bg-[#E040FB]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#E040FB]/20 transition-colors">
+                <Headphones className="w-8 h-8 text-[#E040FB]" weight="fill" />
               </div>
               <div className="text-left flex-1">
-                <p className="text-xl font-bold text-[#FFD700]">I am a Label / Producer</p>
-                <p className="text-sm text-gray-400 mt-1">Manage artists, distribute catalogs, and track royalties</p>
+                <p className="text-xl font-bold text-[#E040FB]">I am a Producer</p>
+                <p className="text-sm text-gray-400 mt-1">Sell beats, manage instrumentals, and earn from licensing</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => selectRole('label')}
+            disabled={loading}
+            className="w-full group relative overflow-hidden rounded-2xl border-2 border-[#7C4DFF]/30 hover:border-[#7C4DFF] transition-all duration-300"
+            data-testid="role-label-btn"
+          >
+            <div className="relative bg-[#111] hover:bg-[#1a1a1a] transition-colors px-8 py-7 flex items-center gap-5">
+              <div className="w-16 h-16 rounded-xl bg-[#7C4DFF]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#7C4DFF]/20 transition-colors">
+                <VinylRecord className="w-8 h-8 text-[#7C4DFF]" weight="fill" />
+              </div>
+              <div className="text-left flex-1">
+                <p className="text-xl font-bold text-[#7C4DFF]">I am a Label</p>
+                <p className="text-sm text-gray-400 mt-1">Manage artists, distribute catalogs, and track royalties across your roster</p>
               </div>
             </div>
           </button>
