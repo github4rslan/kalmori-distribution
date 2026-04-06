@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { API } from '../App';
+import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
 import ShareStatsModal from '../components/ShareStatsModal';
 import { Button } from '../components/ui/button';
@@ -35,6 +35,7 @@ const TIKTOK_TRENDS = [
 ];
 
 const AnalyticsPage = () => {
+  const { user } = useAuth();
   const [analytics, setAnalytics] = useState(null);
   const [insights, setInsights] = useState('');
   const [platformData, setPlatformData] = useState([]);
@@ -126,11 +127,15 @@ const AnalyticsPage = () => {
             <p className="text-[#A1A1AA] mt-1">Track your streaming performance</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <input type="file" accept=".csv" ref={importRef} onChange={handleCSVImport} className="hidden" />
-            <Button onClick={() => importRef.current?.click()} disabled={importing} variant="outline" className="rounded-full gap-2 border-white/10 text-white hover:bg-white/5" data-testid="import-csv-btn">
-              {importing ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
-              Import CSV
-            </Button>
+            {user?.role === 'admin' && (
+              <>
+                <input type="file" accept=".csv" ref={importRef} onChange={handleCSVImport} className="hidden" />
+                <Button onClick={() => importRef.current?.click()} disabled={importing} variant="outline" className="rounded-full gap-2 border-white/10 text-white hover:bg-white/5" data-testid="import-csv-btn">
+                  {importing ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
+                  Import CSV
+                </Button>
+              </>
+            )}
             <Button onClick={() => setShowShareModal(true)} variant="outline" className="rounded-full gap-2 border-[#E040FB]/30 text-[#E040FB] hover:bg-[#E040FB]/10" data-testid="share-stats-btn">
               <ShareNetwork className="w-4 h-4" /> Share Stats
             </Button>
@@ -154,15 +159,14 @@ const AnalyticsPage = () => {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: <Play className="w-5 h-5" />, value: analytics?.total_streams?.toLocaleString() || '0', label: 'Total Streams', color: '#FF3B30', change: '+12.5%' },
-            { icon: <CurrencyDollar className="w-5 h-5" />, value: `$${analytics?.total_earnings?.toFixed(2) || '0.00'}`, label: 'Total Earnings', color: '#22C55E', change: '+8.2%' },
+            { icon: <Play className="w-5 h-5" />, value: analytics?.total_streams?.toLocaleString() || '0', label: 'Total Streams', color: '#FF3B30' },
+            { icon: <CurrencyDollar className="w-5 h-5" />, value: `$${analytics?.total_earnings?.toFixed(2) || '0.00'}`, label: 'Total Earnings', color: '#22C55E' },
             { icon: <TrendUp className="w-5 h-5" />, value: analytics?.total_downloads?.toLocaleString() || '0', label: 'Downloads', color: '#FFCC00' },
             { icon: <Globe className="w-5 h-5" />, value: analytics?.release_count || '0', label: 'Releases', color: '#007AFF' },
           ].map((stat, i) => (
             <div key={i} className="bg-[#141414] border border-white/10 p-5 rounded-md">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>{stat.icon}</div>
-                {stat.change && <span className="text-xs text-[#22C55E] font-mono">{stat.change}</span>}
               </div>
               <p className="text-2xl font-bold font-mono">{stat.value}</p>
               <p className="text-sm text-[#A1A1AA] mt-1">{stat.label}</p>

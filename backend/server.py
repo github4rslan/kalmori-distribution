@@ -785,29 +785,23 @@ async def get_analytics_overview(request: Request):
         totals = result[0] if result else {"total_streams": 0, "total_downloads": 0, "total_earnings": 0.0}
     else:
         totals = stream_totals
-        totals["total_downloads"] = int(totals["total_streams"] * 0.05)  # ~5% of streams
+        totals["total_downloads"] = 0
     ts = totals.get("total_streams", 0)
-    # Platform breakdown from stream_events
+    # Platform breakdown from stream_events (real data only)
     platform_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": "$platform", "count": {"$sum": 1}}}
     ]
     platform_result = await db.stream_events.aggregate(platform_pipeline).to_list(20)
-    if platform_result:
-        streams_by_store = {r["_id"]: r["count"] for r in platform_result if r["_id"]}
-    else:
-        streams_by_store = {"Spotify": int(ts*0.45), "Apple Music": int(ts*0.25), "YouTube Music": int(ts*0.15), "Amazon Music": int(ts*0.10), "Other": int(ts*0.05)}
-    # Country breakdown from stream_events
+    streams_by_store = {r["_id"]: r["count"] for r in platform_result if r["_id"]} if platform_result else {}
+    # Country breakdown from stream_events (real data only)
     country_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": "$country", "count": {"$sum": 1}}}
     ]
     country_result = await db.stream_events.aggregate(country_pipeline).to_list(20)
-    if country_result:
-        streams_by_country = {r["_id"]: r["count"] for r in country_result if r["_id"]}
-    else:
-        streams_by_country = {"US": int(ts*0.35), "UK": int(ts*0.15), "DE": int(ts*0.10), "CA": int(ts*0.08), "AU": int(ts*0.07), "Other": int(ts*0.25)}
-    # Daily streams from stream_events
+    streams_by_country = {r["_id"]: r["count"] for r in country_result if r["_id"]} if country_result else {}
+    # Daily streams from stream_events (real data only)
     daily_pipeline = [
         {"$match": {"artist_id": user["id"]}},
         {"$group": {"_id": {"$substr": ["$timestamp", 0, 10]}, "streams": {"$sum": 1}, "earnings": {"$sum": "$revenue"}}},
@@ -815,15 +809,7 @@ async def get_analytics_overview(request: Request):
         {"$limit": 30}
     ]
     daily_result = await db.stream_events.aggregate(daily_pipeline).to_list(30)
-    if daily_result:
-        daily_streams = [{"date": r["_id"], "streams": r["streams"], "earnings": round(r["earnings"], 2)} for r in reversed(daily_result)]
-    else:
-        base = max(ts, 1000) // 30
-        daily_streams = []
-        for i in range(30):
-            d = datetime.now(timezone.utc) - timedelta(days=29-i)
-            v = random.uniform(0.7, 1.3)
-            daily_streams.append({"date": d.strftime("%Y-%m-%d"), "streams": int(base*v), "earnings": round(base*v*0.004, 2)})
+    daily_streams = [{"date": r["_id"], "streams": r["streams"], "earnings": round(r["earnings"], 2)} for r in reversed(daily_result)] if daily_result else []
     return {"total_streams": ts, "total_downloads": totals.get("total_downloads", 0),
         "total_earnings": round(totals.get("total_earnings", 0.0), 2), "streams_by_store": streams_by_store,
         "streams_by_country": streams_by_country, "daily_streams": daily_streams, "release_count": len(releases)}
@@ -841,27 +827,66 @@ async def get_release_analytics(release_id: str, request: Request):
 @api_router.get("/analytics/trending")
 async def get_trending(request: Request):
     user = await get_current_user(request)
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    two_weeks_ago = (now - timedelta(days=14)).isoformat()
     releases = await db.releases.find({"artist_id": user["id"]}, {"_id": 0}).to_list(100)
     release_ids = [r["id"] for r in releases]
-    # Batch query all royalties in one call
-    royalties_pipeline = [
-        {"$match": {"release_id": {"$in": release_ids}}},
-        {"$group": {"_id": "$release_id", "total_streams": {"$sum": "$streams"}}}
+    # Total streams per release from stream_events
+    total_pipeline = [
+        {"$match": {"artist_id": user["id"], "release_id": {"$in": release_ids}}},
+        {"$group": {"_id": "$release_id", "total_streams": {"$sum": 1}}}
     ]
-    royalties_map = {r["_id"]: r["total_streams"] for r in await db.royalties.aggregate(royalties_pipeline).to_list(200)}
+    total_map = {r["_id"]: r["total_streams"] for r in await db.stream_events.aggregate(total_pipeline).to_list(200)}
+    # This week streams per release
+    week_pipeline = [
+        {"$match": {"artist_id": user["id"], "release_id": {"$in": release_ids}, "timestamp": {"$gte": week_ago}}},
+        {"$group": {"_id": "$release_id", "streams": {"$sum": 1}}}
+    ]
+    week_map = {r["_id"]: r["streams"] for r in await db.stream_events.aggregate(week_pipeline).to_list(200)}
+    # Previous week streams per release
+    prev_pipeline = [
+        {"$match": {"artist_id": user["id"], "release_id": {"$in": release_ids}, "timestamp": {"$gte": two_weeks_ago, "$lt": week_ago}}},
+        {"$group": {"_id": "$release_id", "streams": {"$sum": 1}}}
+    ]
+    prev_map = {r["_id"]: r["streams"] for r in await db.stream_events.aggregate(prev_pipeline).to_list(200)}
+    # Top platform per release
+    plat_pipeline = [
+        {"$match": {"artist_id": user["id"], "release_id": {"$in": release_ids}}},
+        {"$group": {"_id": {"release_id": "$release_id", "platform": "$platform"}, "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    plat_raw = await db.stream_events.aggregate(plat_pipeline).to_list(500)
+    top_platforms = {}
+    for tp in plat_raw:
+        rid = tp["_id"]["release_id"]
+        if rid not in top_platforms:
+            top_platforms[rid] = tp["_id"]["platform"]
+    # Top country per release
+    country_pipeline = [
+        {"$match": {"artist_id": user["id"], "release_id": {"$in": release_ids}}},
+        {"$group": {"_id": {"release_id": "$release_id", "country": "$country"}, "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    country_raw = await db.stream_events.aggregate(country_pipeline).to_list(500)
+    top_countries = {}
+    for tc in country_raw:
+        rid = tc["_id"]["release_id"]
+        if rid not in top_countries:
+            top_countries[rid] = tc["_id"]["country"]
     trending = []
     for r in releases:
-        streams = royalties_map.get(r["id"], 0)
-        if r.get("status") == "distributed" or streams > 0:
-            base_streams = max(streams, random.randint(100, 5000))
-            week_change = round(random.uniform(-15, 45), 1)
+        total = total_map.get(r["id"], 0)
+        this_week = week_map.get(r["id"], 0)
+        last_week = prev_map.get(r["id"], 0)
+        if total > 0 or r.get("status") == "distributed":
+            change = round((this_week - last_week) / max(last_week, 1) * 100, 1) if last_week > 0 else 0.0
             trending.append({
                 "release_id": r["id"], "title": r["title"], "release_type": r.get("release_type", "single"),
                 "cover_art_url": r.get("cover_art_url"), "genre": r.get("genre", ""),
-                "streams_this_week": int(base_streams * random.uniform(0.2, 0.4)),
-                "total_streams": base_streams, "change_percent": week_change,
-                "top_store": random.choice(["Spotify", "Apple Music", "YouTube Music", "TikTok"]),
-                "top_country": random.choice(["US", "UK", "NG", "JM", "CA", "DE"]),
+                "streams_this_week": this_week, "total_streams": total, "change_percent": change,
+                "top_store": top_platforms.get(r["id"], "N/A"),
+                "top_country": top_countries.get(r["id"], "N/A"),
             })
     trending.sort(key=lambda x: x["streams_this_week"], reverse=True)
     return {"trending": trending[:10], "period": "last_7_days"}
@@ -2677,11 +2702,13 @@ async def send_receipt(request: Request):
 # ============= ADMIN PAYOUT DASHBOARD =============
 # Moved to routes/payouts_routes.py
 
-# ============= DSP DATA IMPORT (CSV) =============
+# ============= DSP DATA IMPORT (CSV) — ADMIN ONLY =============
 @api_router.post("/analytics/import")
 async def import_streaming_data(request: Request, file: UploadFile = File(...)):
-    """Import streaming data from CSV. Expected columns: date, platform, country, streams, revenue, release_title"""
+    """Import streaming data from CSV. Admin only. Expected columns: date, platform, country, streams, revenue, release_title"""
     user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can import streaming data")
     import csv, io
     content = await file.read()
     try:
@@ -3486,85 +3513,10 @@ async def startup():
     # Initialize CMS
     await init_cms_content()
 
-    # Seed streaming data with realistic DSP simulation engine
+    # Create indexes for stream_events (real data imported by admin only)
     await db.stream_events.create_index("artist_id")
     await db.stream_events.create_index("timestamp")
     await db.stream_events.create_index("platform")
-    existing_events = await db.stream_events.count_documents({})
-    if existing_events == 0:
-        import math
-        all_users = await db.users.find({}, {"_id": 0, "id": 1}).to_list(100)
-        platforms = ["Spotify", "Apple Music", "YouTube Music", "Amazon Music", "TikTok", "Tidal", "Deezer", "SoundCloud"]
-        platform_weights = [0.40, 0.22, 0.15, 0.08, 0.06, 0.04, 0.03, 0.02]
-        platform_rev = {"Spotify": 0.004, "Apple Music": 0.006, "YouTube Music": 0.002, "Amazon Music": 0.004, "TikTok": 0.003, "Tidal": 0.009, "Deezer": 0.004, "SoundCloud": 0.003}
-        countries = ["US", "UK", "NG", "DE", "CA", "AU", "BR", "JP", "FR", "IN", "JM", "KE", "GH", "ZA"]
-        country_weights = [0.30, 0.12, 0.10, 0.08, 0.07, 0.06, 0.05, 0.04, 0.04, 0.04, 0.03, 0.03, 0.02, 0.02]
-        # Peak hours by region (UTC)
-        peak_hours = {"US": [14, 15, 16, 17, 22, 23, 0, 1], "UK": [8, 9, 17, 18, 19, 20], "NG": [7, 8, 12, 17, 18, 19, 20], "DE": [7, 8, 17, 18, 19], "CA": [14, 15, 16, 23, 0], "AU": [22, 23, 0, 7, 8, 9], "BR": [12, 13, 21, 22, 23], "JP": [0, 1, 2, 8, 9, 10], "FR": [7, 8, 17, 18, 19], "IN": [2, 3, 12, 13, 14], "JM": [14, 15, 22, 23], "KE": [6, 7, 16, 17, 18], "GH": [7, 8, 17, 18], "ZA": [6, 7, 16, 17, 18]}
-        total_seeded = 0
-        for user_doc in all_users:
-            user_id = user_doc["id"]
-            releases = await db.releases.find({"artist_id": user_id}, {"_id": 0, "id": 1, "title": 1}).to_list(50)
-            if not releases:
-                continue
-            events_batch = []
-            for rel in releases:
-                base_daily = random.randint(10, 35)
-                for days_ago in range(30):
-                    # Growth curve: newer days have more streams (simulates growth)
-                    growth = 1 + (30 - days_ago) * 0.02
-                    # Weekend boost (Sat=5, Sun=6)
-                    day = datetime.now(timezone.utc) - timedelta(days=days_ago)
-                    weekend_mult = 1.25 if day.weekday() >= 5 else 1.0
-                    daily_count = int(base_daily * growth * weekend_mult * random.uniform(0.7, 1.3))
-                    for _ in range(daily_count):
-                        country = random.choices(countries, weights=country_weights, k=1)[0]
-                        # Use peak hours for that country
-                        hours = peak_hours.get(country, list(range(24)))
-                        hour = random.choice(hours) if random.random() < 0.6 else random.randint(0, 23)
-                        minute = random.randint(0, 59)
-                        ts = day.replace(hour=hour, minute=minute, second=random.randint(0, 59))
-                        platform = random.choices(platforms, weights=platform_weights, k=1)[0]
-                        base_rev = platform_rev.get(platform, 0.004)
-                        revenue = round(base_rev * random.uniform(0.7, 1.3), 4)
-                        events_batch.append({
-                            "id": f"se_{uuid.uuid4().hex[:12]}",
-                            "artist_id": user_id,
-                            "release_id": rel["id"],
-                            "release_title": rel.get("title", ""),
-                            "platform": platform,
-                            "country": country,
-                            "revenue": revenue,
-                            "timestamp": ts.isoformat(),
-                        })
-            if events_batch:
-                # Batch insert in chunks
-                for i in range(0, len(events_batch), 1000):
-                    await db.stream_events.insert_many(events_batch[i:i+1000])
-                total_seeded += len(events_batch)
-        if total_seeded > 0:
-            logger.info(f"Seeded {total_seeded} realistic stream events for analytics")
-        else:
-            admin_user = await db.users.find_one({"email": admin_email}, {"_id": 0, "id": 1})
-            if admin_user:
-                demo_events = []
-                for d in range(30):
-                    day = datetime.now(timezone.utc) - timedelta(days=d)
-                    count = int(20 * (1 + (30 - d) * 0.02) * random.uniform(0.7, 1.3))
-                    for _ in range(count):
-                        platform = random.choices(platforms, weights=platform_weights, k=1)[0]
-                        country = random.choices(countries, weights=country_weights, k=1)[0]
-                        demo_events.append({
-                            "id": f"se_{uuid.uuid4().hex[:12]}",
-                            "artist_id": admin_user["id"],
-                            "release_id": "demo_release",
-                            "release_title": "Demo Track",
-                            "platform": platform, "country": country,
-                            "revenue": round(platform_rev.get(platform, 0.004) * random.uniform(0.7, 1.3), 4),
-                            "timestamp": day.replace(hour=random.randint(0, 23), minute=random.randint(0, 59)).isoformat(),
-                        })
-                await db.stream_events.insert_many(demo_events)
-                logger.info(f"Seeded {len(demo_events)} demo stream events for admin")
 
     # Write test credentials
     from pathlib import Path
