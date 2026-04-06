@@ -11,24 +11,13 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - **Auth**: JWT + Google OAuth | **DSP**: Spotify Web API (spotipy)
 
 ## Implemented Features (All Tested)
-1-18. Core features (Auth, Subscriptions, Releases, Distribution, Analytics, AI, Beats, Contracts, Messaging, Royalty Splits, Payouts, Artist Profiles, etc.)
-19. Admin Page Builder V1 — Drag-and-drop, 12 block types
-20. Page Builder V2 — Custom CSS, Image uploads, Block duplication, Multi-page
-21. Page Builder Auto-Seeding — Landing (14), About (5), Pricing (4) blocks
-22. Reset to Default button
-23. Template Library — 10 pre-built feature templates
-24. Spotify DSP OAuth Integration — Real artist data
-25. Admin User Cleanup
-26. Updated Subscription Gating (spotify_data, beat_marketplace, messaging, royalty_splits)
-27. **Clickable Notifications** — All 23+ notification types navigate to relevant page
-28. **Feature Announcements** — Admin creates announcements, all users notified with plan-gated access badges
-29. **What's New page** — /features shows Available (green ACTIVE) vs Locked (gold Upgrade) based on user plan
-30. **Reply-To Email** — All emails reply to submitkalmori@gmail.com
-31. **Cookie Consent** — Banner + backend DB logging
-32. **Landing Page Hero Text** — "The Ai Powered Music Distribution Service" with animations
-33. **Analytics Cleanup** — Removed ALL simulated/fake data. Endpoints return real DB data only (zeros when empty)
-34. **CSV Import Admin-Only** — Only admins can import streaming data via CSV. Button hidden for non-admin users
-35. **Removed Fake Percentages** — Stats cards no longer show hardcoded change indicators
+1-32. Core platform features (Auth, Subscriptions, Releases, Distribution, Analytics, AI, Beats, Contracts, Messaging, Royalty Splits, Payouts, Artist Profiles, Page Builder, Spotify, Cookie Consent, Feature Announcements, etc.)
+33. **Analytics Cleanup** — Removed ALL simulated/fake data. Endpoints return real DB data only (zeros when empty). Startup seeder removed. Random fallbacks removed.
+34. **CSV Import Admin-Only** — Only admins can import streaming data via CSV. Returns 403 for non-admin. "Import CSV" button hidden for artists/producers.
+35. **Removed Fake Percentages** — Stats cards no longer show hardcoded +12.5%/+8.2% change indicators
+36. **Admin Feature Announcements UI** — Full CRUD admin page at /admin/feature-announcements. Create announcements with title, description, category, plan tier (free/rise/pro), icon, and color. Publishes notifications to all users. Delete with confirmation.
+37. **Global Axios Token Refresh** — Auto-refreshes access token on 401 responses. Queues failed requests during refresh. Fixes Spotify page redirect issue.
+38. **Spotify Error Handling** — Shows error state with message instead of silently redirecting to login page on non-401 errors.
 
 ## Subscription Tiers
 | Feature | Free | Rise | Pro |
@@ -45,8 +34,7 @@ users, releases, tracks, stream_events, artist_profiles, beats, contracts, conve
 
 ## Remaining Tasks
 - P0: Deploy to kalmori.org (Save to Github)
-- P0: Add custom domain in Resend for email delivery
+- P1: Admin Royalty Import Dashboard enhancements (column mapping, preview, import history)
 - P1: Apple Music Analytics API integration (pending user credentials)
-- P2: Admin UI form for creating feature announcements (currently API-only)
-- P2: Further server.py refactoring into /routes/ modules
+- P2: Server.py refactoring into /routes/ modules
 - P3: YouTube Music / other DSP integrations
