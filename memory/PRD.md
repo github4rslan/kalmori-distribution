@@ -1,34 +1,76 @@
-# Kalmori — TuneCore Clone / Digital Music Distribution Platform
+# Kalmori — TuneCore Clone / Digital Content Aggregator
 
-## Problem Statement
-Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians. Core requirements include Authentication, Subscriptions, Object Storage, AI Features, Artist management, Release/Track uploads, Distribution, Beat Marketplace, Admin Page Builder, and Kalmori white-labeling.
+## Original Problem Statement
+Build a TuneCore clone / high-volume digital content aggregator and B2B e-commerce platform for musicians with Authentication, Subscriptions, Object Storage, AI Features, Artist/User management, Release/Track uploads, Distribution store management, Beat/Instrumental catalog, and strict Kalmori white-labeling.
+
+## Product Requirements
+- Client Revenue Dashboards, Payout Exports, Admin Royalty Imports
+- Subscription tier gating (Free 20% / Rise 5% / Pro 0%)
+- Marketing Campaigns, Contract generation, Audio watermarking
+- In-App messaging, Admin-only Page Builder
+- Role-Based Access (Artist, Producer, Label, Admin)
 
 ## Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion + @dnd-kit
-- **Backend**: FastAPI (Python) + MongoDB
-- **Payments**: Stripe + PayPal | **Storage**: Emergent Object Storage
-- **AI**: Emergent LLM Key (OpenAI) | **Email**: Resend API
-- **Auth**: JWT + Google OAuth | **DSP**: Spotify Web API (spotipy)
+- Frontend: React + Tailwind CSS + Shadcn/UI
+- Backend: FastAPI (Python) with modular route files
+- Database: MongoDB (Motor async driver)
+- 3rd Party: Stripe, PayPal, Resend, Spotify Web API, OpenAI (Emergent LLM), Emergent Object Storage, Emergent Google Auth
 
-## Implemented Features (All Tested)
-1-45. All previous features (Auth, Subscriptions, Releases, Distribution, Analytics, AI, Beats, Contracts, Messaging, Royalty Splits, Payouts, Artist Profiles, Page Builder, Spotify, Cookie Consent, Feature Announcements UI, Notification Bank, Analytics Cleanup, CSV Admin-Only Import, Role Selection, Global Token Refresh, etc.)
+## Modular Backend Route Structure
+```
+/app/backend/
+├── server.py (~2258 lines — auth, releases, tracks, distributions, payments, wallet, collab, calendar, notifications, splits, contracts, purchases, presave, sharing, artist profiles, settings)
+├── core.py (DB, models, auth helpers, SUBSCRIPTION_PLANS, check_feature_access)
+├── routes/
+│   ├── analytics_routes.py (analytics overview, release analytics, trending, leaderboard, goals, revenue, CSV import, fan analytics)
+│   ├── subscription_routes.py (plans, my-plan, upgrade, checkout, promo codes, referrals)
+│   ├── admin_routes.py (admin panel, user management, deletion)
+│   ├── ai_routes.py (AI strategies, PDF export, smart insights)
+│   ├── beats_routes.py (beat CRUD, marketplace)
+│   ├── collab_routes.py (collaboration hub)
+│   ├── content_routes.py (content management)
+│   ├── email_routes.py (email sending, weekly digest)
+│   ├── label_routes.py (label management)
+│   ├── messages_routes.py (in-app messaging)
+│   ├── page_builder_routes.py (drag-and-drop page builder)
+│   ├── payouts_routes.py (payout processing)
+│   ├── paypal_routes.py (PayPal integration)
+│   ├── royalty_routes.py (royalty management)
+│   └── spotify_routes.py (Spotify integration)
+```
 
-### Latest Session (Apr 6, 2026)
-46. **Individual User Delete** — Admin can delete any non-admin user from /admin/users. Deletes ALL related data across 18+ collections (releases, tracks, beats, messages, analytics, wallets, etc). Admin accounts protected (returns 403). Confirmation modal with warning.
-47. **ALL Admin Notifications Sync** — Fixed 3 notification sources (new_signup, new_submission, schedule_reminder) to use find() instead of find_one(). Both admin@kalmori.com AND submitkalmori@gmail.com now receive all notifications.
+## Subscription Plans
+| Plan | Price | Revenue Share | Release Types | Key Features |
+|------|-------|--------------|---------------|-------------|
+| Free | $0 | 20% to Kalmori | Unlimited (Singles, EPs, Albums) | Basic analytics, 150+ platforms, ISRC codes |
+| Rise | $24.99/release | 5% to Kalmori | Singles only | Advanced analytics, Fan Analytics, Messaging, Beat Marketplace, Goals |
+| Pro | $49.99/month | 0% (keep 100%) | All types | AI Strategy, Revenue Exports, YouTube Content ID, Spotify Canvas, Pre-Save, Collabs, Royalty Splits |
 
-## Account Types
-| Role | Description |
-|------|-------------|
-| Artist | Distribute music, track analytics, grow fanbase |
-| Producer | Sell beats, manage instrumentals, earn from licensing |
-| Label | Manage artists, distribute catalogs, track royalties |
+## What's Been Implemented
+- Authentication (JWT + Google OAuth) with role selection (Artist/Producer/Label)
+- Full release/track upload wizard with object storage
+- Distribution to 150+ stores (simulated DSP data, real Spotify API)
+- Beat marketplace with contracts and purchases
+- Stripe + PayPal payment processing
+- AI Release Strategy (OpenAI via Emergent LLM)
+- Revenue Analytics & Royalty Calculator with PDF/CSV export
+- Fan Analytics, Release Leaderboard, Goal Tracking
+- Admin dashboard (user mgmt, royalty imports, feature announcements, notification bank)
+- In-app messaging, Collaboration hub
+- Drag-and-drop Page Builder (admin)
+- FAQ page, Pricing page with promo code support
+- Referral program
+- Cookie consent, Artist public profiles with QR codes
+- Weekly digest emails via Resend
 
-## DB Collections
-users, releases, tracks, stream_events, artist_profiles, beats, contracts, conversations, messages, typing_status, royalty_splits, split_earnings, wallets, withdrawals, payout_settings, goals, notifications, notification_preferences, presave_campaigns, collaboration_posts, collab_invites, saved_strategies, digest_log, page_layouts, spotify_connections, feature_announcements, cookie_consents, imported_royalties, email_verifications
+## Completed Refactoring (2026-04-06)
+- Extracted analytics/goals/revenue/fan-analytics from server.py → analytics_routes.py
+- Extracted subscriptions/promo-codes/referrals from server.py → subscription_routes.py
+- Moved SUBSCRIPTION_PLANS and check_feature_access to core.py
+- server.py reduced from 3550 to 2258 lines
+- Iteration 72: 100% pass rate (32 backend, 14 frontend)
 
-## Remaining Tasks
-- P0: Deploy to kalmori.org (Save to Github)
-- P1: Apple Music Analytics API integration (pending user credentials)
-- P2: Server.py refactoring into /routes/ modules
-- P3: YouTube Music / other DSP integrations
+## Remaining Backlog
+- P1: Apple Music Analytics API OAuth integration (pending user credentials)
+- P2: YouTube Music / other DSP integrations
+- P3: Replace remaining simulated DSP data with real API feeds
