@@ -568,12 +568,12 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
             "submitted_at": datetime.now(timezone.utc).isoformat(),
             "reviewed_at": None, "reviewed_by": None, "review_notes": None}}, upsert=True)
     await db.releases.update_one({"id": release_id}, {"$set": {"status": "pending_review", "submitted_stores": stores}})
-    # Notify admin (find actual admin user)
-    admin_user = await db.users.find_one({"role": "admin"}, {"_id": 0, "id": 1})
-    if admin_user:
+    # Notify ALL admins
+    all_admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(50)
+    for admin_user in all_admins:
         await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": admin_user["id"],
             "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
-            "release_id": release_id, "read": False, "action_url": "/admin", "created_at": datetime.now(timezone.utc).isoformat()})
+            "release_id": release_id, "read": False, "action_url": "/admin/submissions", "created_at": datetime.now(timezone.utc).isoformat()})
     return {"message": f"Submitted for review to {len(stores)} stores", "stores": stores, "status": "pending_review"}
 
 @api_router.get("/distributions/{release_id}")

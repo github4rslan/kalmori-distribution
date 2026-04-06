@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import AdminLayout from '../components/AdminLayout';
-import { Users, MagnifyingGlass, CaretLeft, CaretRight, PencilSimple, X } from '@phosphor-icons/react';
+import { Users, MagnifyingGlass, CaretLeft, CaretRight, PencilSimple, X, Trash, WarningCircle } from '@phosphor-icons/react';
 import { Button } from '../components/ui/button';
 import { Link } from 'react-router-dom';
+
+import { toast } from 'sonner';
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -16,6 +18,8 @@ const AdminUsersPage = () => {
   const [editUser, setEditUser] = useState(null);
   const [editForm, setEditForm] = useState({ role: '', plan: '', status: '' });
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async (p = 1, q = '') => {
     setLoading(true);
@@ -49,9 +53,22 @@ const AdminUsersPage = () => {
     try {
       await axios.put(`${API}/admin/users/${editUser.id}`, editForm);
       setEditUser(null);
+      toast.success('User updated');
       fetchUsers(page, search);
-    } catch (err) { console.error(err); alert(err.response?.data?.detail || 'Update failed'); }
+    } catch (err) { toast.error(err.response?.data?.detail || 'Update failed'); }
     finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await axios.delete(`${API}/admin/users/${deleteTarget.id}`);
+      toast.success(res.data.message || 'User deleted');
+      setDeleteTarget(null);
+      fetchUsers(page, search);
+    } catch (err) { toast.error(err.response?.data?.detail || 'Delete failed'); }
+    finally { setDeleting(false); }
   };
 
   const planColor = (p) => {
@@ -133,6 +150,11 @@ const AdminUsersPage = () => {
                           <button onClick={() => openEdit(u)} className="text-xs text-[#7C4DFF] hover:underline flex items-center gap-1" data-testid={`edit-user-${u.id}`}>
                             <PencilSimple className="w-3.5 h-3.5" /> Edit
                           </button>
+                          {u.role !== 'admin' && (
+                            <button onClick={() => setDeleteTarget(u)} className="text-xs text-red-500 hover:underline flex items-center gap-1" data-testid={`delete-user-${u.id}`}>
+                              <Trash className="w-3.5 h-3.5" /> Delete
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -198,6 +220,35 @@ const AdminUsersPage = () => {
                 <Button onClick={() => setEditUser(null)} variant="outline" className="flex-1 border-white/10 text-gray-400">Cancel</Button>
                 <Button onClick={handleSave} disabled={saving} className="flex-1 bg-[#E53935] hover:bg-[#d32f2f] text-white" data-testid="save-user-btn">
                   {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Delete Confirmation Modal */}
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="delete-user-modal">
+            <div className="absolute inset-0 bg-black/70" onClick={() => setDeleteTarget(null)} />
+            <div className="relative bg-[#111] border border-red-500/30 rounded-2xl w-full max-w-md p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <WarningCircle className="w-6 h-6 text-red-500" weight="fill" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Delete User Account</h2>
+                  <p className="text-xs text-gray-400">This action cannot be undone</p>
+                </div>
+              </div>
+              <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-4 space-y-2">
+                <p className="text-sm text-white font-medium">{deleteTarget.artist_name || deleteTarget.name}</p>
+                <p className="text-xs text-gray-400">{deleteTarget.email}</p>
+                <p className="text-xs text-red-400 mt-2">This will permanently delete the user and ALL their data including releases, tracks, beats, messages, analytics, and wallet information.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button onClick={() => setDeleteTarget(null)} variant="outline" className="flex-1 border-white/10 text-gray-400">Cancel</Button>
+                <Button onClick={handleDelete} disabled={deleting} className="flex-1 bg-red-600 hover:bg-red-700 text-white" data-testid="confirm-delete-user-btn">
+                  {deleting ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Trash className="w-4 h-4 mr-2" />}
+                  {deleting ? 'Deleting...' : 'Delete Permanently'}
                 </Button>
               </div>
             </div>

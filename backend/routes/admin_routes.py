@@ -253,6 +253,40 @@ async def admin_cleanup_non_admin_users(request: Request):
         "cleanup_details": cleanup_report,
     }
 
+@admin_router.delete("/users/{user_id}")
+async def admin_delete_user(user_id: str, request: Request):
+    """Admin: Delete a single user and all their related data"""
+    await require_admin(request)
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.get("role") == "admin":
+        raise HTTPException(status_code=403, detail="Cannot delete admin accounts")
+    # Delete all related data
+    collections_to_clean = [
+        "releases", "tracks", "stream_events", "artist_profiles",
+        "saved_strategies", "goals", "notifications", "notification_preferences",
+        "digest_log", "presave_campaigns", "wallets", "withdrawals",
+        "payout_settings", "collaboration_posts", "collab_invites",
+        "conversations", "messages", "typing_status", "spotify_connections",
+    ]
+    cleaned = {}
+    for coll_name in collections_to_clean:
+        result = await db[coll_name].delete_many({"$or": [
+            {"user_id": user_id}, {"artist_id": user_id}, {"owner_id": user_id}
+        ]})
+        if result.deleted_count > 0:
+            cleaned[coll_name] = result.deleted_count
+    beats_r = await db.beats.delete_many({"producer_id": user_id})
+    if beats_r.deleted_count > 0:
+        cleaned["beats"] = beats_r.deleted_count
+    splits_r = await db.royalty_splits.delete_many({"$or": [{"producer_id": user_id}, {"artist_id": user_id}]})
+    if splits_r.deleted_count > 0:
+        cleaned["royalty_splits"] = splits_r.deleted_count
+    await db.users.delete_one({"id": user_id})
+    return {"message": f"Deleted user {user.get('name', '')} ({user.get('email', '')}) and all related data", "cleanup": cleaned}
+
+
 @admin_router.get("/users/{user_id}/detail")
 async def admin_get_user_detail(user_id: str, request: Request):
     await require_admin(request)
@@ -1052,16 +1086,18 @@ async def check_due_schedules(request: Request):
         artist_part = f" for {sched['artist_name']}" if sched.get("artist_name") else ""
         template_part = f" using {sched['template_name']}" if sched.get("template_name") else ""
 
-        # Create reminder notification for admin
-        await db.notifications.insert_one({
-            "id": f"notif_{uuid.uuid4().hex[:12]}",
-            "user_id": user["id"],
-            "type": "schedule_reminder",
-            "message": f"Scheduled import due: {sched['name']}{artist_part}{template_part}. Upload the {sched['frequency']} report now.",
-            "read": False,
-            "action_url": "/admin",
-            "created_at": now_str,
-        })
+        # Create reminder notification for ALL admins
+        all_admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(50)
+        for admin in all_admins:
+            await db.notifications.insert_one({
+                "id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": admin["id"],
+                "type": "schedule_reminder",
+                "message": f"Scheduled import due: {sched['name']}{artist_part}{template_part}. Upload the {sched['frequency']} report now.",
+                "read": False,
+                "action_url": "/admin",
+                "created_at": now_str,
+            })
 
         # Advance next_due
         if sched["frequency"] == "weekly":
