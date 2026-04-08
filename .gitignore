@@ -4,6 +4,9 @@
 .idea/
 .vscode/
 
+# Emergent AI (old system, not needed)
+.emergent/
+
 # Dependencies
 node_modules/
 /node_modules
