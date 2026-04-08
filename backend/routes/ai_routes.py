@@ -12,7 +12,21 @@ logger = logging.getLogger(__name__)
 
 ai_router = APIRouter(prefix="/api/ai")
 
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY")
+
+async def _llm_chat(system_message: str, user_prompt: str) -> str:
+    """Call OpenAI chat completion. Returns the assistant's text."""
+    from openai import AsyncOpenAI
+    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_prompt},
+        ],
+        max_tokens=1500,
+    )
+    return response.choices[0].message.content
 
 async def _get_user_from_request(request: Request):
     from server import get_current_user
@@ -33,21 +47,15 @@ class DescriptionRequest(BaseModel):
 async def get_analytics_insights(request: Request):
     user = await _get_user_from_request(request)
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = LlmChat(
-            api_key=EMERGENT_KEY,
-            session_id=f"insights_{user['id']}_{uuid.uuid4().hex[:8]}",
-            system_message="You are a music industry analytics expert. Provide concise, actionable insights for independent artists based on their streaming data. Keep responses under 200 words. Use bullet points."
-        ).with_model("openai", "gpt-4o")
-        
         from motor.motor_asyncio import AsyncIOMotorClient
         db_client = AsyncIOMotorClient(os.environ['MONGO_URL'])
         db = db_client[os.environ['DB_NAME']]
-        
+
         releases = await db.releases.find({"artist_id": user["id"]}).to_list(50)
         release_count = len(releases)
         genres = list(set(r.get("genre", "Unknown") for r in releases))
-        
+        db_client.close()
+
         prompt = f"""Analyze this artist's profile and provide strategic insights:
 - Releases: {release_count}
 - Genres: {', '.join(genres) if genres else 'Not specified'}
@@ -58,10 +66,11 @@ Provide insights on:
 2. Potential audience growth tactics
 3. Revenue optimization tips
 4. Platform-specific strategies (Spotify, Apple Music, TikTok)"""
-        
-        msg = UserMessage(text=prompt)
-        response = await chat.send_message(msg)
-        db_client.close()
+
+        response = await _llm_chat(
+            "You are a music industry analytics expert. Provide concise, actionable insights for independent artists based on their streaming data. Keep responses under 200 words. Use bullet points.",
+            prompt
+        )
         return {"insights": response}
     except Exception as e:
         logger.error(f"AI insights error: {e}")
@@ -71,13 +80,6 @@ Provide insights on:
 async def get_metadata_suggestions(data: MetadataSuggestRequest, request: Request):
     await _get_user_from_request(request)
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = LlmChat(
-            api_key=EMERGENT_KEY,
-            session_id=f"metadata_{uuid.uuid4().hex[:8]}",
-            system_message="You are a music metadata expert. Return JSON only, no markdown. Suggest optimal metadata for music releases to maximize discoverability on streaming platforms."
-        ).with_model("openai", "gpt-4o")
-        
         prompt = f"""Suggest metadata for a music release:
 Title: {data.title}
 Genre: {data.genre or 'Not specified'}
@@ -85,9 +87,11 @@ Mood: {data.mood or 'Not specified'}
 
 Return a JSON object with these fields:
 {{"suggested_genres": ["primary genre", "sub-genre"], "suggested_moods": ["mood1", "mood2", "mood3"], "suggested_tags": ["tag1", "tag2", "tag3", "tag4", "tag5"], "suggested_description": "A 1-2 sentence description", "suggested_language": "language code", "suggested_bpm_range": "e.g. 120-130"}}"""
-        
-        msg = UserMessage(text=prompt)
-        response = await chat.send_message(msg)
+
+        response = await _llm_chat(
+            "You are a music metadata expert. Return JSON only, no markdown. Suggest optimal metadata for music releases to maximize discoverability on streaming platforms.",
+            prompt
+        )
         
         import json
         try:
@@ -112,16 +116,11 @@ Return a JSON object with these fields:
 async def generate_description(data: DescriptionRequest, request: Request):
     await _get_user_from_request(request)
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        chat = LlmChat(
-            api_key=EMERGENT_KEY,
-            session_id=f"desc_{uuid.uuid4().hex[:8]}",
-            system_message="You are a music marketing copywriter. Write compelling, concise descriptions for music releases. Keep it under 100 words."
-        ).with_model("openai", "gpt-4o")
-        
         prompt = f"Write a compelling release description for:\nTitle: {data.title}\nArtist: {data.artist_name}\nGenre: {data.genre or 'Various'}\nTracks: {data.track_count}"
-        msg = UserMessage(text=prompt)
-        response = await chat.send_message(msg)
+        response = await _llm_chat(
+            "You are a music marketing copywriter. Write compelling, concise descriptions for music releases. Keep it under 100 words.",
+            prompt
+        )
         return {"description": response}
     except Exception as e:
         logger.error(f"AI description error: {e}")
@@ -246,16 +245,11 @@ Based on this data, provide your strategy as a valid JSON object with this exact
 Return ONLY the JSON. No markdown, no explanation outside the JSON."""
 
         try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-            chat = LlmChat(
-                api_key=EMERGENT_KEY,
-                session_id=f"strategy_{user['id']}_{uuid.uuid4().hex[:8]}",
-                system_message="You are an expert music industry strategist. Always respond with valid JSON only. No markdown formatting."
-            ).with_model("openai", "gpt-4o")
-            
-            msg = UserMessage(text=prompt)
-            response = await chat.send_message(msg)
-            
+            response = await _llm_chat(
+                "You are an expert music industry strategist. Always respond with valid JSON only. No markdown formatting.",
+                prompt
+            )
+
             # Parse the JSON response
             clean = response.strip()
             if clean.startswith("```"):
@@ -675,14 +669,10 @@ Be specific with numbers from the data. Don't be generic. Return ONLY the JSON a
 
         insights_raw = []
         try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-            chat = LlmChat(
-                api_key=EMERGENT_KEY,
-                session_id=f"insights_{user['id']}_{uuid.uuid4().hex[:8]}",
-                system_message="You are a music growth analyst. Always respond with valid JSON only."
-            ).with_model("openai", "gpt-4o")
-
-            response = await chat.send_message(UserMessage(text=prompt))
+            response = await _llm_chat(
+                "You are a music growth analyst. Always respond with valid JSON only.",
+                prompt
+            )
             clean = response.strip()
             if clean.startswith("```"):
                 clean = clean.split("\n", 1)[1].rsplit("```", 1)[0].strip()

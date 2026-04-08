@@ -2192,9 +2192,10 @@ async def startup():
     tag_path = os.path.join(os.path.dirname(__file__), 'kalmori_tag.mp3')
     if not os.path.exists(tag_path):
         try:
-            from emergentintegrations.llm.openai import OpenAITextToSpeech
-            tts = OpenAITextToSpeech(api_key=os.environ.get("EMERGENT_LLM_KEY"))
-            audio_bytes = await tts.generate_speech(text="Kalmori", model="tts-1", voice="onyx", speed=0.9, response_format="mp3")
+            from openai import AsyncOpenAI
+            tts_client = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY") or os.environ.get("EMERGENT_LLM_KEY"))
+            tts_response = await tts_client.audio.speech.create(model="tts-1", voice="onyx", input="Kalmori", speed=0.9)
+            audio_bytes = tts_response.content
             with open(tag_path, 'wb') as f:
                 f.write(audio_bytes)
             logger.info(f"Voice tag generated: {len(audio_bytes)} bytes")
