@@ -428,12 +428,14 @@ async def regenerate_watermark(beat_id: str, request: Request):
     beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
     if not beat or not beat.get("audio_url"):
         raise HTTPException(status_code=404, detail="Beat audio not found")
-    data, _ = get_object(beat["audio_url"])
-    preview_path = beat["audio_url"].rsplit(".", 1)[0] + "_preview.mp3"
-    watermarked = _watermark_audio(data)
-    put_object(preview_path, watermarked, "audio/mpeg")
+    import requests as _requests
+    audio_data = _requests.get(beat["audio_url"], timeout=60).content
+    preview_path = f"tunedrop/beats/{beat_id}/preview_{beat_id}.mp3"
+    watermarked = _watermark_audio(audio_data)
+    preview_result = put_object(preview_path, watermarked, "audio/mpeg")
+    preview_url = preview_result["url"]
     await db.beats.update_one(
         {"id": beat_id},
-        {"$set": {"preview_url": preview_path, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"preview_url": preview_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    return {"preview_url": preview_path, "message": "Watermark preview regenerated"}
+    return {"preview_url": preview_url, "message": "Watermark preview regenerated"}
