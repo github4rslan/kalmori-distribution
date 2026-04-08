@@ -296,10 +296,9 @@ const RegisterPage = () => {
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm text-left" data-testid="register-error-step2">
-                {error}
-                {error.toLowerCase().includes('already registered') && (
-                  <span className="block mt-1">Already have an account? <Link to="/login" className="text-[#0095FF] font-semibold hover:underline">Log in here</Link></span>
-                )}
+                {error.toLowerCase().includes('already registered') ? (
+                  <>This email is already registered. <Link to="/login" className="text-[#0095FF] font-semibold hover:underline">Log in here</Link></>
+                ) : error}
               </div>
             )}
 
