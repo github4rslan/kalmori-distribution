@@ -132,8 +132,7 @@ const RegisterPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    const redirectUrl = window.location.origin + '/select-role';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    toast.info('Google sign-up coming soon. Please use email and password.');
   };
 
   const inputCls = "w-full bg-transparent border border-gray-600 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#0095FF] focus:ring-2 focus:ring-[#0095FF]/20 transition-all placeholder-gray-500";
