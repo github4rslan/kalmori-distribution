@@ -631,153 +631,164 @@ RELEASE_PRICES = {"single": 20.00, "ep": 35.00, "album": 50.00}
 
 @api_router.post("/payments/checkout")
 async def create_checkout(checkout: PaymentCheckout, request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    import stripe as stripe_sdk
     user = await get_current_user(request)
     release = await db.releases.find_one({"id": checkout.release_id, "artist_id": user["id"]})
     if not release: raise HTTPException(status_code=404, detail="Release not found")
     if user.get("plan") == "free":
         await db.releases.update_one({"id": checkout.release_id}, {"$set": {"payment_status": "free_tier"}})
         return {"message": "Free tier activated", "redirect_url": None}
-    amount = RELEASE_PRICES.get(release["release_type"], 20.00)
     stripe_api_key = os.environ.get("STRIPE_API_KEY")
-    host_url = str(request.base_url)
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
-    session = await stripe_checkout.create_checkout_session(CheckoutSessionRequest(
-        amount=amount, currency="usd",
-        success_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=cancelled",
-        metadata={"release_id": checkout.release_id, "user_id": user["id"], "release_type": release["release_type"]}))
-    await db.payment_transactions.insert_one({"id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.session_id,
-        "user_id": user["id"], "release_id": checkout.release_id, "amount": amount, "currency": "usd",
-        "payment_status": "pending", "provider": "stripe", "created_at": datetime.now(timezone.utc).isoformat()})
-    return {"checkout_url": session.url, "session_id": session.session_id}
+    if not stripe_api_key:
+        raise HTTPException(status_code=503, detail="Payment processing not configured")
+    stripe_sdk.api_key = stripe_api_key
+    amount = RELEASE_PRICES.get(release["release_type"], 20.00)
+    try:
+        session = stripe_sdk.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price_data": {"currency": "usd", "product_data": {"name": f"Release: {release['title']}"}, "unit_amount": int(amount * 100)}, "quantity": 1}],
+            mode="payment",
+            success_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=cancelled",
+            metadata={"release_id": checkout.release_id, "user_id": user["id"], "release_type": release["release_type"]}
+        )
+        await db.payment_transactions.insert_one({"id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
+            "user_id": user["id"], "release_id": checkout.release_id, "amount": amount, "currency": "usd",
+            "payment_status": "pending", "provider": "stripe", "created_at": datetime.now(timezone.utc).isoformat()})
+        return {"checkout_url": session.url, "session_id": session.id}
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {e}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 @api_router.get("/payments/status/{session_id}")
 async def check_payment_status(session_id: str, request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
-    stripe_api_key = os.environ.get("STRIPE_API_KEY")
-    host_url = str(request.base_url)
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
-    status = await stripe_checkout.get_checkout_status(session_id)
-    if status.payment_status == "paid":
-        txn = await db.payment_transactions.find_one({"session_id": session_id})
-        if txn and txn["payment_status"] != "paid":
-            await db.payment_transactions.update_one({"session_id": session_id},
-                {"$set": {"payment_status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}})
-            await db.releases.update_one({"id": txn["release_id"]}, {"$set": {"payment_status": "paid"}})
-    return {"status": status.status, "payment_status": status.payment_status,
-        "amount": status.amount_total / 100, "currency": status.currency}
+    import stripe as stripe_sdk
+    stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
+    try:
+        session = stripe_sdk.checkout.Session.retrieve(session_id)
+        if session.payment_status == "paid":
+            txn = await db.payment_transactions.find_one({"session_id": session_id})
+            if txn and txn["payment_status"] != "paid":
+                await db.payment_transactions.update_one({"session_id": session_id},
+                    {"$set": {"payment_status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}})
+                await db.releases.update_one({"id": txn["release_id"]}, {"$set": {"payment_status": "paid"}})
+        return {"status": session.status, "payment_status": session.payment_status,
+            "amount": session.amount_total / 100 if session.amount_total else 0, "currency": session.currency}
+    except Exception as e:
+        logger.error(f"Stripe status check error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    import stripe as stripe_sdk
     body = await request.body()
     signature = request.headers.get("Stripe-Signature")
-    stripe_api_key = os.environ.get("STRIPE_API_KEY")
-    host_url = str(request.base_url)
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
+    stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
     try:
-        webhook_response = await stripe_checkout.handle_webhook(body, signature)
-        if webhook_response.payment_status == "paid":
-            now = datetime.now(timezone.utc).isoformat()
-            metadata = webhook_response.metadata or {}
-            purchase_type = metadata.get("type")
-            # Handle beat purchases
-            if purchase_type == "beat_purchase":
-                beat_id = metadata.get("beat_id")
-                user_id = metadata.get("user_id")
-                contract_id = metadata.get("contract_id")
-                if beat_id and user_id:
-                    await db.beat_purchases.update_one({"session_id": webhook_response.session_id},
-                        {"$set": {"payment_status": "paid", "paid_at": now}})
-                    # Update contract payment status
-                    if contract_id:
-                        await db.beat_contracts.update_one({"id": contract_id}, {"$set": {"payment_status": "paid", "paid_at": now}})
-                    # Send receipt
-                    purchase = await db.beat_purchases.find_one({"session_id": webhook_response.session_id}, {"_id": 0})
-                    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
-                    if purchase and user:
+        if webhook_secret:
+            event = stripe_sdk.Webhook.construct_event(body, signature, webhook_secret)
+        else:
+            event = stripe_sdk.Event.construct_from(
+                __import__('json').loads(body), stripe_sdk.api_key
+            )
+        if event["type"] != "checkout.session.completed":
+            return {"status": "ignored"}
+        session = event["data"]["object"]
+        payment_status = session.get("payment_status")
+        session_id = session.get("id")
+        metadata = session.get("metadata") or {}
+        if payment_status != "paid":
+            return {"status": "not_paid"}
+        now = datetime.now(timezone.utc).isoformat()
+        purchase_type = metadata.get("type")
+        # Handle beat purchases
+        if purchase_type == "beat_purchase":
+            beat_id = metadata.get("beat_id")
+            user_id = metadata.get("user_id")
+            contract_id = metadata.get("contract_id")
+            if beat_id and user_id:
+                await db.beat_purchases.update_one({"session_id": session_id},
+                    {"$set": {"payment_status": "paid", "paid_at": now}})
+                if contract_id:
+                    await db.beat_contracts.update_one({"id": contract_id}, {"$set": {"payment_status": "paid", "paid_at": now}})
+                purchase = await db.beat_purchases.find_one({"session_id": session_id}, {"_id": 0})
+                user = await db.users.find_one({"id": user_id}, {"_id": 0, "password_hash": 0})
+                if purchase and user:
+                    try:
+                        from routes.email_routes import send_beat_purchase_receipt
                         receipt_id = f"rcpt_{uuid.uuid4().hex[:12]}"
+                        await send_beat_purchase_receipt(user["email"], user.get("name", "Artist"),
+                            purchase.get("beat_title", "Beat"), purchase.get("license_type", "basic_lease"),
+                            purchase.get("amount", 0), receipt_id)
+                    except Exception as e:
+                        logger.warning(f"Webhook receipt email failed: {e}")
+                    if contract_id:
                         try:
-                            from routes.email_routes import send_beat_purchase_receipt
-                            await send_beat_purchase_receipt(user["email"], user.get("name", "Artist"),
-                                purchase.get("beat_title", "Beat"), purchase.get("license_type", "basic_lease"),
-                                purchase.get("amount", 0), receipt_id)
+                            contract = await db.beat_contracts.find_one({"id": contract_id}, {"_id": 0})
+                            if contract:
+                                from routes.email_routes import send_email
+                                contract["payment_status"] = "paid"
+                                pdf_bytes = _generate_contract_pdf(contract)
+                                import base64
+                                pdf_b64 = base64.b64encode(pdf_bytes).decode()
+                                await send_email(user["email"],
+                                    f"Your Kalmori License Agreement - {contract.get('beat_title', 'Beat')}",
+                                    f"""<div style="font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#000;color:#fff;border-radius:16px;overflow:hidden;">
+                                    <div style="background:linear-gradient(135deg,#7C4DFF,#E040FB);padding:30px;text-align:center;">
+                                    <h1 style="color:white;margin:0;font-size:22px;">License Agreement Confirmed</h1>
+                                    </div>
+                                    <div style="padding:30px;">
+                                    <p style="color:#ccc;">Your {contract.get('license_name', 'license')} for <b>"{contract.get('beat_title', '')}"</b> has been confirmed.</p>
+                                    <p style="color:#888;font-size:13px;">Contract ID: {contract_id}</p>
+                                    </div></div>""")
                         except Exception as e:
-                            logger.warning(f"Webhook receipt email failed: {e}")
-                        # Email signed contract PDF to buyer
-                        if contract_id:
-                            try:
-                                contract = await db.beat_contracts.find_one({"id": contract_id}, {"_id": 0})
-                                if contract:
-                                    from routes.email_routes import send_email
-                                    contract["payment_status"] = "paid"
-                                    pdf_bytes = _generate_contract_pdf(contract)
-                                    import base64
-                                    pdf_b64 = base64.b64encode(pdf_bytes).decode()
-                                    await send_email(user["email"],
-                                        f"Your Kalmori License Agreement - {contract.get('beat_title', 'Beat')}",
-                                        f"""<div style="font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#000;color:#fff;border-radius:16px;overflow:hidden;">
-                                        <div style="background:linear-gradient(135deg,#7C4DFF,#E040FB);padding:30px;text-align:center;">
-                                        <h1 style="color:white;margin:0 0 4px;font-size:11px;letter-spacing:5px;font-weight:800;text-transform:uppercase;opacity:0.85;">KALMORI</h1>
-                                        <h2 style="color:white;margin:0;font-size:22px;">License Agreement Confirmed</h2>
-                                        </div>
-                                        <div style="padding:30px;">
-                                        <p style="color:#ccc;font-size:15px;">Your {contract.get('license_name', 'license')} for <b>"{contract.get('beat_title', '')}"</b> has been confirmed.</p>
-                                        <p style="color:#888;font-size:13px;">Contract ID: {contract_id}</p>
-                                        <p style="color:#888;font-size:13px;">You can download your signed contract from your Purchases page.</p>
-                                        <p style="color:#555;font-size:12px;margin-top:28px;padding-top:16px;border-top:1px solid #222;text-align:center;">Kalmori Digital Distribution</p>
-                                        </div></div>""")
-                            except Exception as e:
-                                logger.warning(f"Contract email failed: {e}")
-                        # Auto-create royalty split for this beat license
-                        try:
-                            license_type = metadata.get("license_type", "basic_lease")
-                            default_splits = DEFAULT_SPLITS.get(license_type, {"producer": 50, "artist": 50})
-                            beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
-                            producer_id = beat.get("uploaded_by") or beat.get("user_id") or "admin"
-                            # Find admin/producer user for the beat
-                            admin_users = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(1)
-                            if producer_id == "admin" and admin_users:
-                                producer_id = admin_users[0]["id"]
-                            split_doc = {
-                                "id": f"split_{uuid.uuid4().hex[:12]}",
-                                "beat_id": beat_id,
-                                "beat_title": beat.get("title", "") if beat else "",
-                                "contract_id": contract_id or "",
-                                "license_type": license_type,
-                                "producer_id": producer_id,
-                                "producer_name": beat.get("artist_name", "Producer") if beat else "Producer",
-                                "artist_id": user_id,
-                                "artist_name": user.get("artist_name") or user.get("name", ""),
-                                "producer_split": default_splits["producer"],
-                                "artist_split": default_splits["artist"],
-                                "status": "active",
-                                "created_at": now,
-                                "updated_at": now,
-                            }
-                            await db.royalty_splits.insert_one(split_doc)
-                            logger.info(f"Royalty split created: {split_doc['id']} ({default_splits['producer']}/{default_splits['artist']})")
-                        except Exception as e:
-                            logger.warning(f"Royalty split creation failed: {e}")
-            # Handle subscriptions
-            elif purchase_type == "subscription":
-                plan = metadata.get("plan")
-                user_id = metadata.get("user_id")
-                if plan and user_id:
-                    await db.users.update_one({"id": user_id}, {"$set": {"plan": plan}})
-                    await db.subscriptions.update_one({"user_id": user_id}, {"$set": {
-                        "user_id": user_id, "plan": plan, "status": "active",
-                        "updated_at": now}}, upsert=True)
-                    await db.payment_transactions.update_one({"session_id": webhook_response.session_id},
-                        {"$set": {"payment_status": "paid", "paid_at": now}})
-            # Handle release payments
-            else:
-                release_id = metadata.get("release_id")
-                if release_id:
-                    await db.releases.update_one({"id": release_id}, {"$set": {"payment_status": "paid"}})
-                    await db.payment_transactions.update_one({"session_id": webhook_response.session_id},
-                        {"$set": {"payment_status": "paid", "paid_at": now}})
+                            logger.warning(f"Contract email failed: {e}")
+                    try:
+                        license_type = metadata.get("license_type", "basic_lease")
+                        default_splits = DEFAULT_SPLITS.get(license_type, {"producer": 50, "artist": 50})
+                        beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
+                        producer_id = beat.get("uploaded_by") or beat.get("user_id") or "admin"
+                        admin_users = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(1)
+                        if producer_id == "admin" and admin_users:
+                            producer_id = admin_users[0]["id"]
+                        split_doc = {
+                            "id": f"split_{uuid.uuid4().hex[:12]}",
+                            "beat_id": beat_id,
+                            "beat_title": beat.get("title", "") if beat else "",
+                            "contract_id": contract_id or "",
+                            "license_type": license_type,
+                            "producer_id": producer_id,
+                            "producer_name": beat.get("artist_name", "Producer") if beat else "Producer",
+                            "artist_id": user_id,
+                            "artist_name": user.get("artist_name") or user.get("name", "") if user else "",
+                            "producer_split": default_splits["producer"],
+                            "artist_split": default_splits["artist"],
+                            "status": "active",
+                            "created_at": now,
+                            "updated_at": now,
+                        }
+                        await db.royalty_splits.insert_one(split_doc)
+                    except Exception as e:
+                        logger.warning(f"Royalty split creation failed: {e}")
+        # Handle subscriptions
+        elif purchase_type == "subscription":
+            plan = metadata.get("plan")
+            user_id = metadata.get("user_id")
+            if plan and user_id:
+                await db.users.update_one({"id": user_id}, {"$set": {"plan": plan}})
+                await db.subscriptions.update_one({"user_id": user_id}, {"$set": {
+                    "user_id": user_id, "plan": plan, "status": "active",
+                    "updated_at": now}}, upsert=True)
+                await db.payment_transactions.update_one({"session_id": session_id},
+                    {"$set": {"payment_status": "paid", "paid_at": now}})
+        # Handle release payments
+        else:
+            release_id = metadata.get("release_id")
+            if release_id:
+                await db.releases.update_one({"id": release_id}, {"$set": {"payment_status": "paid"}})
+                await db.payment_transactions.update_one({"session_id": session_id},
+                    {"$set": {"payment_status": "paid", "paid_at": now}})
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Webhook error: {e}")
@@ -1441,7 +1452,7 @@ class BeatPurchaseCheckout(PydanticBaseModel):
 
 @api_router.post("/beats/purchase/checkout")
 async def create_beat_purchase_checkout(data: BeatPurchaseCheckout, request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    import stripe as stripe_sdk
     user = await get_current_user(request)
     # Verify signed contract exists
     contract = await db.beat_contracts.find_one({"id": data.contract_id, "user_id": user["id"], "payment_status": "pending"})
@@ -1452,20 +1463,21 @@ async def create_beat_purchase_checkout(data: BeatPurchaseCheckout, request: Req
         raise HTTPException(status_code=404, detail="Beat not found")
     amount = contract["amount"]
     stripe_api_key = os.environ.get("STRIPE_API_KEY")
-    host_url = str(request.base_url)
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
-    session = await stripe_checkout.create_checkout_session(CheckoutSessionRequest(
-        amount=amount, currency="usd",
+    stripe_sdk.api_key = stripe_api_key
+    session = stripe_sdk.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{"price_data": {"currency": "usd", "product_data": {"name": f"Beat License: {beat['title']} ({data.license_type})"}, "unit_amount": int(amount * 100)}, "quantity": 1}],
+        mode="payment",
         success_url=f"{data.origin_url}/purchases?purchase=success&beat_id={data.beat_id}&license={data.license_type}&contract_id={data.contract_id}&session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{data.origin_url}/instrumentals?purchase=cancelled",
-        metadata={"beat_id": data.beat_id, "user_id": user["id"], "license_type": data.license_type, "contract_id": data.contract_id, "type": "beat_purchase"}))
+        metadata={"beat_id": data.beat_id, "user_id": user["id"], "license_type": data.license_type, "contract_id": data.contract_id, "type": "beat_purchase"})
     await db.beat_purchases.insert_one({
-        "id": f"bp_{uuid.uuid4().hex[:12]}", "session_id": session.session_id,
+        "id": f"bp_{uuid.uuid4().hex[:12]}", "session_id": session.id,
         "user_id": user["id"], "beat_id": data.beat_id, "beat_title": beat["title"],
         "license_type": data.license_type, "contract_id": data.contract_id,
         "amount": amount, "currency": "usd",
         "payment_status": "pending", "created_at": datetime.now(timezone.utc).isoformat()})
-    return {"checkout_url": session.url, "session_id": session.session_id, "amount": amount}
+    return {"checkout_url": session.url, "session_id": session.id, "amount": amount}
 
 @api_router.get("/beats/purchases")
 async def get_beat_purchases(request: Request):
@@ -1516,16 +1528,14 @@ async def download_purchased_beat(purchase_id: str, request: Request):
 @api_router.get("/purchases/verify/{session_id}")
 async def verify_beat_purchase(session_id: str, request: Request):
     """Verify and finalize a beat purchase after Stripe payment"""
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    import stripe as stripe_sdk
     user = await get_current_user(request)
-    stripe_api_key = os.environ.get("STRIPE_API_KEY")
-    host_url = str(request.base_url)
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=f"{host_url}api/webhook/stripe")
-    status = await stripe_checkout.get_checkout_status(session_id)
+    stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
+    session = stripe_sdk.checkout.Session.retrieve(session_id)
     purchase = await db.beat_purchases.find_one({"session_id": session_id, "user_id": user["id"]}, {"_id": 0})
     if not purchase:
         raise HTTPException(status_code=404, detail="Purchase not found")
-    if status.payment_status == "paid" and purchase.get("payment_status") != "paid":
+    if session.payment_status == "paid" and purchase.get("payment_status") != "paid":
         now = datetime.now(timezone.utc).isoformat()
         await db.beat_purchases.update_one({"session_id": session_id},
             {"$set": {"payment_status": "paid", "paid_at": now}})

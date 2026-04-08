@@ -948,7 +948,7 @@ async def get_cart_count(request: Request):
 
 @kalmori_router.post("/cart/checkout")
 async def checkout_cart(origin_url: str, request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    import stripe as stripe_sdk
     current_user = await _get_current_user_flexible(request)
     cart_items = await db.cart.find({"user_id": current_user["id"]}).to_list(50)
     if not cart_items:
@@ -961,35 +961,45 @@ async def checkout_cart(origin_url: str, request: Request):
         await db.cart.delete_many({"user_id": current_user["id"]})
         return {"checkout_url": f"{origin_url}/dashboard?order=success&order_id={order_id}", "session_id": f"free_{order_id}", "is_free": True}
 
-    webhook_url = f"{origin_url}/api/webhook/stripe-cart"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    stripe_sdk.api_key = STRIPE_API_KEY
     cart_order_id = str(uuid.uuid4())
-    success_url = f"{origin_url}/dashboard?order=success&session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{origin_url}/cart?payment=cancelled"
-    checkout_request = CheckoutSessionRequest(amount=float(total_amount), currency="usd", success_url=success_url, cancel_url=cancel_url,
+    line_items = []
+    for item in cart_items:
+        line_items.append({"price_data": {"currency": "usd", "product_data": {"name": item.get("title", "Cart Item")}, "unit_amount": int(item.get("total_price", 0) * 100)}, "quantity": 1})
+    session = stripe_sdk.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=line_items,
+        mode="payment",
+        success_url=f"{origin_url}/dashboard?order=success&session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{origin_url}/cart?payment=cancelled",
         metadata={"cart_order_id": cart_order_id, "user_id": current_user["id"], "item_count": str(len(cart_items))})
-    session = await stripe_checkout.create_checkout_session(checkout_request)
-    await db.orders.insert_one({"id": cart_order_id, "user_id": current_user["id"], "session_id": session.session_id,
+    await db.orders.insert_one({"id": cart_order_id, "user_id": current_user["id"], "session_id": session.id,
         "items": [{k:v for k,v in i.items() if k != '_id'} for i in cart_items], "total_amount": total_amount,
         "payment_status": "pending", "status": "pending", "created_at": datetime.now(timezone.utc)})
-    return {"checkout_url": session.url, "session_id": session.session_id, "is_free": False}
+    return {"checkout_url": session.url, "session_id": session.id, "is_free": False}
 
 @kalmori_router.post("/webhook/stripe-cart")
 async def stripe_cart_webhook(request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    import stripe as stripe_sdk
     body = await request.body()
-    signature = request.headers.get("Stripe-Signature")
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url="")
+    signature = request.headers.get("stripe-signature")
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
     try:
-        event = await stripe_checkout.handle_webhook(body, signature)
-        if event.payment_status == "paid":
-            order = await db.orders.find_one({"session_id": event.session_id})
-            if order:
-                await db.orders.update_one({"id": order["id"]}, {"$set": {"payment_status": "paid", "status": "completed", "paid_at": datetime.now(timezone.utc)}})
-                await db.cart.delete_many({"user_id": order["user_id"]})
-                await db.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": order["user_id"], "type": "payment",
-                    "message": f"Your order has been processed successfully. Total: ${order['total_amount']:.2f}",
-                    "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
+        if webhook_secret and signature:
+            event = stripe_sdk.Webhook.construct_event(body, signature, webhook_secret)
+        else:
+            import json
+            event = json.loads(body)
+        if event.get("type") == "checkout.session.completed":
+            session = event["data"]["object"]
+            if session.get("payment_status") == "paid":
+                order = await db.orders.find_one({"session_id": session["id"]})
+                if order:
+                    await db.orders.update_one({"id": order["id"]}, {"$set": {"payment_status": "paid", "status": "completed", "paid_at": datetime.now(timezone.utc)}})
+                    await db.cart.delete_many({"user_id": order["user_id"]})
+                    await db.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": order["user_id"], "type": "payment",
+                        "message": f"Your order has been processed successfully. Total: ${order['total_amount']:.2f}",
+                        "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
         return {"received": True}
     except Exception as e:
         logger.error(f"Cart webhook error: {e}")
@@ -999,21 +1009,22 @@ async def stripe_cart_webhook(request: Request):
 
 @kalmori_router.post("/payments/create-promotion-checkout")
 async def create_promotion_checkout(promo_req: PromotionCheckoutRequest, http_request: Request):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    import stripe as stripe_sdk
     current_user = await _get_current_user_flexible(http_request)
     origin_url = str(http_request.base_url).rstrip('/')
-    webhook_url = f"{origin_url}api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    stripe_sdk.api_key = STRIPE_API_KEY
     promotion_order_id = str(uuid.uuid4())
-    success_url = f"{origin_url}/dashboard?promotion=success&order_id={promotion_order_id}"
-    cancel_url = f"{origin_url}/promoting?payment=cancelled"
-    checkout_request = CheckoutSessionRequest(amount=float(promo_req.amount), currency="usd", success_url=success_url, cancel_url=cancel_url,
+    session = stripe_sdk.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{"price_data": {"currency": "usd", "product_data": {"name": promo_req.package_name}, "unit_amount": int(float(promo_req.amount) * 100)}, "quantity": 1}],
+        mode="payment",
+        success_url=f"{origin_url}/dashboard?promotion=success&order_id={promotion_order_id}",
+        cancel_url=f"{origin_url}/promoting?payment=cancelled",
         metadata={"order_id": promotion_order_id, "package_id": promo_req.package_id, "package_name": promo_req.package_name, "user_id": current_user["id"], "order_type": "promotion"})
-    session = await stripe_checkout.create_checkout_session(checkout_request)
-    await db.promotion_orders.insert_one({"id": promotion_order_id, "session_id": session.session_id, "user_id": current_user["id"],
+    await db.promotion_orders.insert_one({"id": promotion_order_id, "session_id": session.id, "user_id": current_user["id"],
         "user_email": current_user.get("email"), "package_id": promo_req.package_id, "package_name": promo_req.package_name,
         "amount": promo_req.amount, "currency": "usd", "payment_status": "pending", "order_status": "pending_payment", "created_at": datetime.now(timezone.utc)})
-    return {"checkout_url": session.url, "session_id": session.session_id, "order_id": promotion_order_id}
+    return {"checkout_url": session.url, "session_id": session.id, "order_id": promotion_order_id}
 
 # ==================== KALMORI WALLET (Extended) ====================
 
