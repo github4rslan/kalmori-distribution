@@ -88,7 +88,7 @@ export default function LeaderboardPage() {
 
         {/* Top 3 Podium */}
         {sorted.length >= 3 && sortBy === 'total_streams' && filterStatus === 'all' && (
-          <div className="grid grid-cols-3 gap-4" data-testid="podium">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4" data-testid="podium">
             <PodiumCard release={sorted[1]} place={2} />
             <PodiumCard release={sorted[0]} place={1} featured />
             <PodiumCard release={sorted[2]} place={3} />

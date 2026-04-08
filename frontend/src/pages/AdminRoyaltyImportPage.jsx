@@ -864,7 +864,7 @@ const AdminRoyaltyImportPage = () => {
                 </div>
               ) : importDetail ? (
                 <div className="overflow-auto max-h-[calc(85vh-80px)]">
-                  <div className="grid grid-cols-4 gap-4 p-5 border-b border-white/5">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-5 border-b border-white/5">
                     {[
                       { v: importDetail.import?.total_rows, l: 'Total', c: 'text-white' },
                       { v: importDetail.import?.matched, l: 'Matched', c: 'text-[#1DB954]' },

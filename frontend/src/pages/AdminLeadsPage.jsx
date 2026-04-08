@@ -71,7 +71,7 @@ const AdminLeadsPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4" data-testid="lead-stats">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" data-testid="lead-stats">
           <div className="bg-[#141414] border border-white/10 rounded-xl p-4 text-center">
             <p className="text-2xl font-bold font-mono text-white">{stats.total}</p>
             <p className="text-[10px] text-gray-500 mt-1">Total Drafts</p>

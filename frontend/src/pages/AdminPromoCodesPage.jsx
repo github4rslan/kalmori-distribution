@@ -135,7 +135,7 @@ export default function AdminPromoCodesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1 block">
                   Discount Value {form.discount_type === 'percent' ? '(%)' : '($)'}
