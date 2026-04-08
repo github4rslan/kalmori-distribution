@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import { useAuth, API } from '../App';
 import {
@@ -47,6 +48,7 @@ const StatCard = ({ label, value, icon, color, onClick, hint }) => (
 
 export default function AdminBeatsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [beats, setBeats] = useState([]);
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -443,7 +445,7 @@ export default function AdminBeatsPage() {
               const producerRevenue = producerSales.reduce((a, s) => a + (s.producer_amount || 0), 0);
               return (
                 <div key={p.id}
-                  onClick={() => { setFilterProducer(p.id); setActiveTab('beats'); }}
+                  onClick={() => navigate(`/admin/users/${p.id}`)}
                   className="bg-[#111] border border-white/5 rounded-2xl p-5 hover:border-white/20 transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden">
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200 rounded-2xl"
                     style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }} />
@@ -474,7 +476,7 @@ export default function AdminBeatsPage() {
                         <p>earned</p>
                       </div>
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium" style={{ color: PRIMARY }}>
-                        View beats →
+                        View profile →
                       </div>
                     </div>
                   </div>

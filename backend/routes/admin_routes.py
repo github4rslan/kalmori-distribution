@@ -1393,3 +1393,10 @@ async def admin_delete_notification(notification_id: str, request: Request):
     admin = await require_admin(request)
     await db.notifications.delete_one({"id": notification_id, "user_id": admin["id"]})
     return {"message": "Notification deleted"}
+
+@admin_router.get("/promotion-orders")
+async def admin_get_promotion_orders(request: Request):
+    """Admin: Get all promotion orders"""
+    await require_admin(request)
+    orders = await db.promotion_orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return {"orders": orders}

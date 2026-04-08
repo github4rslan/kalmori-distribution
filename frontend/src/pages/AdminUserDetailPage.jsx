@@ -73,6 +73,19 @@ const AdminUserDetailPage = () => {
   if (!data) return null;
 
   const { user, stats, releases, platform_breakdown, country_breakdown, weekly_trends, goals } = data;
+  const [beats, setBeats] = useState([]);
+  const [promotions, setPromotions] = useState([]);
+
+  useEffect(() => {
+    if (data) {
+      axios.get(`${API}/admin/beats`, { withCredentials: true })
+        .then(r => setBeats((r.data.beats || []).filter(b => b.created_by === user.id)))
+        .catch(() => {});
+      axios.get(`${API}/admin/promotion-orders`, { withCredentials: true })
+        .then(r => setPromotions((r.data.orders || r.data || []).filter(o => o.user_id === user.id)))
+        .catch(() => {});
+    }
+  }, [data]);
   const statusColor = (s) => s === 'distributed' ? 'text-[#1DB954]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#E53935]' : 'text-gray-400';
   const planColors = { pro: '#E040FB', rise: '#FFD700', free: '#666', single: '#7C4DFF', album: '#FF6B6B' };
 
@@ -289,8 +302,11 @@ const AdminUserDetailPage = () => {
                 </thead>
                 <tbody>
                   {releases.map(r => (
-                    <tr key={r.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="py-2.5 px-4 text-sm font-medium text-white">{r.title}</td>
+                    <tr key={r.id} className="border-b border-white/5 hover:bg-white/5 cursor-pointer" onClick={() => navigate(`/admin/submissions?release=${r.id}`)}>
+                      <td className="py-2.5 px-4 text-sm font-medium text-white flex items-center gap-2">
+                        {r.cover_art_url && <img src={r.cover_art_url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />}
+                        <span className="truncate max-w-[120px]">{r.title}</span>
+                      </td>
                       <td className="py-2.5 px-4 text-xs text-gray-400 capitalize">{r.release_type}</td>
                       <td className="py-2.5 px-4 text-xs text-gray-400">{r.genre || '-'}</td>
                       <td className="py-2.5 px-4"><span className={`text-xs capitalize ${statusColor(r.status)}`}>{r.status?.replace('_', ' ')}</span></td>
@@ -328,6 +344,57 @@ const AdminUserDetailPage = () => {
             </div>
           </div>
         )}
+        {/* Beats Section */}
+        {beats.length > 0 && (
+          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
+            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">Beats ({beats.length})</h3>
+              <Link to="/admin/beats" className="text-xs text-[#7C4DFF] hover:underline">View all →</Link>
+            </div>
+            <div className="divide-y divide-white/5">
+              {beats.map(b => (
+                <div key={b.id} className="flex items-center gap-3 p-4 hover:bg-white/5 cursor-pointer" onClick={() => navigate('/admin/beats')}>
+                  {b.cover_url
+                    ? <img src={b.cover_url} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                    : <div className="w-10 h-10 rounded bg-[#1a1a1a] flex items-center justify-center flex-shrink-0"><MusicNotes className="w-5 h-5 text-gray-600" /></div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{b.title}</p>
+                    <p className="text-xs text-gray-500">{b.genre} · {b.bpm} BPM · {b.key}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-[#FFD700] font-mono">${b.prices?.basic_lease || 0}</p>
+                    <p className="text-xs text-gray-500">{b.sales_count || 0} sales</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Promotion Orders */}
+        {promotions.length > 0 && (
+          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
+            <div className="p-5 border-b border-white/10">
+              <h3 className="text-sm font-bold text-white">Promotion Orders ({promotions.length})</h3>
+            </div>
+            <div className="divide-y divide-white/5">
+              {promotions.map(o => (
+                <div key={o.id} className="flex items-center justify-between p-4 hover:bg-white/5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{o.package_name || o.package_id}</p>
+                    <p className="text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0 ml-3">
+                    <p className="text-xs text-[#FFD700] font-mono">${o.amount}</p>
+                    <span className={`text-xs capitalize ${o.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-400'}`}>{o.payment_status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </AdminLayout>
   );
