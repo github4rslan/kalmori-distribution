@@ -188,6 +188,8 @@ async def reset_password(data: PasswordResetConfirm):
     expires_at = reset["expires_at"]
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    if isinstance(expires_at, datetime) and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
     if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired")
 
@@ -209,6 +211,8 @@ async def verify_reset_token(token: str):
     expires_at = reset["expires_at"]
     if isinstance(expires_at, str):
         expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    if isinstance(expires_at, datetime) and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
     if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired")
     return {"valid": True, "email": reset["email"]}
