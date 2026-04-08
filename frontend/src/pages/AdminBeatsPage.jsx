@@ -20,13 +20,28 @@ const HIGHLIGHT = '#FFD700';
 const inputCls = "w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF] focus:ring-1 focus:ring-[#7C4DFF]/30 transition-all placeholder-white/30";
 const selectCls = `${inputCls} cursor-pointer`;
 
-const StatCard = ({ label, value, icon, color }) => (
-  <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: `${color}20`, color }}>
+const StatCard = ({ label, value, icon, color, onClick, hint }) => (
+  <div
+    onClick={onClick}
+    className={`bg-[#111] border border-white/5 rounded-2xl p-5 transition-all duration-200 group relative overflow-hidden
+      ${onClick ? 'cursor-pointer hover:border-white/20 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]' : ''}`}
+    style={onClick ? { '--hover-color': color } : {}}
+  >
+    {onClick && (
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-200 rounded-2xl"
+        style={{ background: `linear-gradient(135deg, ${color}, transparent)` }} />
+    )}
+    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110"
+      style={{ backgroundColor: `${color}20`, color }}>
       {icon}
     </div>
     <p className="text-2xl font-bold text-white font-mono">{value}</p>
     <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">{label}</p>
+    {onClick && hint && (
+      <p className="text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 font-medium" style={{ color }}>
+        {hint} →
+      </p>
+    )}
   </div>
 );
 
@@ -78,8 +93,13 @@ export default function AdminBeatsPage() {
   const totalRevenue = sales.reduce((a, s) => a + (s.amount || 0), 0);
   const platformRevenue = sales.reduce((a, s) => a + (s.platform_fee_amount || 0), 0);
 
-  // Unique producers
-  const producers = [...new Map(beats.map(b => [b.created_by, { id: b.created_by, name: b.producer_name, email: b.producer_email }])).values()];
+  // Unique producers — fallback chain for name
+  const producers = [...new Map(beats.map(b => [b.created_by, {
+    id: b.created_by,
+    name: b.producer_name || b.producer_email?.split('@')[0] || `Producer ${b.created_by?.slice(-4)}`,
+    email: b.producer_email,
+    role: b.producer_role,
+  }])).values()];
 
   const filteredBeats = filterProducer
     ? beats.filter(b => b.created_by === filterProducer)
@@ -223,10 +243,14 @@ export default function AdminBeatsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Total Beats" value={beats.length} icon={<MusicNote className="w-5 h-5" weight="fill" />} color={PRIMARY} />
-          <StatCard label="Producers" value={producers.length} icon={<User className="w-5 h-5" weight="fill" />} color={SECONDARY} />
-          <StatCard label="Total Sales" value={sales.length} icon={<ShoppingBag className="w-5 h-5" weight="fill" />} color="#FF4081" />
-          <StatCard label="Platform Revenue" value={`$${platformRevenue.toFixed(2)}`} icon={<CurrencyDollar className="w-5 h-5" weight="fill" />} color={HIGHLIGHT} />
+          <StatCard label="Total Beats" value={beats.length} icon={<MusicNote className="w-5 h-5" weight="fill" />} color={PRIMARY}
+            onClick={() => setActiveTab('beats')} hint="View all beats" />
+          <StatCard label="Producers" value={producers.length} icon={<User className="w-5 h-5" weight="fill" />} color={SECONDARY}
+            onClick={() => setActiveTab('producers')} hint="View producers" />
+          <StatCard label="Total Sales" value={sales.length} icon={<ShoppingBag className="w-5 h-5" weight="fill" />} color="#FF4081"
+            onClick={() => setActiveTab('sales')} hint="View sales" />
+          <StatCard label="Platform Revenue" value={`$${platformRevenue.toFixed(2)}`} icon={<CurrencyDollar className="w-5 h-5" weight="fill" />} color={HIGHLIGHT}
+            onClick={() => setActiveTab('settings')} hint="Manage fee" />
         </div>
 
         {/* Tabs */}
@@ -418,16 +442,22 @@ export default function AdminBeatsPage() {
               const producerSales = sales.filter(s => s.producer_id === p.id);
               const producerRevenue = producerSales.reduce((a, s) => a + (s.producer_amount || 0), 0);
               return (
-                <div key={p.id} className="bg-[#111] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-all">
+                <div key={p.id}
+                  onClick={() => { setFilterProducer(p.id); setActiveTab('beats'); }}
+                  className="bg-[#111] border border-white/5 rounded-2xl p-5 hover:border-white/20 transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200 rounded-2xl"
+                    style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }} />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-transform duration-200 group-hover:scale-110"
                         style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }}>
                         {(p.name || p.email || '?')[0].toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{p.name || 'Unknown'}</p>
-                        <p className="text-xs text-white/40">{p.email}</p>
+                        <p className="text-sm font-bold text-white">{p.name}</p>
+                        <p className="text-xs text-white/40">{p.email || 'No email'}</p>
+                        {p.role && <span className="text-xs px-2 py-0.5 rounded-full capitalize mt-1 inline-block"
+                          style={{ backgroundColor: `${PRIMARY}20`, color: PRIMARY }}>{p.role.replace(/_/g, ' ')}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-6 text-xs text-white/40">
@@ -442,6 +472,9 @@ export default function AdminBeatsPage() {
                       <div className="text-center">
                         <p className="font-bold text-sm" style={{ color: HIGHLIGHT }}>${producerRevenue.toFixed(2)}</p>
                         <p>earned</p>
+                      </div>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium" style={{ color: PRIMARY }}>
+                        View beats →
                       </div>
                     </div>
                   </div>
