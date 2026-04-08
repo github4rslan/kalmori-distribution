@@ -268,7 +268,7 @@ const AdminSubmissionsPage = () => {
                         <div className="pt-1">
                           <p className="text-sm text-gray-500 mb-2">Cover Art</p>
                           <img
-                            src={`${API}/files/${detail.release.cover_art_url}`}
+                            src={detail.release.cover_art_url}
                             alt={detail.release?.title || 'Cover art'}
                             className="w-28 h-28 rounded-xl object-cover border border-white/10"
                           />

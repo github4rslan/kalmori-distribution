@@ -168,7 +168,7 @@ const ReleasesPage = () => {
                       <Link to={`/releases/${release.id}`} className="flex items-center gap-3 hover:text-[#FF3B30] transition-colors">
                         <div className="w-10 h-10 bg-[#1E1E1E] rounded flex items-center justify-center flex-shrink-0">
                           {release.cover_art_url ? (
-                            <img src={`${API.replace('/api', '')}/api/files/${release.cover_art_url}`} alt="" className="w-full h-full object-cover rounded" />
+                            <img src={release.cover_art_url} alt="" className="w-full h-full object-cover rounded" />
                           ) : (
                             <Disc className="w-5 h-5 text-[#A1A1AA]" />
                           )}

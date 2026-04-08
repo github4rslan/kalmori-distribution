@@ -526,8 +526,8 @@ const ReleaseDetailPage = () => {
           <div className="w-48 h-48 flex-shrink-0">
             <label className="relative block w-full h-full bg-[#141414] border border-white/10 rounded-md overflow-hidden cursor-pointer group">
               {release.cover_art_url ? (
-                <img 
-                  src={`${API.replace('/api', '')}/api/files/${release.cover_art_url}`}
+                <img
+                  src={release.cover_art_url}
                   alt={release.title}
                   className="w-full h-full object-cover"
                 />

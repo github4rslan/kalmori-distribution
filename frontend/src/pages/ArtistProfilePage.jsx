@@ -95,7 +95,7 @@ const AudioPreviewPlayer = ({ track, slug, themeColor, isPlaying, onPlay, onStop
 
 /* ============ Release Card ============ */
 const ReleaseCard = ({ release, index, slug, themeColor, playingTrackId, onPlayTrack, onStopTrack }) => {
-  const coverUrl = release.cover_art_url ? `${BACKEND_URL}/api/files/${release.cover_art_url}` : null;
+  const coverUrl = release.cover_art_url || null;
 
   return (
     <motion.div
@@ -151,7 +151,7 @@ const ReleaseCard = ({ release, index, slug, themeColor, playingTrackId, onPlayT
 
 /* ============ Pre-Save Card ============ */
 const PreSaveCard = ({ campaign, index, themeColor }) => {
-  const coverUrl = campaign.cover_art_url ? `${BACKEND_URL}/api/files/${campaign.cover_art_url}` : null;
+  const coverUrl = campaign.cover_art_url || null;
   const releaseDate = campaign.release_date
     ? new Date(campaign.release_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
     : null;
