@@ -38,9 +38,9 @@ APP_NAME = "tunedrop"
 storage_key = None  # kept for legacy compatibility
 
 cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME", "dhabplawv"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY", "882247917397356"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET", "eWseftCBRNpu2lAWuuANj7RQosA"),
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
     secure=True,
 )
 

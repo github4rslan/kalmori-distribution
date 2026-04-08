@@ -102,9 +102,9 @@ Website-Kalmori-/
 | `RESEND_API_KEY` | Resend email API key |
 | `SENDER_EMAIL` | `noreply@kalmori.org` |
 | `RECAPTCHA_SECRET_KEY` | Google reCAPTCHA v2 secret key |
-| `CLOUDINARY_CLOUD_NAME` | `dhabplawv` |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `CLOUDINARY_CLOUD_NAME` | Your Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key (from Cloudinary dashboard) |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret (from Cloudinary dashboard) |
 | `STRIPE_API_KEY` | Stripe live secret key (`sk_live_...`) |
 | `PAYPAL_CLIENT_ID` | PayPal app client ID |
 | `PAYPAL_CLIENT_SECRET` | PayPal app client secret |
@@ -193,7 +193,9 @@ Stream/download endpoints use `302 RedirectResponse` to Cloudinary URL.
 cd backend
 python -c "
 import cloudinary, cloudinary.api
-cloudinary.config(cloud_name='dhabplawv', api_key='882247917397356', api_secret='eWseftCBRNpu2lAWuuANj7RQosA', secure=True)
+from dotenv import load_dotenv; load_dotenv()
+import os
+cloudinary.config(cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'], api_key=os.environ['CLOUDINARY_API_KEY'], api_secret=os.environ['CLOUDINARY_API_SECRET'], secure=True)
 print(cloudinary.api.ping())
 "
 ```
@@ -317,8 +319,9 @@ curl -s -X POST https://kalmori-distribution.onrender.com/api/auth/login \
 ```bash
 cd backend
 python -c "
-import cloudinary, cloudinary.api, cloudinary.uploader, io
-cloudinary.config(cloud_name='dhabplawv', api_key='882247917397356', api_secret='eWseftCBRNpu2lAWuuANj7RQosA', secure=True)
+import cloudinary, cloudinary.api, cloudinary.uploader, io, os
+from dotenv import load_dotenv; load_dotenv()
+cloudinary.config(cloud_name=os.environ['CLOUDINARY_CLOUD_NAME'], api_key=os.environ['CLOUDINARY_API_KEY'], api_secret=os.environ['CLOUDINARY_API_SECRET'], secure=True)
 print('Ping:', cloudinary.api.ping())
 gif = b'GIF89a\x01\x00\x01\x00\x00\xff\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x00;'
 r = cloudinary.uploader.upload(io.BytesIO(gif), public_id='kalmori/test', resource_type='image', overwrite=True)
