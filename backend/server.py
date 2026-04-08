@@ -282,8 +282,8 @@ async def upload_cover_art(release_id: str, request: Request, file: UploadFile =
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     path = f"{APP_NAME}/covers/{user['id']}/{release_id}/{uuid.uuid4()}.{ext}"
     result = put_object(path, await file.read(), file.content_type)
-    await db.releases.update_one({"id": release_id}, {"$set": {"cover_art_url": result["url"]}})
-    return {"cover_art_url": result["url"]}
+    await db.releases.update_one({"id": release_id}, {"$set": {"cover_art_url": result["url"], "cover_url": result["url"]}})
+    return {"cover_art_url": result["url"], "cover_url": result["url"]}
 
 @api_router.put("/releases/{release_id}")
 async def update_release(release_id: str, release: ReleaseCreate, request: Request):
