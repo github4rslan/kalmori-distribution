@@ -508,13 +508,52 @@ const ReleaseDetailPage = () => {
 
   if (!release) return null;
 
+  const STORE_BRAND = {
+    spotify:        { text: 'Spotify',       color: '#1DB954' },
+    apple_music:    { text: '♪ Apple',       color: '#FC3C44' },
+    youtube_music:  { text: '▶ YT Music',    color: '#FF0000' },
+    amazon_music:   { text: 'amazon music',  color: '#00A8E1' },
+    tidal:          { text: 'TIDAL',         color: '#FFFFFF' },
+    deezer:         { text: 'DEEZER',        color: '#FEAA2D' },
+    soundcloud:     { text: '☁ SoundCloud',  color: '#FF5500' },
+    pandora:        { text: 'PANDORA',       color: '#3668FF' },
+    tiktok:         { text: '♪ TikTok',      color: '#00F2EA' },
+    instagram:      { text: '📷 Instagram',  color: '#E4405F' },
+    shazam:         { text: 'Shazam',        color: '#0088FF' },
+    iheartradio:    { text: 'iHeart',        color: '#CC0000' },
+    napster:        { text: 'Napster',       color: '#FF0090' },
+    audiomack:      { text: 'Audiomack',     color: '#FFA200' },
+    tencent:        { text: 'QQ Music',      color: '#FCAD18' },
+    boomplay:       { text: 'Boomplay',      color: '#FACD00' },
+    mdundo:         { text: 'Mdundo',        color: '#00BCD4' },
+    anghami:        { text: 'Anghami',       color: '#7C4DFF' },
+    kkbox:          { text: 'KKBOX',         color: '#009E60' },
+    joox:           { text: 'JOOX',          color: '#00C853' },
+    yandex:         { text: 'Yandex',        color: '#FF0000' },
+    vk:             { text: 'VK Music',      color: '#4A76A8' },
+    gaana:          { text: 'Gaana',         color: '#E72323' },
+    jiosaavn:       { text: 'JioSaavn',      color: '#2BC5B4' },
+    wynk:           { text: 'Wynk',          color: '#7B2FF7' },
+    hungama:        { text: 'Hungama',       color: '#FF6D00' },
+    melon:          { text: 'Melon',         color: '#00C73C' },
+    genie:          { text: 'Genie',         color: '#0080FF' },
+    bugs:           { text: 'Bugs!',         color: '#FF4444' },
+    flo:            { text: 'FLO',           color: '#6C5CE7' },
+    netease:        { text: 'NetEase',       color: '#CC0000' },
+    kuwo:           { text: 'Kuwo',          color: '#FF6600' },
+    kugou:          { text: 'Kugou',         color: '#0099FF' },
+  };
+
   const getStoreIcon = (storeId) => {
-    switch (storeId) {
-      case 'spotify': return <SpotifyLogo className="w-5 h-5" />;
-      case 'apple_music': return <AppleLogo className="w-5 h-5" />;
-      case 'youtube_music': return <YoutubeLogo className="w-5 h-5" />;
-      default: return <Globe className="w-5 h-5" />;
+    const brand = STORE_BRAND[storeId];
+    if (brand) {
+      return (
+        <span className="text-[10px] font-bold leading-tight text-center" style={{ color: brand.color }}>
+          {brand.text}
+        </span>
+      );
     }
+    return <Globe className="w-5 h-5" />;
   };
 
   return (
