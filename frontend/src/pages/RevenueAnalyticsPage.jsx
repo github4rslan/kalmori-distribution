@@ -494,8 +494,8 @@ export default function RevenueAnalyticsPage() {
                   <ResultCard label="Your Take" value={`$${calcResult.artist_take.toFixed(2)}`} color="#FFD700" />
                 </div>
 
-                <div className="bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden overflow-x-auto">
+                  <table className="w-full min-w-[400px] text-sm">
                     <thead>
                       <tr className="text-gray-500 text-xs border-b border-white/10">
                         <th className="text-left p-3 font-medium">Platform</th>

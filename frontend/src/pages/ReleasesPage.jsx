@@ -146,8 +146,8 @@ const ReleasesPage = () => {
             )}
           </div>
         ) : (
-          <div className="bg-[#141414] border border-white/10 rounded-md overflow-hidden">
-            <table className="w-full">
+          <div className="bg-[#141414] border border-white/10 rounded-md overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="px-6 py-4 text-left text-xs uppercase tracking-wider text-[#A1A1AA]">Release</th>
