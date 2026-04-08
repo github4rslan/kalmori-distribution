@@ -142,6 +142,51 @@ body {
   box-shadow: 0 8px 30px rgba(124, 77, 255, 0.4);
 }
 
+.btn-kalmori {
+  background: linear-gradient(135deg, var(--kalmori-purple) 0%, var(--kalmori-magenta) 55%, var(--kalmori-pink) 100%);
+  background-size: 200% 200%;
+  animation: gradientMove 3s ease infinite;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(124, 77, 255, 0.22);
+}
+
+.btn-kalmori:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 14px 36px rgba(224, 64, 251, 0.28);
+}
+
+.btn-kalmori-gold {
+  background: linear-gradient(135deg, var(--kalmori-gold) 0%, #FFA500 100%);
+  color: #0a0a0a !important;
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+}
+
+.btn-kalmori-gold:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 14px 36px rgba(255, 215, 0, 0.28);
+}
+
+.btn-kalmori-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(124, 77, 255, 0.28) !important;
+  color: #fff;
+}
+
+.btn-kalmori-ghost:hover {
+  background: rgba(124, 77, 255, 0.12);
+  border-color: rgba(224, 64, 251, 0.45) !important;
+}
+
+.btn-kalmori-danger {
+  background: linear-gradient(135deg, #E53935 0%, #FF6B6B 100%);
+  box-shadow: 0 10px 28px rgba(229, 57, 53, 0.22);
+}
+
+.btn-kalmori-danger:hover {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 14px 36px rgba(229, 57, 53, 0.3);
+}
+
 /* Red Button */
 .btn-red {
   background-color: #E53935;

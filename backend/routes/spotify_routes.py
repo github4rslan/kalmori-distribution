@@ -7,7 +7,7 @@ import logging
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 
-from core import db, get_current_user
+from core import db, get_current_user, get_frontend_base_url
 
 logger = logging.getLogger(__name__)
 spotify_router = APIRouter(prefix="/api/spotify")
@@ -15,16 +15,17 @@ spotify_router = APIRouter(prefix="/api/spotify")
 SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "")
-REDIRECT_URI = f"{FRONTEND_URL}/api/spotify/callback"
 
 SCOPES = "user-read-private user-read-email"
 
 
-def get_spotify_oauth(state=None):
+def get_spotify_oauth(request: Request = None, state=None):
+    backend_base_url = os.environ.get("BACKEND_PUBLIC_URL") or (str(request.base_url).rstrip("/") if request else "")
+    redirect_uri = f"{backend_base_url}/api/spotify/callback"
     return SpotifyOAuth(
         client_id=SPOTIFY_CLIENT_ID,
         client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=REDIRECT_URI,
+        redirect_uri=redirect_uri,
         scope=SCOPES,
         state=state,
         show_dialog=True,
@@ -45,7 +46,9 @@ def get_client_credentials_sp():
 async def spotify_connect(request: Request):
     """Start Spotify OAuth flow — returns auth URL for the user to visit"""
     user = await get_current_user(request)
-    sp_oauth = get_spotify_oauth(state=user["id"])
+    if not SPOTIFY_CLIENT_ID or not SPOTIFY_CLIENT_SECRET:
+        raise HTTPException(status_code=500, detail="Spotify integration is not configured")
+    sp_oauth = get_spotify_oauth(request, state=user["id"])
     auth_url = sp_oauth.get_authorize_url()
     return {"auth_url": auth_url}
 
@@ -53,14 +56,15 @@ async def spotify_connect(request: Request):
 @spotify_router.get("/callback")
 async def spotify_callback(request: Request, code: str = None, state: str = None, error: str = None):
     """Handle Spotify OAuth callback — exchanges code for tokens"""
+    frontend_base_url = get_frontend_base_url(request) or FRONTEND_URL
     if error:
-        return RedirectResponse(f"{FRONTEND_URL}/settings?spotify=error&reason={error}")
+        return RedirectResponse(f"{frontend_base_url}/settings?spotify=error&reason={error}")
 
     if not code:
-        return RedirectResponse(f"{FRONTEND_URL}/settings?spotify=error&reason=no_code")
+        return RedirectResponse(f"{frontend_base_url}/settings?spotify=error&reason=no_code")
 
     try:
-        sp_oauth = get_spotify_oauth()
+        sp_oauth = get_spotify_oauth(request)
         token_info = sp_oauth.get_access_token(code, as_dict=True)
 
         # Get the user's Spotify profile
@@ -115,11 +119,11 @@ async def spotify_callback(request: Request, code: str = None, state: str = None
             upsert=True,
         )
 
-        return RedirectResponse(f"{FRONTEND_URL}/settings?spotify=success")
+        return RedirectResponse(f"{frontend_base_url}/settings?spotify=success")
 
     except Exception as e:
         logger.error(f"Spotify callback error: {e}")
-        return RedirectResponse(f"{FRONTEND_URL}/settings?spotify=error&reason=token_exchange_failed")
+        return RedirectResponse(f"{frontend_base_url}/settings?spotify=error&reason=token_exchange_failed")
 
 
 @spotify_router.get("/status")

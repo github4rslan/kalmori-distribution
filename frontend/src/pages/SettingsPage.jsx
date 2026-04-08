@@ -41,7 +41,7 @@ const NOTIF_PREF_LABELS = {
 };
 
 const SettingsPage = () => {
-  const { user, checkAuth } = useAuth();
+  const { user, checkAuth, updateUser } = useAuth();
   const [profile, setProfile] = useState({
     artist_name: '',
     bio: '',
@@ -59,6 +59,7 @@ const SettingsPage = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [notifPrefs, setNotifPrefs] = useState({});
   const [savingNotifPrefs, setSavingNotifPrefs] = useState(false);
+  const [planStatus, setPlanStatus] = useState('free');
   const [spotifyStatus, setSpotifyStatus] = useState(null);
   const [slug, setSlug] = useState('');
   const [slugInput, setSlugInput] = useState('');
@@ -165,18 +166,24 @@ const SettingsPage = () => {
     setSavingNotifPrefs(true);
     try {
       await axios.put(`${API}/settings/notification-preferences`, { [key]: newVal }, { withCredentials: true });
-    } catch { toast.error('Failed to update preference'); }
+      setNotifPrefs(prev => ({ ...prev, [key]: newVal }));
+    } catch {
+      setNotifPrefs(prev => ({ ...prev, [key]: !newVal }));
+      toast.error('Failed to update preference');
+    }
     finally { setSavingNotifPrefs(false); }
   };
 
   const fetchData = async () => {
     try {
-      const [profileRes, plansRes] = await Promise.all([
+      const [profileRes, plansRes, myPlanRes] = await Promise.all([
         axios.get(`${API}/artists/profile`),
-        axios.get(`${API}/subscriptions/plans`)
+        axios.get(`${API}/subscriptions/plans`),
+        axios.get(`${API}/subscriptions/my-plan`, { withCredentials: true }),
       ]);
       setProfile(profileRes.data);
       setPlans(plansRes.data);
+      setPlanStatus(myPlanRes.data.status || 'active');
     } catch (error) {
       console.error('Failed to fetch settings:', error);
     } finally {
@@ -223,11 +230,28 @@ const SettingsPage = () => {
 
   const handleUpgradePlan = async (plan) => {
     try {
-      await axios.post(`${API}/subscriptions/upgrade`, null, { params: { plan } });
-      toast.success(`Upgraded to ${plans[plan]?.name} plan!`);
-      checkAuth();
+      if (plan === 'free') {
+        const res = await axios.post(`${API}/subscriptions/upgrade`, null, { params: { plan }, withCredentials: true });
+        updateUser?.({ plan: res.data.plan });
+        setPlanStatus(res.data.status || 'free');
+        toast.success('Plan updated');
+        await checkAuth();
+        return;
+      }
+
+      const checkoutRes = await axios.post(`${API}/subscriptions/checkout`, {
+        plan,
+        origin_url: window.location.origin,
+      }, { withCredentials: true });
+
+      if (checkoutRes.data.checkout_url) {
+        window.location.href = checkoutRes.data.checkout_url;
+        return;
+      }
+
+      toast.error('Unable to start checkout');
     } catch (error) {
-      toast.error('Failed to upgrade plan');
+      toast.error(error.response?.data?.detail || 'Failed to upgrade plan');
     }
   };
 
@@ -442,6 +466,9 @@ const SettingsPage = () => {
               <h2 className="text-lg font-medium mb-2">Current Plan</h2>
               <p className="text-[#A1A1AA] text-sm mb-6">
                 You are currently on the <span className="text-[#FFCC00] font-semibold uppercase">{user?.plan || 'Free'}</span> plan
+                <span className="ml-2 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+                  {planStatus}
+                </span>
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -484,14 +511,10 @@ const SettingsPage = () => {
                     {user?.plan !== key && (
                       <Button
                         onClick={() => handleUpgradePlan(key)}
-                        className={`w-full ${
-                          key === 'rise' 
-                            ? 'bg-[#FF3B30] hover:bg-[#FF3B30]/90' 
-                            : 'bg-white/10 hover:bg-white/20'
-                        } text-white`}
+                        className={`w-full ${key === 'pro' ? 'btn-kalmori-gold' : key === 'rise' ? 'btn-kalmori' : 'btn-kalmori-ghost'}`}
                         data-testid={`upgrade-${key}-btn`}
                       >
-                        {key === 'free' ? 'Downgrade' : 'Upgrade'}
+                        {key === 'free' ? 'Downgrade' : 'Upgrade with Payment'}
                       </Button>
                     )}
                   </div>
@@ -570,7 +593,7 @@ const SettingsPage = () => {
                       await axios.post(`${API}/spotify/disconnect`, {}, { withCredentials: true });
                       setSpotifyStatus({ connected: false });
                       toast.success('Spotify disconnected');
-                    }} className="px-4 py-2 text-xs font-medium text-red-400 border border-red-400/30 rounded-full hover:bg-red-400/10 transition-all" data-testid="disconnect-spotify">
+                    }} className="btn-kalmori-danger px-4 py-2 rounded-full text-xs font-medium" data-testid="disconnect-spotify">
                       Disconnect
                     </button>
                   </div>
@@ -581,7 +604,7 @@ const SettingsPage = () => {
                       if (res.data?.auth_url) window.location.href = res.data.auth_url;
                     } catch { toast.error('Failed to start Spotify connection'); }
                   }}
-                    className="px-4 py-2 text-xs font-bold text-[#1DB954] border border-[#1DB954]/30 rounded-full hover:bg-[#1DB954]/10 transition-all flex items-center gap-2" data-testid="connect-spotify">
+                    className="btn-kalmori px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2" data-testid="connect-spotify">
                     <LinkIcon className="w-3.5 h-3.5" /> Connect
                   </button>
                 )}
@@ -610,7 +633,7 @@ const SettingsPage = () => {
                           toast.error('No artists found');
                         }
                       } catch { toast.error('Search failed'); }
-                    }} className="px-4 py-2 text-xs font-bold bg-[#1DB954] text-white rounded-lg hover:bg-[#1DB954]/80" data-testid="spotify-search-btn">
+                    }} className="btn-kalmori px-4 py-2 rounded-lg text-xs font-bold" data-testid="spotify-search-btn">
                       Search & Link
                     </button>
                   </div>

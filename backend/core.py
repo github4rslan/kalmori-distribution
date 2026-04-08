@@ -15,6 +15,7 @@ import bcrypt
 import jwt
 import requests
 from io import BytesIO
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,17 @@ class ReleaseCreate(BaseModel):
     description: Optional[str] = None
     explicit: bool = False
     language: str = "en"
+    title_version: Optional[str] = None
+    label: Optional[str] = None
+    catalog_number: Optional[str] = None
+    production_year: Optional[str] = None
+    copyright_line: Optional[str] = None
+    production_line: Optional[str] = None
+    is_compilation: Optional[bool] = False
+    main_artist: Optional[str] = None
+    territory: Optional[str] = "worldwide"
+    distributed_platforms: Optional[List[str]] = []
+    rights_confirmed: Optional[bool] = True
 
 class ReleaseResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -97,6 +109,17 @@ class ReleaseResponse(BaseModel):
     description: Optional[str] = None
     explicit: bool
     language: str
+    title_version: Optional[str] = None
+    label: Optional[str] = None
+    catalog_number: Optional[str] = None
+    production_year: Optional[str] = None
+    copyright_line: Optional[str] = None
+    production_line: Optional[str] = None
+    is_compilation: Optional[bool] = False
+    main_artist: Optional[str] = None
+    territory: Optional[str] = "worldwide"
+    distributed_platforms: Optional[List[str]] = []
+    rights_confirmed: Optional[bool] = True
     cover_art_url: Optional[str] = None
     status: str
     artist_id: str
@@ -124,6 +147,10 @@ class TrackCreate(BaseModel):
     preview_start: Optional[str] = "00:30"
     preview_end: Optional[str] = "00:00"
     main_artist: Optional[str] = ""
+    artists: Optional[List[Dict[str, Any]]] = []
+    main_contributors: Optional[List[Dict[str, Any]]] = []
+    contributors: Optional[List[Dict[str, Any]]] = []
+    audio_file_name: Optional[str] = ""
 
 class TrackResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -146,6 +173,10 @@ class TrackResponse(BaseModel):
     preview_start: Optional[str] = "00:30"
     preview_end: Optional[str] = "00:00"
     main_artist: Optional[str] = ""
+    artists: Optional[List[Dict[str, Any]]] = []
+    main_contributors: Optional[List[Dict[str, Any]]] = []
+    contributors: Optional[List[Dict[str, Any]]] = []
+    audio_file_name: Optional[str] = ""
 
 class DistributionStore(BaseModel):
     store_id: str
@@ -332,6 +363,15 @@ SUBSCRIPTION_PLANS = {
     },
 }
 
+FEATURE_CATEGORY_ROUTES = {
+    "general": "/dashboard",
+    "distribution": "/releases",
+    "analytics": "/analytics",
+    "ai": "/features",
+    "marketplace": "/beat-bank",
+    "social": "/collab-hub",
+}
+
 def check_feature_access(user_plan: str, feature: str):
     """Check if user's plan allows access to a feature"""
     plan = SUBSCRIPTION_PLANS.get(user_plan, SUBSCRIPTION_PLANS["free"])
@@ -345,4 +385,39 @@ def check_feature_access(user_plan: str, feature: str):
         }
         required = plan_names.get(feature, "Pro")
         raise HTTPException(status_code=403, detail=f"This feature requires the {required} plan. Upgrade at /pricing")
+
+
+def resolve_feature_action_url(category: str = "general", has_access: bool = True) -> str:
+    if not has_access:
+        return "/pricing"
+    return FEATURE_CATEGORY_ROUTES.get(category or "general", "/features")
+
+
+def get_frontend_base_url(request: Optional[Request] = None) -> str:
+    candidates = [
+        os.environ.get("PUBLIC_FRONTEND_URL"),
+        os.environ.get("SITE_URL"),
+        os.environ.get("APP_BASE_URL"),
+        os.environ.get("FRONTEND_URL"),
+    ]
+
+    vercel_url = os.environ.get("VERCEL_PROJECT_PRODUCTION_URL") or os.environ.get("VERCEL_URL")
+    if vercel_url:
+        candidates.append(vercel_url if vercel_url.startswith("http") else f"https://{vercel_url}")
+
+    if request is not None:
+        origin = request.headers.get("origin")
+        referer = request.headers.get("referer")
+        for candidate in (origin, referer, str(request.base_url).rstrip("/")):
+            if candidate:
+                candidates.append(candidate)
+
+    for candidate in candidates:
+        if not candidate:
+            continue
+        parsed = urlparse(candidate)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+
+    return ""
 

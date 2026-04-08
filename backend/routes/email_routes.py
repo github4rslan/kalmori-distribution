@@ -9,6 +9,8 @@ import secrets
 import bcrypt
 import logging
 
+from core import get_frontend_base_url
+
 logger = logging.getLogger(__name__)
 
 email_router = APIRouter(prefix="/api")
@@ -323,7 +325,7 @@ async def _build_digest_data(user):
     }
 
 
-def _build_digest_html(user, data):
+def _build_digest_html(user, data, frontend_base_url: str = ""):
     """Build branded HTML email for weekly digest"""
     artist = user.get("artist_name") or user.get("name", "Artist")
     growth_color = "#4CAF50" if data["growth"] >= 0 else "#F44336"
@@ -415,11 +417,11 @@ def _build_digest_html(user, data):
         {f'<p style="color:#888;font-size:12px;margin-top:16px;">Pre-Save Subscribers: <strong style="color:#FFD700;">{data["total_presave"]}</strong></p>' if data["total_presave"] > 0 else ''}
 
         <div style="text-align:center;margin:28px 0 16px;">
-            <a href="{FRONTEND_URL}/fan-analytics" style="background:linear-gradient(90deg,#7C4DFF,#E040FB);color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">View Full Analytics</a>
+            <a href="{frontend_base_url or FRONTEND_URL}/fan-analytics" style="background:linear-gradient(90deg,#7C4DFF,#E040FB);color:white;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:14px;display:inline-block;">View Full Analytics</a>
         </div>
 
         <p style="color:#555;font-size:11px;text-align:center;margin:20px 0 0;">You're receiving this because you enabled Weekly Digest in your notification settings.<br/>
-        <a href="{FRONTEND_URL}/settings" style="color:#7C4DFF;text-decoration:none;">Manage preferences</a></p>
+        <a href="{frontend_base_url or FRONTEND_URL}/settings" style="color:#7C4DFF;text-decoration:none;">Manage preferences</a></p>
     </div>
 </div>'''
     return html
@@ -432,7 +434,7 @@ async def send_weekly_digest(request: Request):
     user = await get_current_user(request)
 
     data = await _build_digest_data(user)
-    html = _build_digest_html(user, data)
+    html = _build_digest_html(user, data, get_frontend_base_url(request))
     subject = f"Kalmori Weekly Digest - {data['week_ending']} | {data['recent_total']:,} streams"
 
     sent = await send_email(user["email"], subject, html)
@@ -466,7 +468,7 @@ async def preview_weekly_digest(request: Request):
     from server import get_current_user
     user = await get_current_user(request)
     data = await _build_digest_data(user)
-    html = _build_digest_html(user, data)
+    html = _build_digest_html(user, data, get_frontend_base_url(request))
     return {
         "html": html,
         "stats": {
@@ -949,7 +951,7 @@ async def generate_artist_report(user_id: str, period: str = "weekly"):
     }
 
 
-def build_analytics_report_email(report: dict) -> str:
+def build_analytics_report_email(report: dict, frontend_base_url: str = "") -> str:
     """Build the HTML email for an analytics report"""
     user = report["user"]
     period_label = "Weekly" if report["period"] == "weekly" else "Monthly"
@@ -998,7 +1000,7 @@ def build_analytics_report_email(report: dict) -> str:
     {"<h3 style='color:#E040FB;font-size:13px;letter-spacing:2px;margin:24px 0 8px;'>TOP COUNTRIES</h3><table style='width:100%;border-collapse:collapse;'>" + country_html + "</table>" if country_html else ""}
 
     <div style="text-align:center;margin:30px 0 10px;">
-      <a href="{FRONTEND_URL}/analytics" style="display:inline-block;background:#7C4DFF;color:#fff;padding:12px 32px;border-radius:50px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:1px;">VIEW FULL DASHBOARD</a>
+      <a href="{frontend_base_url or FRONTEND_URL}/analytics" style="display:inline-block;background:#7C4DFF;color:#fff;padding:12px 32px;border-radius:50px;text-decoration:none;font-weight:700;font-size:13px;letter-spacing:1px;">VIEW FULL DASHBOARD</a>
     </div>
     """
     return email_base("linear-gradient(135deg, #7C4DFF, #E040FB)", f"Your {period_label} Report", body, "Keep creating. Keep growing.")
@@ -1018,7 +1020,7 @@ async def send_analytics_reports(request: Request):
     if target != "all":
         report = await generate_artist_report(target, period)
         if report and report["user"].get("email"):
-            html = build_analytics_report_email(report)
+            html = build_analytics_report_email(report, get_frontend_base_url(request))
             period_label = "Weekly" if period == "weekly" else "Monthly"
             await send_email(report["user"]["email"], f"Kalmori: Your {period_label} Analytics Report", html)
             return {"message": f"Report sent to {report['user']['email']}", "sent_count": 1}
@@ -1029,7 +1031,7 @@ async def send_analytics_reports(request: Request):
     for u in users:
         report = await generate_artist_report(u["id"], period)
         if report and report["user"].get("email"):
-            html = build_analytics_report_email(report)
+            html = build_analytics_report_email(report, get_frontend_base_url(request))
             period_label = "Weekly" if period == "weekly" else "Monthly"
             success = await send_email(report["user"]["email"], f"Kalmori: Your {period_label} Analytics Report", html)
             if success:
@@ -1058,7 +1060,7 @@ async def preview_analytics_report(request: Request):
     report = await generate_artist_report(target_id, period)
     if not report:
         raise HTTPException(status_code=404, detail="User not found")
-    html = build_analytics_report_email(report)
+    html = build_analytics_report_email(report, get_frontend_base_url(request))
     return {"html": html, "stats": {
         "total_streams": report["total_streams"],
         "total_revenue": report["total_revenue"],

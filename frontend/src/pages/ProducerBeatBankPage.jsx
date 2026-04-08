@@ -54,15 +54,17 @@ export default function ProducerBeatBankPage() {
     price_basic: 29.99, price_premium: 79.99, price_unlimited: 149.99, price_exclusive: 499.99
   });
 
-  // Guard: only producer/label/label_producer
   const role = user?.user_role || user?.role || '';
   const ALLOWED = ['producer', 'label', 'label_producer', 'admin'];
-  if (!ALLOWED.includes(role)) return <Navigate to="/dashboard" replace />;
 
   useEffect(() => {
+    if (!ALLOWED.includes(role)) {
+      setLoading(false);
+      return undefined;
+    }
     fetchAll();
     return () => { if (audioRef.current) audioRef.current.pause(); };
-  }, []);
+  }, [role]);
 
   const fetchAll = async () => {
     try {
@@ -206,6 +208,8 @@ export default function ProducerBeatBankPage() {
     { id: 'beats', label: 'My Beats', count: beats.length },
     { id: 'sales', label: 'Sales Log', count: sales.length },
   ];
+
+  if (!ALLOWED.includes(role)) return <Navigate to="/dashboard" replace />;
 
   return (
     <DashboardLayout>

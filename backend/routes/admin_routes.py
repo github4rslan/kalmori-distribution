@@ -11,7 +11,7 @@ import logging
 import csv as csv_module
 import io
 
-from core import db, require_admin, AdminUserUpdate, AdminReviewAction
+from core import db, require_admin, AdminUserUpdate, AdminReviewAction, resolve_feature_action_url
 
 logger = logging.getLogger(__name__)
 
@@ -138,10 +138,33 @@ async def get_submission_detail(release_id: str, request: Request):
     await require_admin(request)
     submission = await db.submissions.find_one({"release_id": release_id}, {"_id": 0})
     if not submission: raise HTTPException(status_code=404, detail="Submission not found")
-    release = await db.releases.find_one({"id": release_id}, {"_id": 0})
-    tracks = await db.tracks.find({"release_id": release_id}, {"_id": 0}).sort("track_number", 1).to_list(50)
-    artist = await db.users.find_one({"id": submission["artist_id"]}, {"_id": 0, "password_hash": 0})
-    return {"submission": submission, "release": release, "tracks": tracks, "artist": artist}
+    submission_bank = submission.get("submission_bank", {})
+    release = submission_bank.get("release") or await db.releases.find_one({"id": release_id}, {"_id": 0})
+    tracks = submission_bank.get("tracks") or await db.tracks.find({"release_id": release_id}, {"_id": 0}).sort("track_number", 1).to_list(50)
+    artist = submission_bank.get("artist") or await db.users.find_one({"id": submission["artist_id"]}, {"_id": 0, "password_hash": 0})
+    artist_profile = submission_bank.get("artist_profile")
+    if artist_profile is None:
+        artist_profile = await db.artist_profiles.find_one({"user_id": submission["artist_id"]}, {"_id": 0}) or {}
+    audio_bank = submission_bank.get("audio_bank") or [
+        {
+            "track_id": t.get("id"),
+            "track_number": t.get("track_number"),
+            "title": t.get("title", ""),
+            "audio_url": t.get("audio_url"),
+            "audio_format": t.get("audio_url", "").split(".")[-1].lower() if t.get("audio_url") and "." in t.get("audio_url", "") else "",
+            "duration": t.get("duration"),
+            "isrc": t.get("isrc", ""),
+        }
+        for t in tracks if t.get("audio_url")
+    ]
+    return {
+        "submission": submission,
+        "release": release,
+        "tracks": tracks,
+        "artist": artist,
+        "artist_profile": artist_profile,
+        "audio_bank": audio_bank,
+    }
 
 @admin_router.put("/submissions/{release_id}/review")
 async def review_submission(release_id: str, review: AdminReviewAction, request: Request):
@@ -1309,7 +1332,7 @@ async def create_feature_announcement(data: FeatureAnnouncementCreate, request: 
             "icon": data.icon,
             "color": data.color,
             "read": False,
-            "action_url": "/features" if has_access else "/pricing",
+            "action_url": resolve_feature_action_url(data.category, has_access),
             "created_at": now,
         })
         notif_count += 1

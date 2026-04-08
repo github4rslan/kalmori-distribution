@@ -10,6 +10,7 @@ const NOTIFICATION_ROUTES = {
   'new_submission': '/admin',
   'milestone': '/goals',
   'goal_achieved': '/goals',
+  'follower': '/dashboard',
   'referral_reward': '/wallet',
   'referral_welcome': '/dashboard',
   'ai_insight': '/analytics',
@@ -17,16 +18,23 @@ const NOTIFICATION_ROUTES = {
   'release_approved': '/releases',
   'release_rejected': '/releases',
   'release_update': '/releases',
+  'review_result': '/releases',
   'payout': '/wallet',
   'payout_processed': '/wallet',
   'payment': '/wallet',
+  'royalty_update': '/revenue',
   'message': '/messages',
   'new_message': '/messages',
   'collab_invite': '/collaborations',
   'collab_accepted': '/collaborations',
   'collab_rejected': '/collaborations',
+  'collab_response': '/collaborations',
+  'collaboration_invite': '/collaborations',
+  'collaboration_accepted': '/collaborations',
+  'collaboration_declined': '/collaborations',
   'content_id_claim': '/content-id',
   'content_id': '/content-id',
+  'canvas': '/spotify-canvas',
   'campaign': '/analytics',
   'subscription': '/settings',
   'beat_purchase': '/wallet',
@@ -37,10 +45,16 @@ const NOTIFICATION_ROUTES = {
   'spotify': '/spotify',
   'weekly_digest': '/analytics',
   'verification': '/settings',
+  'feature_announcement': '/features',
+  'draft_reminder': '/releases',
+  'schedule_reminder': '/admin',
+  'new_signup': '/admin/users',
 };
 
 const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate }) => (
-  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50" data-testid="notification-panel">
+  <div
+    className="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-1rem))] sm:w-96 max-w-[calc(100vw-1rem)] translate-x-0 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 max-[420px]:right-[-3.25rem]"
+    data-testid="notification-panel">
     <div className="flex items-center justify-between p-4 border-b border-white/10">
       <h3 className="text-sm font-bold text-white">Notifications</h3>
       {notifications.some(n => !n.read) && (
@@ -168,6 +182,7 @@ const DashboardLayout = ({ children }) => {
   };
 
   const plan = user?.plan || 'free';
+  const planStatusLabel = plan === 'free' ? 'FREE PLAN' : `${plan.toUpperCase()} ACTIVE`;
   const LOCKED = {
     free: ['spotify_canvas', 'content_id', 'collaborations', 'presave', 'fan_analytics', 'leaderboard', 'goals', 'ai_strategy'],
     rise: ['spotify_canvas', 'content_id', 'leaderboard', 'presave', 'ai_strategy'],
@@ -293,7 +308,9 @@ const DashboardLayout = ({ children }) => {
             <div className="flex-1" />
             <div className="flex items-center gap-4">
               <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
-              <span className="text-xs px-3 py-1 bg-[#FFD700]/10 text-[#FFD700] rounded-full font-semibold uppercase tracking-wider hidden sm:inline">{user?.plan || 'Free'}</span>
+              <span className="text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-[0.2em] hidden sm:inline bg-white/5 text-white/70 border border-white/10">
+                {planStatusLabel}
+              </span>
               {/* Notification Bell */}
               <div className="relative" ref={notifRef}>
                 <button onClick={toggleNotifications} className="relative p-2 hover:bg-white/5 rounded-lg transition-colors" data-testid="notification-bell">

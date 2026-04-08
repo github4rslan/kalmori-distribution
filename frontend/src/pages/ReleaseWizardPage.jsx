@@ -236,6 +236,14 @@ export default function ReleaseWizardPage() {
     }
     setLoading(true);
     try {
+      const sanitizePeople = (items = []) =>
+        items
+          .map((item) => ({
+            role: item?.role || '',
+            name: item?.name || '',
+          }))
+          .filter((item) => item.role || item.name);
+
       // Create release with all metadata
       const releaseData = {
         title: form.title, release_type: form.product_type.toLowerCase() || 'single',
@@ -264,8 +272,24 @@ export default function ReleaseWizardPage() {
       for (const track of allTracks) {
         if (!track.title) continue;
         const trackRes = await axios.post(`${API}/tracks`, {
-          release_id: newId, title: track.title,
-          track_number: track.track_number, explicit: track.explicit,
+          release_id: newId,
+          title: track.title,
+          track_number: track.track_number,
+          explicit: track.explicit,
+          title_version: track.title_version || '',
+          isrc: track.isrc || '',
+          dolby_atmos_isrc: track.dolby_atmos_isrc || '',
+          iswc: track.iswc || '',
+          audio_language: track.audio_language || 'English',
+          production: track.production || '',
+          publisher: track.publisher || '',
+          preview_start: track.preview_start || '00:30',
+          preview_end: track.preview_end || '00:00',
+          main_artist: track.main_artist || form.main_artist || '',
+          artists: sanitizePeople(track.artists),
+          main_contributors: sanitizePeople(track.main_contributors),
+          contributors: sanitizePeople(track.contributors),
+          audio_file_name: track.audioName || '',
         }, { headers });
         if (track.audioFile) {
           const audioFD = new FormData();

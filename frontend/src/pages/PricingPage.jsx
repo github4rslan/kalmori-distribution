@@ -83,7 +83,7 @@ const plans = [
 
 export default function PricingPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, checkAuth, updateUser } = useAuth();
   const [upgrading, setUpgrading] = useState(null);
   const [promoCode, setPromoCode] = useState('');
   const [promoResult, setPromoResult] = useState(null);
@@ -108,14 +108,14 @@ export default function PricingPage() {
     const subscription = params.get('subscription');
     const plan = params.get('plan');
     if (subscription === 'success' && plan) {
-      const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
-        || localStorage.getItem('access_token');
       axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${plan}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-      }).then(() => {
+        withCredentials: true,
+      }).then(async () => {
+        updateUser?.({ plan });
+        await checkAuth?.();
         toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
         window.history.replaceState({}, '', '/pricing');
-        setTimeout(() => window.location.reload(), 500);
+        setTimeout(() => window.location.assign('/settings'), 500);
       }).catch(() => toast.error('Failed to activate plan'));
     } else if (subscription === 'cancelled') {
       toast.error('Payment was cancelled');
@@ -131,26 +131,18 @@ export default function PricingPage() {
       if (planId !== 'free') {
         const res = await axios.post(`${API_URL}/api/subscriptions/checkout`, {
           plan: planId, origin_url: window.location.origin,
-        }, { headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }, withCredentials: true });
+        }, { withCredentials: true });
         if (res.data.checkout_url) { window.location.href = res.data.checkout_url; return; }
       }
-      const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
-        || localStorage.getItem('access_token');
-      await axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${planId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
+      const downgradeRes = await axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${planId}`, {}, {
+        withCredentials: true,
       });
+      updateUser?.({ plan: downgradeRes.data.plan });
+      await checkAuth?.();
       toast.success(`Plan changed to ${plans.find(p => p.id === planId)?.name}!`);
-      window.location.reload();
+      window.location.assign('/settings');
     } catch (err) {
-      try {
-        const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1]
-          || localStorage.getItem('access_token');
-        await axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${planId}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }, withCredentials: true,
-        });
-        toast.success(`Plan changed to ${plans.find(p => p.id === planId)?.name}!`);
-        window.location.reload();
-      } catch { toast.error('Failed to change plan'); }
+      toast.error(err.response?.data?.detail || 'Failed to change plan');
     } finally { setUpgrading(null); }
   };
 

@@ -20,9 +20,11 @@ async def get_my_plan(request: Request):
     user = await get_current_user(request)
     plan = user.get("plan", "free")
     plan_info = SUBSCRIPTION_PLANS.get(plan, SUBSCRIPTION_PLANS["free"])
+    subscription = await db.subscriptions.find_one({"user_id": user["id"]}, {"_id": 0})
     return {
         "plan": plan,
         "name": plan_info["name"],
+        "status": subscription.get("status", "active") if subscription else ("active" if plan != "free" else "free"),
         "revenue_share": plan_info["revenue_share"],
         "max_releases": plan_info.get("max_releases", 1),
         "locked_features": plan_info.get("locked", []),
@@ -33,13 +35,27 @@ async def upgrade_subscription(plan: str, request: Request):
     user = await get_current_user(request)
     if plan not in SUBSCRIPTION_PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan")
+    current_plan = user.get("plan", "free")
+    target_plan = SUBSCRIPTION_PLANS[plan]
+    if target_plan["price"] > 0 and plan != current_plan:
+        paid_transactions = await db.payment_transactions.find(
+            {"user_id": user["id"], "type": "subscription", "plan": plan, "payment_status": "paid"},
+            {"_id": 0},
+        ).sort("created_at", -1).to_list(1)
+        txn = paid_transactions[0] if paid_transactions else None
+        if not txn:
+            raise HTTPException(status_code=402, detail="Payment required before upgrading this plan")
     await db.users.update_one({"id": user["id"]}, {"$set": {"plan": plan}})
     await db.subscriptions.update_one({"user_id": user["id"]}, {"$set": {
         "user_id": user["id"], "plan": plan, "status": "active",
-        "price": SUBSCRIPTION_PLANS[plan]["price"],
+        "price": target_plan["price"],
         "updated_at": datetime.now(timezone.utc).isoformat()
     }}, upsert=True)
-    return {"message": f"Upgraded to {SUBSCRIPTION_PLANS[plan]['name']} plan", "plan": plan}
+    return {
+        "message": f"Upgraded to {target_plan['name']} plan",
+        "plan": plan,
+        "status": "active",
+    }
 
 class SubscriptionCheckout(BaseModel):
     plan: str

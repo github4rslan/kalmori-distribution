@@ -33,6 +33,7 @@ from core import (
     hash_password, verify_password, create_access_token, create_refresh_token,
     generate_upc, generate_isrc, get_current_user, require_admin,
     init_storage, put_object, get_object, get_jwt_secret, JWT_ALGORITHM,
+    resolve_feature_action_url,
 )
 import jwt
 import requests
@@ -548,25 +549,70 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
     release = await db.releases.find_one({"id": release_id, "artist_id": user["id"]}, {"_id": 0})
     if not release: raise HTTPException(status_code=404, detail="Release not found")
     if not release.get("cover_art_url"): raise HTTPException(status_code=400, detail="Release must have cover art")
-    tracks = await db.tracks.find({"release_id": release_id, "audio_url": {"$ne": None}}).to_list(50)
+    tracks = await db.tracks.find({"release_id": release_id, "audio_url": {"$ne": None}}, {"_id": 0}).sort("track_number", 1).to_list(50)
     if not tracks: raise HTTPException(status_code=400, detail="Release must have at least one track with audio")
     if user.get("plan") != "free" and release.get("payment_status") != "paid":
         raise HTTPException(status_code=400, detail="Payment required before distribution")
+    artist_profile = await db.artist_profiles.find_one({"user_id": user["id"]}, {"_id": 0}) or {}
+    submitted_at = datetime.now(timezone.utc).isoformat()
+    track_bank = []
+    for track in tracks:
+        audio_url = track.get("audio_url")
+        audio_format = audio_url.split(".")[-1].lower() if audio_url and "." in audio_url else ""
+        track_bank.append({
+            **track,
+            "audio_format": audio_format,
+            "audio_uploaded": bool(audio_url),
+            "submission_locked_at": submitted_at,
+        })
     for store_id in stores:
         store = next((s for s in DSP_STORES if s["store_id"] == store_id), None)
         if store:
             await db.distributions.update_one({"release_id": release_id, "store_id": store_id},
                 {"$set": {"release_id": release_id, "artist_id": user["id"], "store_id": store_id,
                     "store_name": store["store_name"], "status": "pending_review",
-                    "submitted_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+                    "submitted_at": submitted_at}}, upsert=True)
     submission_id = f"sub_{uuid.uuid4().hex[:12]}"
     await db.submissions.update_one({"release_id": release_id},
         {"$set": {"id": submission_id, "release_id": release_id, "artist_id": user["id"],
             "artist_name": user.get("artist_name", user["name"]), "release_title": release["title"],
             "release_type": release["release_type"], "genre": release.get("genre", ""),
             "track_count": len(tracks), "stores": stores, "status": "pending_review",
-            "submitted_at": datetime.now(timezone.utc).isoformat(),
-            "reviewed_at": None, "reviewed_by": None, "review_notes": None}}, upsert=True)
+            "submitted_at": submitted_at,
+            "reviewed_at": None, "reviewed_by": None, "review_notes": None,
+            "cover_art_url": release.get("cover_art_url"),
+            "payment_status": release.get("payment_status", "pending"),
+            "submission_bank": {
+                "release": {**release, "submitted_stores": stores, "submitted_at": submitted_at},
+                "artist": {
+                    "id": user["id"],
+                    "name": user.get("name", ""),
+                    "artist_name": user.get("artist_name", ""),
+                    "email": user.get("email", ""),
+                    "plan": user.get("plan", "free"),
+                    "user_role": user.get("user_role", user.get("role", "artist")),
+                    "country": user.get("country", ""),
+                    "state": user.get("state", ""),
+                    "town": user.get("town", ""),
+                    "post_code": user.get("post_code", ""),
+                    "phone_number": user.get("phone_number", ""),
+                    "legal_name": user.get("legal_name", ""),
+                },
+                "artist_profile": artist_profile,
+                "tracks": track_bank,
+                "audio_bank": [
+                    {
+                        "track_id": track["id"],
+                        "track_number": track.get("track_number"),
+                        "title": track.get("title", ""),
+                        "audio_url": track.get("audio_url"),
+                        "audio_format": track.get("audio_format", ""),
+                        "duration": track.get("duration"),
+                        "isrc": track.get("isrc", ""),
+                    }
+                    for track in track_bank
+                ],
+            }}}, upsert=True)
     await db.releases.update_one({"id": release_id}, {"$set": {"status": "pending_review", "submitted_stores": stores}})
     # Notify ALL admins
     all_admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(50)
@@ -1110,6 +1156,7 @@ async def get_features(request: Request):
         min_level = plan_hierarchy.get(a.get("min_plan", "free"), 0)
         a["has_access"] = user_level >= min_level
         a["upgrade_plan"] = a.get("min_plan", "free").capitalize() if not a["has_access"] else None
+        a["action_url"] = a.get("action_url") or resolve_feature_action_url(a.get("category", "general"), a["has_access"])
     return announcements
 
 # Admin routes moved to routes/admin_routes.py
@@ -1807,6 +1854,7 @@ async def get_notification_prefs(request: Request):
         "email_collaborations": True,
         "email_payments": True,
         "email_marketing": False,
+        "email_analytics_report": True,
         "push_releases": True,
         "push_collaborations": True,
         "push_payments": True,
@@ -1830,7 +1878,7 @@ async def update_notification_prefs(request: Request):
     body = await request.json()
     allowed_keys = ["email_releases", "email_collaborations", "email_payments", "email_marketing",
                     "push_releases", "push_collaborations", "push_payments", "push_milestones",
-                    "email_weekly_digest"]
+                    "email_weekly_digest", "email_analytics_report"]
     updates = {k: v for k, v in body.items() if k in allowed_keys and isinstance(v, bool)}
     if not updates:
         raise HTTPException(status_code=400, detail="No valid preferences provided")

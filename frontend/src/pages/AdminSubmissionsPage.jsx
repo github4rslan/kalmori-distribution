@@ -2,8 +2,23 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import AdminLayout from '../components/AdminLayout';
-import { CheckCircle, XCircle, Clock, Eye, CaretLeft, CaretRight, FunnelSimple, ClipboardText } from '@phosphor-icons/react';
+import { CheckCircle, XCircle, Clock, Eye, CaretLeft, CaretRight, FunnelSimple, ClipboardText, MusicNotes, Waveform, DownloadSimple } from '@phosphor-icons/react';
 import { Button } from '../components/ui/button';
+
+const formatList = (items = []) => {
+  if (!Array.isArray(items) || items.length === 0) return '—';
+  const values = items
+    .map((item) => {
+      if (typeof item === 'string') return item;
+      if (!item) return '';
+      return [item.role, item.name].filter(Boolean).join(': ');
+    })
+    .filter(Boolean);
+  return values.length > 0 ? values.join(', ') : '—';
+};
+
+const detailFields = (fields) =>
+  fields.filter((field) => field.value !== undefined && field.value !== null && field.value !== '');
 
 const AdminSubmissionsPage = () => {
   const [submissions, setSubmissions] = useState([]);
@@ -143,7 +158,6 @@ const AdminSubmissionsPage = () => {
             </div>
           )}
 
-          {/* Pagination */}
           {pages > 1 && (
             <div className="flex items-center justify-between p-4 border-t border-white/10">
               <p className="text-xs text-gray-500">{total} total submissions</p>
@@ -156,66 +170,185 @@ const AdminSubmissionsPage = () => {
           )}
         </div>
 
-        {/* Review Modal */}
         {selectedSub && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="review-modal">
             <div className="absolute inset-0 bg-black/70" onClick={() => { setSelectedSub(null); setDetail(null); setReviewNotes(''); }} />
-            <div className="relative bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="relative bg-[#111] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-y-auto">
               {detailLoading ? (
                 <div className="flex items-center justify-center py-16"><div className="w-6 h-6 border-2 border-[#E53935] border-t-transparent rounded-full animate-spin" /></div>
               ) : detail ? (
                 <div className="p-6 space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <h2 className="text-xl font-bold">Review Submission</h2>
                     <span className={`text-xs px-2 py-1 rounded-full ${statusColor(detail.submission.status)}`}>{detail.submission.status.replace('_', ' ')}</span>
                   </div>
 
-                  {/* Release Info */}
-                  <div className="bg-white/5 p-4 rounded-lg space-y-2">
-                    <h3 className="font-medium text-sm text-gray-300">Release Details</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div><span className="text-gray-500">Title:</span> <span className="ml-2">{detail.release?.title}</span></div>
-                      <div><span className="text-gray-500">Type:</span> <span className="ml-2 capitalize">{detail.release?.release_type}</span></div>
-                      <div><span className="text-gray-500">Genre:</span> <span className="ml-2">{detail.release?.genre}</span></div>
-                      <div><span className="text-gray-500">Release Date:</span> <span className="ml-2">{detail.release?.release_date}</span></div>
-                      <div><span className="text-gray-500">UPC:</span> <span className="ml-2 font-mono">{detail.release?.upc}</span></div>
-                      <div><span className="text-gray-500">Explicit:</span> <span className="ml-2">{detail.release?.explicit ? 'Yes' : 'No'}</span></div>
-                    </div>
-                  </div>
+                  <div className="grid gap-6 xl:grid-cols-[1.15fr_1fr]">
+                    <div className="bg-white/5 p-4 rounded-lg space-y-4">
+                      <div className="flex items-center gap-2">
+                        <MusicNotes className="w-4 h-4 text-[#E040FB]" />
+                        <h3 className="font-medium text-sm text-gray-300">General Information</h3>
+                      </div>
 
-                  {/* Artist Info */}
-                  <div className="bg-white/5 p-4 rounded-lg space-y-2">
-                    <h3 className="font-medium text-sm text-gray-300">Artist</h3>
-                    <div className="text-sm">
-                      <span className="text-gray-500">Name:</span> <span className="ml-2">{detail.artist?.artist_name || detail.artist?.name}</span>
-                      <br />
-                      <span className="text-gray-500">Email:</span> <span className="ml-2">{detail.artist?.email}</span>
-                      <br />
-                      <span className="text-gray-500">Plan:</span> <span className="ml-2 capitalize">{detail.artist?.plan}</span>
-                    </div>
-                  </div>
-
-                  {/* Tracks */}
-                  <div className="bg-white/5 p-4 rounded-lg space-y-2">
-                    <h3 className="font-medium text-sm text-gray-300">Tracks ({detail.tracks?.length || 0})</h3>
-                    {detail.tracks?.length > 0 ? (
-                      <div className="space-y-2">
-                        {detail.tracks.map((t, i) => (
-                          <div key={t.id} className="flex items-center justify-between text-sm p-2 bg-white/5 rounded">
-                            <span>{t.track_number}. {t.title}</span>
-                            <div className="flex items-center gap-3 text-xs text-gray-500">
-                              <span className="font-mono">{t.isrc}</span>
-                              <span className={t.audio_url ? 'text-[#4CAF50]' : 'text-[#E53935]'}>{t.audio_url ? 'Audio uploaded' : 'No audio'}</span>
-                            </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        {detailFields([
+                          { label: 'Submitted', value: detail.submission?.submitted_at ? new Date(detail.submission.submitted_at).toLocaleString() : '—' },
+                          { label: 'Payment Status', value: detail.submission?.payment_status || detail.release?.payment_status || 'pending' },
+                          { label: 'Release Title', value: detail.release?.title || '—' },
+                          { label: 'Title Version', value: detail.release?.title_version || '—' },
+                          { label: 'Release Type', value: detail.release?.release_type ? detail.release.release_type.charAt(0).toUpperCase() + detail.release.release_type.slice(1) : '—' },
+                          { label: 'Main Artist', value: detail.release?.main_artist || detail.artist?.artist_name || detail.artist?.name || '—' },
+                          { label: 'Label', value: detail.release?.label || '—' },
+                          { label: 'Genre', value: detail.release?.genre || '—' },
+                          { label: 'Subgenre', value: detail.release?.subgenre || '—' },
+                          { label: 'Metadata Language', value: detail.release?.language || '—' },
+                          { label: 'Release Date', value: detail.release?.release_date || '—' },
+                          { label: 'UPC', value: detail.release?.upc || '—', mono: true },
+                          { label: 'Catalog Number', value: detail.release?.catalog_number || '—' },
+                          { label: 'Production Year', value: detail.release?.production_year || '—' },
+                          { label: 'Compilation', value: detail.release?.is_compilation ? 'Yes' : 'No' },
+                          { label: 'Explicit Release', value: detail.release?.explicit ? 'Yes' : 'No' },
+                          { label: 'Territory', value: detail.release?.territory || '—' },
+                          { label: 'Stores', value: detail.submission?.stores?.join(', ') || detail.release?.distributed_platforms?.join(', ') || '—' },
+                          { label: 'Rights Confirmed', value: detail.release?.rights_confirmed ? 'Yes' : 'No' },
+                          { label: 'Tracks Stored', value: detail.audio_bank?.length || detail.tracks?.length || 0 },
+                          { label: 'Artist Email', value: detail.artist?.email || '—' },
+                          { label: 'Artist Name', value: detail.artist?.artist_name || detail.artist?.name || '—' },
+                          { label: 'Full Name', value: detail.artist?.name || '—' },
+                          { label: 'Plan', value: detail.artist?.plan ? detail.artist.plan.charAt(0).toUpperCase() + detail.artist.plan.slice(1) : '—' },
+                          { label: 'Role', value: detail.artist?.user_role || detail.artist?.role || 'artist' },
+                          { label: 'Legal Name', value: detail.artist?.legal_name || '—' },
+                          { label: 'Phone Number', value: detail.artist?.phone_number || '—' },
+                          { label: 'Country', value: detail.artist?.country || detail.artist_profile?.country || '—' },
+                          { label: 'State', value: detail.artist?.state || '—' },
+                          { label: 'Town / City', value: detail.artist?.town || '—' },
+                          { label: 'Post Code', value: detail.artist?.post_code || '—' },
+                          { label: 'Website', value: detail.artist_profile?.website || '—' },
+                          { label: 'Spotify URL', value: detail.artist_profile?.spotify_url || '—' },
+                          { label: 'Apple Music URL', value: detail.artist_profile?.apple_music_url || '—' },
+                          { label: 'Instagram', value: detail.artist_profile?.instagram || '—' },
+                          { label: 'Twitter', value: detail.artist_profile?.twitter || '—' },
+                        ]).map((field) => (
+                          <div key={field.label}>
+                            <span className="text-gray-500">{field.label}:</span>
+                            <span className={`ml-2 break-words ${field.mono ? 'font-mono' : ''}`}>{field.value}</span>
                           </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No tracks</p>
-                    )}
+
+                      {detail.release?.copyright_line && (
+                        <div className="text-sm">
+                          <span className="text-gray-500">Copyright Line:</span>
+                          <p className="mt-1 text-gray-300">{detail.release.copyright_line}</p>
+                        </div>
+                      )}
+
+                      {detail.release?.production_line && (
+                        <div className="text-sm">
+                          <span className="text-gray-500">Production Line:</span>
+                          <p className="mt-1 text-gray-300">{detail.release.production_line}</p>
+                        </div>
+                      )}
+
+                      {detail.artist_profile?.bio && (
+                        <div className="text-sm">
+                          <span className="text-gray-500">Bio:</span>
+                          <p className="mt-1 text-gray-300 leading-relaxed">{detail.artist_profile.bio}</p>
+                        </div>
+                      )}
+
+                      {detail.release?.description && (
+                        <div className="text-sm">
+                          <span className="text-gray-500">Description:</span>
+                          <p className="mt-1 text-gray-300 leading-relaxed">{detail.release.description}</p>
+                        </div>
+                      )}
+
+                      {detail.release?.cover_art_url && (
+                        <div className="pt-1">
+                          <p className="text-sm text-gray-500 mb-2">Cover Art</p>
+                          <img
+                            src={`${API}/files/${detail.release.cover_art_url}`}
+                            alt={detail.release?.title || 'Cover art'}
+                            className="w-28 h-28 rounded-xl object-cover border border-white/10"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-white/5 p-4 rounded-lg space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Waveform className="w-4 h-4 text-[#7C4DFF]" />
+                        <h3 className="font-medium text-sm text-gray-300">Audio Information</h3>
+                      </div>
+
+                      {detail.tracks?.length > 0 ? (
+                        <div className="space-y-3">
+                          {detail.tracks.map((track, index) => {
+                            const audioItem = detail.audio_bank?.find((item) => item.track_id === track.id) || {};
+                            return (
+                              <div key={track.id || `${track.track_number}-${index}`} className="rounded-lg border border-white/5 bg-black/20 p-3 space-y-3">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <p className="text-sm font-medium text-white">{track.track_number}. {track.title}</p>
+                                    <p className="text-xs text-gray-500">{track.title_version || 'Original version'}</p>
+                                  </div>
+                                  <span className={`text-xs ${track.audio_url ? 'text-[#4CAF50]' : 'text-[#E53935]'}`}>
+                                    {track.audio_url ? 'Audio uploaded' : 'No audio'}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-300">
+                                  {detailFields([
+                                    { label: 'Audio File', value: track.audio_file_name || audioItem.audio_file_name || '—' },
+                                    { label: 'Audio Format', value: audioItem.audio_format ? audioItem.audio_format.toUpperCase() : '—' },
+                                    { label: 'Track Language', value: track.audio_language || '—' },
+                                    { label: 'Explicit', value: track.explicit ? 'Yes' : 'No' },
+                                    { label: 'ISRC', value: track.isrc || '—', mono: true },
+                                    { label: 'Dolby Atmos ISRC', value: track.dolby_atmos_isrc || '—', mono: true },
+                                    { label: 'ISWC', value: track.iswc || '—', mono: true },
+                                    { label: 'Main Artist', value: track.main_artist || detail.release?.main_artist || '—' },
+                                    { label: 'Artists', value: formatList(track.artists) },
+                                    { label: 'Main Contributors', value: formatList(track.main_contributors) },
+                                    { label: 'Contributors', value: formatList(track.contributors) },
+                                    { label: 'Publisher', value: track.publisher || '—' },
+                                    { label: 'Production', value: track.production || '—' },
+                                    { label: 'Preview Start', value: track.preview_start || '—' },
+                                    { label: 'Preview End', value: track.preview_end || '—' },
+                                    { label: 'Duration', value: track.duration ? `${track.duration}s` : '—' },
+                                  ]).map((field) => (
+                                    <div key={field.label}>
+                                      <span className="text-gray-500">{field.label}:</span>
+                                      <span className={`ml-2 break-words ${field.mono ? 'font-mono' : ''}`}>{field.value}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {audioItem.audio_url && (
+                                  <>
+                                    <a
+                                      href={`${API}/tracks/${audioItem.track_id}/stream`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="btn-kalmori-ghost inline-flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold"
+                                    >
+                                      <DownloadSimple className="w-3.5 h-3.5" /> Open Audio
+                                    </a>
+                                    <audio controls className="w-full">
+                                      <source src={`${API}/tracks/${audioItem.track_id}/stream`} />
+                                    </audio>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No audio information stored for this submission.</p>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Review Action */}
                   {detail.submission.status === 'pending_review' && (
                     <div className="space-y-3 pt-2 border-t border-white/10">
                       <label className="block text-sm text-gray-400">Review Notes (optional)</label>
@@ -235,7 +368,6 @@ const AdminSubmissionsPage = () => {
                     </div>
                   )}
 
-                  {/* Already reviewed */}
                   {detail.submission.status !== 'pending_review' && (
                     <div className="p-4 bg-white/5 rounded-lg text-sm">
                       <p className="text-gray-400">Reviewed on {new Date(detail.submission.reviewed_at).toLocaleString()}</p>

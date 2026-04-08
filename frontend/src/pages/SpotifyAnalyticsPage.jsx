@@ -54,7 +54,7 @@ export default function SpotifyAnalyticsPage() {
         <h1 className="text-2xl font-bold text-white mb-3">Connect Spotify</h1>
         <p className="text-sm text-gray-400 mb-6">Link your Spotify account to see real-time artist data, top tracks, and follower analytics.</p>
         {error && <p className="text-sm text-red-400 mb-4" data-testid="spotify-error">{error}</p>}
-        <button onClick={() => navigate('/settings')} className="px-6 py-3 bg-[#1DB954] text-white rounded-full text-sm font-bold hover:bg-[#1DB954]/80 transition-all" data-testid="go-to-settings-btn">
+        <button onClick={() => navigate('/settings')} className="btn-kalmori px-6 py-3 rounded-full text-sm font-bold" data-testid="go-to-settings-btn">
           Go to Settings <ArrowRight className="w-4 h-4 inline ml-1" />
         </button>
       </div>
@@ -67,7 +67,7 @@ export default function SpotifyAnalyticsPage() {
         <SpotifyLogo className="w-12 h-12 text-[#1DB954] mx-auto mb-4" weight="fill" />
         <h1 className="text-xl font-bold text-white mb-2">No Artist Linked</h1>
         <p className="text-sm text-gray-400 mb-4">Go to Settings &gt; Integrations to search and link your Spotify artist profile.</p>
-        <button onClick={() => navigate('/settings')} className="px-5 py-2 bg-white/10 text-white rounded-full text-sm hover:bg-white/15">
+        <button onClick={() => navigate('/settings')} className="btn-kalmori-ghost px-5 py-2 rounded-full text-sm">
           Open Settings
         </button>
       </div>
