@@ -34,6 +34,26 @@ export default function RevenueAnalyticsPage() {
   const [calcResult, setCalcResult] = useState(null);
   const [calcLoading, setCalcLoading] = useState(false);
 
+  const handleExport = async (format) => {
+    try {
+      const res = await axios.get(`${API}/analytics/revenue/export/${format}`, {
+        withCredentials: true,
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `revenue-report.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Export failed. Please try again.');
+    }
+    setShowExport(false);
+  };
+
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
@@ -110,22 +130,20 @@ export default function RevenueAnalyticsPage() {
               </button>
               {showExport && (
                 <div className="absolute right-0 top-10 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden min-w-[180px]">
-                  <a
-                    href={`${API}/analytics/revenue/export/csv`}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
-                    onClick={() => setShowExport(false)}
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors"
+                    onClick={() => handleExport('csv')}
                     data-testid="export-csv-btn"
                   >
                     <DownloadSimple className="w-4 h-4" /> Download CSV
-                  </a>
-                  <a
-                    href={`${API}/analytics/revenue/export/pdf`}
-                    className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors border-t border-white/5"
-                    onClick={() => setShowExport(false)}
+                  </button>
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors border-t border-white/5"
+                    onClick={() => handleExport('pdf')}
                     data-testid="export-pdf-btn"
                   >
                     <DownloadSimple className="w-4 h-4" /> Download PDF
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
