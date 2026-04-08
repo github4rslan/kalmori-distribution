@@ -53,7 +53,7 @@ const NOTIFICATION_ROUTES = {
 
 const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate }) => (
   <div
-    className="absolute right-0 top-full mt-2 w-[min(22rem,calc(100vw-1rem))] sm:w-96 max-w-[calc(100vw-1rem)] translate-x-0 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 max-[420px]:right-[-3.25rem]"
+    className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 sm:left-auto top-[72px] sm:top-full sm:mt-2 w-auto sm:w-96 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]"
     data-testid="notification-panel">
     <div className="flex items-center justify-between p-4 border-b border-white/10">
       <h3 className="text-sm font-bold text-white">Notifications</h3>
