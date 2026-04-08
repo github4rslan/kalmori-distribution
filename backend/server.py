@@ -2096,6 +2096,10 @@ async def log_cookie_consent(request: Request):
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+@app.get("/ping")
+async def ping():
+    return {"ok": True}
+
 # ============= REGISTER ROUTERS =============
 app.include_router(api_router)
 
