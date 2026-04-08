@@ -93,6 +93,7 @@ import GoalsPage from './pages/GoalsPage';
 import ArtistProfilePage from './pages/ArtistProfilePage';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import LabelDashboardPage from './pages/LabelDashboardPage';
+import ProducerBeatBankPage from './pages/ProducerBeatBankPage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
 import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
 import ReferralPage from './pages/ReferralPage';
@@ -345,6 +346,7 @@ const AppRouter = () => {
       <Route path="/artist/:slug" element={<ArtistProfilePage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/label" element={<ProtectedRoute><LabelDashboardPage /></ProtectedRoute>} />
+      <Route path="/beat-bank" element={<ProtectedRoute><ProducerBeatBankPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
       <Route path="/features" element={<ProtectedRoute><FeaturesPage /></ProtectedRoute>} />

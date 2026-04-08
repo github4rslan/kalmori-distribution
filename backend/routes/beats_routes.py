@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 VOICE_TAG_PATH = os.path.join(os.path.dirname(__file__), '..', 'kalmori_tag.mp3')
 
+# Default platform fee percentage taken from each beat sale
+DEFAULT_PLATFORM_FEE_PCT = 15.0
+
 def _watermark_audio(audio_bytes: bytes, tag_interval_sec: int = 15) -> bytes:
     """Overlay voice tag on audio at regular intervals"""
     try:
@@ -28,9 +31,8 @@ def _watermark_audio(audio_bytes: bytes, tag_interval_sec: int = 15) -> bytes:
         return buf.getvalue()
     except Exception as e:
         logger.error(f"Watermark failed: {e}")
-        return audio_bytes  # fallback to original if watermarking fails
+        return audio_bytes
 
-logger = logging.getLogger(__name__)
 
 beats_router = APIRouter(prefix="/api/beats", tags=["Beats"])
 
@@ -51,6 +53,18 @@ def init_beats_routes(database, put_obj_fn, get_obj_fn, get_user_fn, require_adm
     require_admin = require_admin_fn
 
 
+PRODUCER_ROLES = {"producer", "label", "label_producer", "admin"}
+
+
+async def _require_producer_or_admin(request: Request):
+    """Allow producer, label, label_producer, or admin"""
+    user = await get_current_user(request)
+    role = user.get("user_role") or user.get("role") or ""
+    if role not in PRODUCER_ROLES:
+        raise HTTPException(status_code=403, detail="Only producers and labels can perform this action")
+    return user
+
+
 class BeatCreate(BaseModel):
     title: str
     genre: str
@@ -62,6 +76,18 @@ class BeatCreate(BaseModel):
     price_premium: float = 79.99
     price_unlimited: float = 149.99
     price_exclusive: float = 499.99
+    description: Optional[str] = ""
+
+
+class BeatSaleRequest(BaseModel):
+    beat_id: str
+    license_type: str  # basic_lease, premium_lease, unlimited_lease, exclusive
+    buyer_id: str
+    amount: float
+
+
+class PlatformFeeUpdate(BaseModel):
+    fee_percentage: float  # 0-100
 
 
 @beats_router.get("")
@@ -71,6 +97,7 @@ async def list_beats(
     bpm_min: Optional[int] = None, bpm_max: Optional[int] = None,
     price_min: Optional[float] = None, price_max: Optional[float] = None,
     sort_by: Optional[str] = "newest",
+    producer_id: Optional[str] = None,
     limit: int = 50
 ):
     query = {"status": "active"}
@@ -80,12 +107,15 @@ async def list_beats(
         query["mood"] = {"$regex": mood, "$options": "i"}
     if key:
         query["key"] = {"$regex": f"^{key}", "$options": "i"}
+    if producer_id:
+        query["created_by"] = producer_id
     if search:
         query["$or"] = [
             {"title": {"$regex": search, "$options": "i"}},
             {"genre": {"$regex": search, "$options": "i"}},
             {"mood": {"$regex": search, "$options": "i"}},
             {"tags": {"$regex": search, "$options": "i"}},
+            {"producer_name": {"$regex": search, "$options": "i"}},
         ]
     if bpm_min is not None or bpm_max is not None:
         bpm_q = {}
@@ -105,21 +135,85 @@ async def list_beats(
     sort_field = "created_at"
     sort_dir = -1
     if sort_by == "price_low":
-        sort_field = "prices.basic_lease"
-        sort_dir = 1
+        sort_field = "prices.basic_lease"; sort_dir = 1
     elif sort_by == "price_high":
-        sort_field = "prices.basic_lease"
-        sort_dir = -1
+        sort_field = "prices.basic_lease"; sort_dir = -1
     elif sort_by == "bpm_low":
-        sort_field = "bpm"
-        sort_dir = 1
+        sort_field = "bpm"; sort_dir = 1
     elif sort_by == "bpm_high":
-        sort_field = "bpm"
-        sort_dir = -1
+        sort_field = "bpm"; sort_dir = -1
 
     beats = await db.beats.find(query, {"_id": 0}).sort(sort_field, sort_dir).limit(limit).to_list(limit)
     total = await db.beats.count_documents(query)
     return {"beats": beats, "total": total}
+
+
+@beats_router.get("/admin/all")
+async def admin_list_all_beats(request: Request, limit: int = 100):
+    """Admin: list ALL beats including inactive, with full producer info"""
+    await require_admin(request)
+    beats = await db.beats.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    total = await db.beats.count_documents({})
+    # Enrich with producer info
+    for beat in beats:
+        producer = await db.users.find_one({"id": beat.get("created_by")}, {"_id": 0, "password_hash": 0})
+        beat["producer_info"] = producer or {}
+    return {"beats": beats, "total": total}
+
+
+@beats_router.get("/my")
+async def my_beats(request: Request):
+    """Producer: get own beats"""
+    user = await _require_producer_or_admin(request)
+    beats = await db.beats.find({"created_by": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    total = await db.beats.count_documents({"created_by": user["id"]})
+    return {"beats": beats, "total": total}
+
+
+@beats_router.get("/my/sales")
+async def my_beat_sales(request: Request):
+    """Producer: get own beat sales log"""
+    user = await _require_producer_or_admin(request)
+    sales = await db.beat_sales.find({"producer_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    total_revenue = sum(s.get("producer_amount", 0) for s in sales)
+    platform_revenue = sum(s.get("platform_fee_amount", 0) for s in sales)
+    return {"sales": sales, "total_revenue": total_revenue, "platform_revenue": platform_revenue, "count": len(sales)}
+
+
+@beats_router.get("/admin/sales")
+async def admin_all_sales(request: Request):
+    """Admin: get all beat sales"""
+    await require_admin(request)
+    sales = await db.beat_sales.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    total = sum(s.get("amount", 0) for s in sales)
+    platform_total = sum(s.get("platform_fee_amount", 0) for s in sales)
+    return {"sales": sales, "total_revenue": total, "platform_revenue": platform_total, "count": len(sales)}
+
+
+@beats_router.get("/platform-fee")
+async def get_platform_fee(request: Request):
+    """Get platform fee setting"""
+    try:
+        await get_current_user(request)
+    except:
+        pass
+    setting = await db.settings.find_one({"key": "beat_platform_fee"})
+    fee = setting["value"] if setting else DEFAULT_PLATFORM_FEE_PCT
+    return {"fee_percentage": fee}
+
+
+@beats_router.put("/platform-fee")
+async def update_platform_fee(data: PlatformFeeUpdate, request: Request):
+    """Admin: update platform fee percentage"""
+    await require_admin(request)
+    if not (0 <= data.fee_percentage <= 100):
+        raise HTTPException(status_code=400, detail="Fee must be between 0 and 100")
+    await db.settings.update_one(
+        {"key": "beat_platform_fee"},
+        {"$set": {"key": "beat_platform_fee", "value": data.fee_percentage, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"fee_percentage": data.fee_percentage, "message": "Platform fee updated"}
 
 
 @beats_router.get("/{beat_id}")
@@ -132,7 +226,8 @@ async def get_beat(beat_id: str):
 
 @beats_router.post("")
 async def create_beat(beat: BeatCreate, request: Request):
-    user = await require_admin(request)
+    """Producer, label, or admin can create beats"""
+    user = await _require_producer_or_admin(request)
     beat_id = f"beat_{uuid.uuid4().hex[:12]}"
     beat_doc = {
         "id": beat_id,
@@ -142,6 +237,7 @@ async def create_beat(beat: BeatCreate, request: Request):
         "key": beat.key,
         "mood": beat.mood,
         "tags": beat.tags,
+        "description": beat.description or "",
         "prices": {
             "basic_lease": beat.price_basic,
             "premium_lease": beat.price_premium,
@@ -154,7 +250,12 @@ async def create_beat(beat: BeatCreate, request: Request):
         "duration": None,
         "status": "active",
         "plays": 0,
+        "sales_count": 0,
+        "total_revenue": 0.0,
         "created_by": user["id"],
+        "producer_name": user.get("artist_name") or user.get("name") or user["email"],
+        "producer_email": user.get("email", ""),
+        "producer_role": user.get("user_role") or user.get("role"),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -165,59 +266,59 @@ async def create_beat(beat: BeatCreate, request: Request):
 
 @beats_router.post("/{beat_id}/audio")
 async def upload_beat_audio(beat_id: str, request: Request, file: UploadFile = File(...)):
-    await require_admin(request)
+    """Producer (owner) or admin can upload audio"""
+    user = await _require_producer_or_admin(request)
     beat = await db.beats.find_one({"id": beat_id})
     if not beat:
         raise HTTPException(status_code=404, detail="Beat not found")
-    
+    # Only owner or admin
+    role = user.get("user_role") or user.get("role") or ""
+    if beat["created_by"] != user["id"] and role != "admin":
+        raise HTTPException(status_code=403, detail="Not your beat")
+
     allowed = ["audio/mpeg", "audio/wav", "audio/mp3", "audio/x-wav", "audio/wave", "audio/x-m4a", "audio/mp4"]
     content_type = file.content_type or "audio/mpeg"
     if content_type not in allowed:
         raise HTTPException(status_code=400, detail=f"Unsupported audio type: {content_type}")
-    
+
     ext = file.filename.split(".")[-1] if "." in file.filename else "mp3"
     file_id = uuid.uuid4().hex
     path = f"{APP_NAME}/beats/{beat_id}/{file_id}.{ext}"
     data = await file.read()
-    
-    # Upload original (clean) audio
+
     put_object(path, data, content_type)
-    
-    # Generate and upload watermarked preview
+
     preview_path = f"{APP_NAME}/beats/{beat_id}/{file_id}_preview.mp3"
     try:
         watermarked = _watermark_audio(data)
         put_object(preview_path, watermarked, "audio/mpeg")
-        logger.info(f"Watermarked preview generated for beat {beat_id}")
     except Exception as e:
         logger.warning(f"Preview generation failed for {beat_id}: {e}")
-        preview_path = path  # fallback to original
-    
+        preview_path = path
+
     await db.beats.update_one(
         {"id": beat_id},
-        {"$set": {
-            "audio_url": path,
-            "preview_url": preview_path,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": {"audio_url": path, "preview_url": preview_path, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"audio_url": path, "preview_url": preview_path, "message": "Audio uploaded with watermarked preview"}
 
 
 @beats_router.post("/{beat_id}/cover")
 async def upload_beat_cover(beat_id: str, request: Request, file: UploadFile = File(...)):
-    await require_admin(request)
+    """Producer (owner) or admin can upload cover"""
+    user = await _require_producer_or_admin(request)
     beat = await db.beats.find_one({"id": beat_id})
     if not beat:
         raise HTTPException(status_code=404, detail="Beat not found")
-    
+    role = user.get("user_role") or user.get("role") or ""
+    if beat["created_by"] != user["id"] and role != "admin":
+        raise HTTPException(status_code=403, detail="Not your beat")
+
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     path = f"{APP_NAME}/beats/{beat_id}/cover.{ext}"
     data = await file.read()
     content_type = file.content_type or "image/jpeg"
-    
     put_object(path, data, content_type)
-    
     await db.beats.update_one(
         {"id": beat_id},
         {"$set": {"cover_url": path, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -230,15 +331,11 @@ async def stream_beat(beat_id: str):
     beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
     if not beat or not beat.get("audio_url"):
         raise HTTPException(status_code=404, detail="Audio not found")
-    
+
     from fastapi.responses import StreamingResponse
-    # Serve watermarked preview if available, otherwise original
     stream_url = beat.get("preview_url") or beat["audio_url"]
     data, content_type = get_object(stream_url)
-    
-    # Increment play count
     await db.beats.update_one({"id": beat_id}, {"$inc": {"plays": 1}})
-    
     return StreamingResponse(BytesIO(data), media_type=content_type, headers={
         "Content-Disposition": f'inline; filename="{beat.get("title", "beat")}_preview.mp3"',
         "Accept-Ranges": "bytes"
@@ -247,15 +344,18 @@ async def stream_beat(beat_id: str):
 
 @beats_router.put("/{beat_id}")
 async def update_beat(beat_id: str, update: dict, request: Request):
-    await require_admin(request)
+    """Producer (owner) or admin can update"""
+    user = await _require_producer_or_admin(request)
     beat = await db.beats.find_one({"id": beat_id})
     if not beat:
         raise HTTPException(status_code=404, detail="Beat not found")
-    
-    allowed_fields = {"title", "genre", "bpm", "key", "mood", "tags", "prices", "status", "duration"}
+    role = user.get("user_role") or user.get("role") or ""
+    if beat["created_by"] != user["id"] and role != "admin":
+        raise HTTPException(status_code=403, detail="Not your beat")
+
+    allowed_fields = {"title", "genre", "bpm", "key", "mood", "tags", "prices", "status", "duration", "description"}
     update_data = {k: v for k, v in update.items() if k in allowed_fields}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-    
     await db.beats.update_one({"id": beat_id}, {"$set": update_data})
     updated = await db.beats.find_one({"id": beat_id}, {"_id": 0})
     return updated
@@ -263,16 +363,68 @@ async def update_beat(beat_id: str, update: dict, request: Request):
 
 @beats_router.delete("/{beat_id}")
 async def delete_beat(beat_id: str, request: Request):
-    await require_admin(request)
-    result = await db.beats.delete_one({"id": beat_id})
-    if result.deleted_count == 0:
+    """Producer (owner) or admin can delete"""
+    user = await _require_producer_or_admin(request)
+    beat = await db.beats.find_one({"id": beat_id})
+    if not beat:
         raise HTTPException(status_code=404, detail="Beat not found")
+    role = user.get("user_role") or user.get("role") or ""
+    if beat["created_by"] != user["id"] and role != "admin":
+        raise HTTPException(status_code=403, detail="Not your beat")
+    await db.beats.delete_one({"id": beat_id})
     return {"message": "Beat deleted"}
+
+
+@beats_router.post("/{beat_id}/record-sale")
+async def record_beat_sale(beat_id: str, sale: BeatSaleRequest, request: Request):
+    """Record a beat sale and split revenue between producer and platform"""
+    beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+
+    # Get platform fee
+    setting = await db.settings.find_one({"key": "beat_platform_fee"})
+    fee_pct = setting["value"] if setting else DEFAULT_PLATFORM_FEE_PCT
+
+    platform_fee_amount = round(sale.amount * (fee_pct / 100), 2)
+    producer_amount = round(sale.amount - platform_fee_amount, 2)
+
+    sale_doc = {
+        "id": f"sale_{uuid.uuid4().hex[:12]}",
+        "beat_id": beat_id,
+        "beat_title": beat.get("title", ""),
+        "producer_id": beat.get("created_by"),
+        "producer_name": beat.get("producer_name", ""),
+        "buyer_id": sale.buyer_id,
+        "license_type": sale.license_type,
+        "amount": sale.amount,
+        "platform_fee_pct": fee_pct,
+        "platform_fee_amount": platform_fee_amount,
+        "producer_amount": producer_amount,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.beat_sales.insert_one(sale_doc)
+    sale_doc.pop("_id", None)
+
+    # Update beat stats
+    await db.beats.update_one(
+        {"id": beat_id},
+        {"$inc": {"sales_count": 1, "total_revenue": producer_amount}}
+    )
+
+    # Credit producer wallet
+    await db.wallets.update_one(
+        {"user_id": beat.get("created_by")},
+        {"$inc": {"balance": producer_amount, "total_earnings": producer_amount}},
+        upsert=True
+    )
+
+    return sale_doc
 
 
 @beats_router.post("/{beat_id}/watermark")
 async def regenerate_watermark(beat_id: str, request: Request):
-    """Admin: Regenerate watermarked preview for an existing beat"""
+    """Admin: Regenerate watermarked preview"""
     await require_admin(request)
     beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
     if not beat or not beat.get("audio_url"):

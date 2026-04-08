@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
-import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle, Star, Sparkle } from '@phosphor-icons/react';
+import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle, Star, Sparkle, Vault, MusicNote } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API } from '../App';
 
@@ -176,9 +176,13 @@ const DashboardLayout = ({ children }) => {
   const locked = LOCKED[plan] || LOCKED.free;
   const isLocked = (feat) => locked.includes(feat);
 
+  const producerRoles = ['producer', 'label', 'label_producer'];
+  const isProducerOrLabel = producerRoles.includes(user?.user_role) || producerRoles.includes(user?.role);
+
   const navItems = [
     { path: '/dashboard', icon: <House className="w-5 h-5" />, label: 'Dashboard' },
     ...(user?.user_role === 'label_producer' ? [{ path: '/label', icon: <Buildings className="w-5 h-5" />, label: 'Label Dashboard' }] : []),
+    ...(isProducerOrLabel ? [{ path: '/beat-bank', icon: <MusicNote className="w-5 h-5" />, label: 'Beat Bank' }] : []),
     { path: '/releases', icon: <Disc className="w-5 h-5" />, label: 'Releases' },
     { path: '/analytics', icon: <ChartLineUp className="w-5 h-5" />, label: 'Analytics' },
     { path: '/wallet', icon: <Wallet className="w-5 h-5" />, label: 'Wallet' },
