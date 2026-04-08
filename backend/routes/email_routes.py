@@ -185,9 +185,12 @@ async def reset_password(data: PasswordResetConfirm):
     if not reset:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
     
-    if datetime.now(timezone.utc) > reset["expires_at"]:
+    expires_at = reset["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired")
-    
+
     if len(data.new_password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
@@ -203,7 +206,10 @@ async def verify_reset_token(token: str):
     reset = await db.password_resets.find_one({"token": token, "used": False})
     if not reset:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-    if datetime.now(timezone.utc) > reset["expires_at"]:
+    expires_at = reset["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(status_code=400, detail="Reset token has expired")
     return {"valid": True, "email": reset["email"]}
 
