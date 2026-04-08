@@ -562,7 +562,7 @@ async def upload_page_file(request: Request, file: UploadFile = File(...)):
     path = f"{APP_NAME}/page-builder/{uuid.uuid4().hex}.{ext}"
     data = await file.read()
     result = put_object(path, data, file.content_type)
-    return {"path": result["path"], "url": result.get("url", result["path"])}
+    return {"path": result["url"], "url": result["url"]}
 
 
 # ===== PUBLIC file serving for page builder assets =====

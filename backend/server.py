@@ -242,8 +242,8 @@ async def upload_avatar(request: Request, file: UploadFile = File(...)):
     path = f"{APP_NAME}/avatars/{user['id']}/{uuid.uuid4()}.{ext}"
     data = await file.read()
     result = put_object(path, data, file.content_type)
-    await db.users.update_one({"id": user["id"]}, {"$set": {"avatar_url": result["path"]}})
-    return {"avatar_url": result["path"]}
+    await db.users.update_one({"id": user["id"]}, {"$set": {"avatar_url": result["url"]}})
+    return {"avatar_url": result["url"]}
 
 # ============= RELEASE ENDPOINTS =============
 @api_router.post("/releases", response_model=ReleaseResponse)
@@ -282,8 +282,8 @@ async def upload_cover_art(release_id: str, request: Request, file: UploadFile =
     ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     path = f"{APP_NAME}/covers/{user['id']}/{release_id}/{uuid.uuid4()}.{ext}"
     result = put_object(path, await file.read(), file.content_type)
-    await db.releases.update_one({"id": release_id}, {"$set": {"cover_art_url": result["path"]}})
-    return {"cover_art_url": result["path"]}
+    await db.releases.update_one({"id": release_id}, {"$set": {"cover_art_url": result["url"]}})
+    return {"cover_art_url": result["url"]}
 
 @api_router.put("/releases/{release_id}")
 async def update_release(release_id: str, release: ReleaseCreate, request: Request):
@@ -330,17 +330,16 @@ async def upload_audio(track_id: str, request: Request, file: UploadFile = File(
     data = await file.read()
     result = put_object(path, data, file.content_type)
     duration = len(data) // (44100 * 2 * 2)
-    await db.tracks.update_one({"id": track_id}, {"$set": {"audio_url": result["path"], "duration": duration, "status": "ready"}})
-    return {"audio_url": result["path"], "duration": duration}
+    await db.tracks.update_one({"id": track_id}, {"$set": {"audio_url": result["url"], "duration": duration, "status": "ready"}})
+    return {"audio_url": result["url"], "duration": duration}
 
 @api_router.get("/tracks/{track_id}/stream")
 async def stream_audio(track_id: str, request: Request):
+    from fastapi.responses import RedirectResponse
     await get_current_user(request)
     track = await db.tracks.find_one({"id": track_id}, {"_id": 0})
     if not track or not track.get("audio_url"): raise HTTPException(status_code=404, detail="Track or audio not found")
-    data, content_type = get_object(track["audio_url"])
-    return StreamingResponse(BytesIO(data), media_type=content_type,
-        headers={"Content-Disposition": f"inline; filename={track['title']}.{track['audio_url'].split('.')[-1]}"})
+    return RedirectResponse(url=track["audio_url"], status_code=302)
 
 @api_router.delete("/tracks/{track_id}")
 async def delete_track(track_id: str, request: Request):
@@ -1510,15 +1509,8 @@ async def download_purchased_beat(purchase_id: str, request: Request):
     beat = await db.beats.find_one({"id": purchase["beat_id"]}, {"_id": 0})
     if not beat or not beat.get("audio_url"):
         raise HTTPException(status_code=404, detail="Beat audio file not available")
-    data, content_type = get_object(beat["audio_url"])
-    ext = beat["audio_url"].split(".")[-1] if "." in beat["audio_url"] else "mp3"
-    safe_title = "".join(c for c in beat.get("title", "beat") if c.isalnum() or c in " _-").strip().replace(" ", "_")
-    license_label = purchase.get("license_type", "lease").replace("_", "-")
-    filename = f"{safe_title}_{license_label}.{ext}"
-    return Response(content=data, media_type=content_type, headers={
-        "Content-Disposition": f'attachment; filename="{filename}"',
-        "Content-Length": str(len(data)),
-    })
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=beat["audio_url"], status_code=302)
 
 # ============= BEAT PURCHASE PAYMENT VERIFICATION =============
 @api_router.get("/purchases/verify/{session_id}")
@@ -1898,12 +1890,8 @@ async def serve_file(path: str, request: Request, auth: Optional[str] = Query(No
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "): token = auth_header[7:]
     if not token: raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        data, content_type = get_object(path)
-        return Response(content=data, media_type=content_type)
-    except Exception as e:
-        logger.error(f"File serve error: {e}")
-        raise HTTPException(status_code=404, detail="File not found")
+    # Files are now served directly via Cloudinary URLs — this endpoint is a legacy stub
+    raise HTTPException(status_code=410, detail="Use direct Cloudinary URL from the file metadata")
 
 # ============= HEALTH =============
 # Label routes moved to routes/label_routes.py
@@ -2034,12 +2022,8 @@ async def stream_public_track_preview(slug: str, track_id: str):
     track = await db.tracks.find_one({"id": track_id, "artist_id": profile["user_id"]}, {"_id": 0})
     if not track or not track.get("audio_url"):
         raise HTTPException(status_code=404, detail="Track not found")
-    try:
-        data, content_type = get_object(track["audio_url"])
-        return StreamingResponse(BytesIO(data), media_type=content_type,
-            headers={"Content-Disposition": f"inline; filename=preview_{track_id}.mp3"})
-    except Exception:
-        raise HTTPException(status_code=404, detail="Audio not found")
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=track["audio_url"], status_code=302)
 
 @api_router.get("/artist/{slug}/qr")
 async def get_artist_qr_code(slug: str, request: Request):

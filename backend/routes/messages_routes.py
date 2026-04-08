@@ -135,7 +135,7 @@ async def upload_chat_file(conversation_id: str, request: Request, file: UploadF
     file_type = "audio" if ct.startswith("audio/") else "image" if ct.startswith("image/") else "file"
     path = f"{APP_NAME}/chat/{conversation_id}/{uuid.uuid4().hex[:12]}.{ext}"
     result = put_object(path, content, ct)
-    file_url = result.get("path") or result.get("url") or path
+    file_url = result.get("url") or path
     msg = {
         "id": f"msg_{uuid.uuid4().hex[:12]}",
         "conversation_id": conversation_id,

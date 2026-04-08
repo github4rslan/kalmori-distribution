@@ -14,6 +14,9 @@ import secrets
 import bcrypt
 import jwt
 import requests
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 from io import BytesIO
 from urllib.parse import urlparse
 
@@ -29,11 +32,17 @@ JWT_ALGORITHM = "HS256"
 def get_jwt_secret() -> str:
     return os.environ["JWT_SECRET"]
 
-# Object Storage
-STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
+# Cloudinary Storage
+EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")  # kept for any legacy references
 APP_NAME = "tunedrop"
-storage_key = None
+storage_key = None  # kept for legacy compatibility
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME", "dhabplawv"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY", "882247917397356"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET", "eWseftCBRNpu2lAWuuANj7RQosA"),
+    secure=True,
+)
 
 # ============= MODELS =============
 class UserCreate(BaseModel):
@@ -297,42 +306,50 @@ async def require_admin(request: Request) -> dict:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
-# Object Storage helpers
+# Cloudinary Storage helpers
 def init_storage():
-    global storage_key
-    if storage_key:
-        return storage_key
-    try:
-        resp = requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
-        resp.raise_for_status()
-        storage_key = resp.json()["storage_key"]
-        return storage_key
-    except Exception as e:
-        logger.error(f"Storage init failed: {e}")
-        return None
+    """Legacy stub — Cloudinary needs no init."""
+    return True
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    key = init_storage()
-    if not key:
-        raise HTTPException(status_code=500, detail="Storage unavailable")
-    resp = requests.put(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data, timeout=120
-    )
-    resp.raise_for_status()
-    return resp.json()
+    """Upload a file to Cloudinary. Returns dict with 'url' key."""
+    try:
+        # Determine resource type
+        if content_type.startswith("audio/") or content_type in ("application/octet-stream",):
+            resource_type = "video"  # Cloudinary uses 'video' for audio files
+        elif content_type.startswith("image/"):
+            resource_type = "image"
+        else:
+            resource_type = "raw"
+
+        # Use path as public_id (replace slashes with underscores for Cloudinary)
+        public_id = path.replace("/", "_").replace(".", "_")
+
+        result = cloudinary.uploader.upload(
+            BytesIO(data),
+            public_id=f"kalmori/{public_id}",
+            resource_type=resource_type,
+            overwrite=True,
+        )
+        return {"url": result["secure_url"], "public_id": result["public_id"]}
+    except Exception as e:
+        logger.error(f"Cloudinary upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
 def get_object(path: str) -> tuple:
-    key = init_storage()
-    if not key:
-        raise HTTPException(status_code=500, detail="Storage unavailable")
-    resp = requests.get(
-        f"{STORAGE_URL}/objects/{path}",
-        headers={"X-Storage-Key": key}, timeout=60
-    )
-    resp.raise_for_status()
-    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+    """
+    For Cloudinary, files are served directly via URL — no need to proxy.
+    This stub fetches the file content for legacy callers that stream through the backend.
+    """
+    try:
+        public_id = path.replace("/", "_").replace(".", "_")
+        url = cloudinary.utils.cloudinary_url(f"kalmori/{public_id}")[0]
+        resp = requests.get(url, timeout=60)
+        resp.raise_for_status()
+        return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
+    except Exception as e:
+        logger.error(f"Cloudinary fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="File not found")
 
 
 # ============= SUBSCRIPTION PLANS =============

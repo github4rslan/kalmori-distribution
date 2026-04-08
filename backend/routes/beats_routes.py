@@ -286,21 +286,23 @@ async def upload_beat_audio(beat_id: str, request: Request, file: UploadFile = F
     path = f"{APP_NAME}/beats/{beat_id}/{file_id}.{ext}"
     data = await file.read()
 
-    put_object(path, data, content_type)
+    audio_result = put_object(path, data, content_type)
+    audio_url = audio_result["url"]
 
+    preview_url = audio_url
     preview_path = f"{APP_NAME}/beats/{beat_id}/{file_id}_preview.mp3"
     try:
         watermarked = _watermark_audio(data)
-        put_object(preview_path, watermarked, "audio/mpeg")
+        preview_result = put_object(preview_path, watermarked, "audio/mpeg")
+        preview_url = preview_result["url"]
     except Exception as e:
         logger.warning(f"Preview generation failed for {beat_id}: {e}")
-        preview_path = path
 
     await db.beats.update_one(
         {"id": beat_id},
-        {"$set": {"audio_url": path, "preview_url": preview_path, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"audio_url": audio_url, "preview_url": preview_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    return {"audio_url": path, "preview_url": preview_path, "message": "Audio uploaded with watermarked preview"}
+    return {"audio_url": audio_url, "preview_url": preview_url, "message": "Audio uploaded with watermarked preview"}
 
 
 @beats_router.post("/{beat_id}/cover")
@@ -318,12 +320,13 @@ async def upload_beat_cover(beat_id: str, request: Request, file: UploadFile = F
     path = f"{APP_NAME}/beats/{beat_id}/cover.{ext}"
     data = await file.read()
     content_type = file.content_type or "image/jpeg"
-    put_object(path, data, content_type)
+    cover_result = put_object(path, data, content_type)
+    cover_url = cover_result["url"]
     await db.beats.update_one(
         {"id": beat_id},
-        {"$set": {"cover_url": path, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"cover_url": cover_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
-    return {"cover_url": path}
+    return {"cover_url": cover_url}
 
 
 @beats_router.get("/{beat_id}/stream")
@@ -332,14 +335,10 @@ async def stream_beat(beat_id: str):
     if not beat or not beat.get("audio_url"):
         raise HTTPException(status_code=404, detail="Audio not found")
 
-    from fastapi.responses import StreamingResponse
+    from fastapi.responses import RedirectResponse
     stream_url = beat.get("preview_url") or beat["audio_url"]
-    data, content_type = get_object(stream_url)
     await db.beats.update_one({"id": beat_id}, {"$inc": {"plays": 1}})
-    return StreamingResponse(BytesIO(data), media_type=content_type, headers={
-        "Content-Disposition": f'inline; filename="{beat.get("title", "beat")}_preview.mp3"',
-        "Accept-Ranges": "bytes"
-    })
+    return RedirectResponse(url=stream_url, status_code=302)
 
 
 @beats_router.put("/{beat_id}")
