@@ -124,9 +124,10 @@ const RegisterPage = () => {
       toast.success('Account created!');
       navigate('/select-role');
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Registration failed';
-      setError(typeof msg === 'string' ? msg : 'Registration failed');
-      toast.error(typeof msg === 'string' ? msg : 'Registration failed');
+      const msg = err.response?.data?.detail || err.message || 'Registration failed';
+      const errorMsg = typeof msg === 'string' ? msg : 'Registration failed';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally { setLoading(false); }
   };
 
@@ -295,7 +296,12 @@ const RegisterPage = () => {
             <p className="text-gray-300 text-lg mb-8">Let's finish creating your account.</p>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm text-left" data-testid="register-error-step2">{error}</div>
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm text-left" data-testid="register-error-step2">
+                {error}
+                {error.toLowerCase().includes('already registered') && (
+                  <span className="block mt-1">Already have an account? <Link to="/login" className="text-[#0095FF] font-semibold hover:underline">Log in here</Link></span>
+                )}
+              </div>
             )}
 
             <div className="bg-black/30 backdrop-blur-md rounded-2xl p-6 sm:p-8 text-left border border-white/10">
