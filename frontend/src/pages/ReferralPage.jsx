@@ -111,7 +111,7 @@ export default function ReferralPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="bg-[#111] border border-[#222] rounded-xl p-5 text-center" data-testid="stat-referrals">
             <Users className="w-6 h-6 text-[#7C4DFF] mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">{data?.total_referrals || 0}</p>

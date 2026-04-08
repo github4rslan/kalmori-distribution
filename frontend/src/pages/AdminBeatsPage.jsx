@@ -449,20 +449,20 @@ export default function AdminBeatsPage() {
                   className="bg-[#111] border border-white/5 rounded-2xl p-5 hover:border-white/20 transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden">
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200 rounded-2xl"
                     style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }} />
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-transform duration-200 group-hover:scale-110"
                         style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }}>
                         {(p.name || p.email || '?')[0].toUpperCase()}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{p.name}</p>
-                        <p className="text-xs text-white/40 truncate">{p.email || 'No email'}</p>
+                      <div>
+                        <p className="text-sm font-bold text-white">{p.name}</p>
+                        <p className="text-xs text-white/40">{p.email || 'No email'}</p>
                         {p.role && <span className="text-xs px-2 py-0.5 rounded-full capitalize mt-1 inline-block"
                           style={{ backgroundColor: `${PRIMARY}20`, color: PRIMARY }}>{p.role.replace(/_/g, ' ')}</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 sm:gap-6 text-xs text-white/40 pl-13 sm:pl-0">
+                    <div className="flex items-center gap-6 text-xs text-white/40">
                       <div className="text-center">
                         <p className="text-white font-bold text-sm">{producerBeats.length}</p>
                         <p>beats</p>
