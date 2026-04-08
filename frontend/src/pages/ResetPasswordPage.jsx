@@ -50,6 +50,10 @@ export default function ResetPasswordPage() {
     } catch (err) {
       if (err.message === 'Failed to fetch') {
         setError('Could not connect to server. Please try again.');
+      } else if (err.message.toLowerCase().includes('invalid') || err.message.toLowerCase().includes('expired')) {
+        setError('This reset link is invalid or has expired. Please request a new one.');
+      } else if (err.message === 'Failed') {
+        setError('Reset failed. This link may have already been used or expired.');
       } else {
         setError(err.message);
       }
@@ -105,7 +109,16 @@ export default function ResetPasswordPage() {
               <h1 className="text-2xl font-bold">New Password</h1>
               <p className="text-gray-400 mt-2 text-sm">Enter your new password</p>
             </div>
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {error && (
+              <div className="text-center">
+                <p className="text-red-500 text-sm">{error}</p>
+                {(error.toLowerCase().includes('invalid') || error.toLowerCase().includes('expired') || error.toLowerCase().includes('used')) && (
+                  <Link to="/forgot-password" className="inline-block mt-2 text-[#7C4DFF] text-sm font-semibold hover:underline">
+                    Request a new reset link
+                  </Link>
+                )}
+              </div>
+            )}
             <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password" required
               className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white" data-testid="new-password-input" />
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" required
