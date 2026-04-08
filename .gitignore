@@ -206,3 +206,9 @@ frontend/node_modules/.cache/default-development/1.pack
 # Environment files
 *.env
 *.env.*
+
+backend/memory/
+.requirements.local.txt
+frontend/frontend-start.err.log
+frontend/frontend-start.out.log
+frontend/npm-install.log
