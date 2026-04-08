@@ -566,6 +566,61 @@ async def send_admin_signup_notification(user_name: str, user_email: str, user_r
         })
 
 
+async def send_admin_distribution_notification(artist_name: str, artist_email: str, release_title: str, release_type: str, genre: str, store_count: int, release_id: str):
+    """Notify ALL admins when an artist submits a release for distribution"""
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "email": 1, "id": 1}).to_list(50)
+    if not admins:
+        return
+    now = datetime.now(timezone.utc).strftime("%B %d, %Y at %I:%M %p UTC")
+    body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">A new release has been submitted for distribution review.</p>
+    <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:16px 0;">
+    <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Release</td><td style="padding:6px 0;color:#fff;font-size:14px;font-weight:bold;">{release_title}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Type</td><td style="padding:6px 0;color:#E040FB;font-size:13px;font-weight:bold;">{release_type.upper()}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Genre</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{genre}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Artist</td><td style="padding:6px 0;color:#7C4DFF;font-size:13px;">{artist_name}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Email</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{artist_email}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Stores</td><td style="padding:6px 0;color:#FFD700;font-size:13px;font-weight:bold;">{store_count} platforms</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Submitted</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{now}</td></tr>
+    </table></div>
+    <div style="text-align:center;margin:20px 0;">
+    <a href="{FRONTEND_URL}/admin/submissions" style="background:linear-gradient(135deg,#7C4DFF,#E040FB);color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">Review Submission</a>
+    </div>"""
+    html = email_base("linear-gradient(135deg,#7C4DFF 0%,#E040FB 100%)", f"New Distribution Submission: {release_title}", body, "Kalmori Admin")
+    for admin in admins:
+        try:
+            await send_email(admin["email"], f"[Kalmori] New submission: {release_title} by {artist_name}", html)
+        except Exception as e:
+            logger.warning(f"Admin distribution email failed: {e}")
+
+
+async def send_admin_beat_notification(producer_name: str, producer_email: str, beat_title: str, genre: str, bpm: int):
+    """Notify ALL admins when a producer uploads a beat"""
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "email": 1, "id": 1}).to_list(50)
+    if not admins:
+        return
+    now = datetime.now(timezone.utc).strftime("%B %d, %Y at %I:%M %p UTC")
+    body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">A new beat has been uploaded to the marketplace.</p>
+    <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:16px 0;">
+    <table style="width:100%;border-collapse:collapse;">
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Beat</td><td style="padding:6px 0;color:#fff;font-size:14px;font-weight:bold;">{beat_title}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Genre</td><td style="padding:6px 0;color:#E040FB;font-size:13px;">{genre}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">BPM</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{bpm}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Producer</td><td style="padding:6px 0;color:#7C4DFF;font-size:13px;">{producer_name}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Email</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{producer_email}</td></tr>
+    <tr><td style="padding:6px 0;color:#888;font-size:13px;">Uploaded</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{now}</td></tr>
+    </table></div>
+    <div style="text-align:center;margin:20px 0;">
+    <a href="{FRONTEND_URL}/admin/beats" style="background:linear-gradient(135deg,#FFD700,#FF9800);color:black;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">View Beat Bank</a>
+    </div>"""
+    html = email_base("linear-gradient(135deg,#FFD700 0%,#FF9800 100%)", f"New Beat Uploaded: {beat_title}", body, "Kalmori Admin")
+    for admin in admins:
+        try:
+            await send_email(admin["email"], f"[Kalmori] New beat: {beat_title} by {producer_name}", html)
+        except Exception as e:
+            logger.warning(f"Admin beat email failed: {e}")
+
+
 @email_router.get("/auth/verify-email")
 async def verify_email(token: str):
     """Verify user email via token"""

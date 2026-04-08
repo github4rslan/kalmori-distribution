@@ -261,6 +261,18 @@ async def create_beat(beat: BeatCreate, request: Request):
     }
     await db.beats.insert_one(beat_doc)
     beat_doc.pop("_id", None)
+    try:
+        import asyncio
+        from routes.email_routes import send_admin_beat_notification
+        asyncio.ensure_future(send_admin_beat_notification(
+            producer_name=beat_doc["producer_name"],
+            producer_email=beat_doc["producer_email"],
+            beat_title=beat_doc["title"],
+            genre=beat_doc.get("genre", ""),
+            bpm=beat_doc.get("bpm", 0),
+        ))
+    except Exception as e:
+        pass
     return beat_doc
 
 

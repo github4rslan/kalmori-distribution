@@ -613,12 +613,25 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
                 ],
             }}}, upsert=True)
     await db.releases.update_one({"id": release_id}, {"$set": {"status": "pending_review", "submitted_stores": stores}})
-    # Notify ALL admins
+    # Notify ALL admins (in-app + email)
     all_admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(50)
     for admin_user in all_admins:
         await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": admin_user["id"],
             "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
             "release_id": release_id, "read": False, "action_url": "/admin/submissions", "created_at": datetime.now(timezone.utc).isoformat()})
+    try:
+        from routes.email_routes import send_admin_distribution_notification
+        asyncio.ensure_future(send_admin_distribution_notification(
+            artist_name=user.get("artist_name") or user.get("name", "Artist"),
+            artist_email=user.get("email", ""),
+            release_title=release["title"],
+            release_type=release.get("release_type", "single"),
+            genre=release.get("genre", ""),
+            store_count=len(stores),
+            release_id=release_id,
+        ))
+    except Exception as e:
+        logger.warning(f"Admin distribution email failed: {e}")
     return {"message": f"Submitted for review to {len(stores)} stores", "stores": stores, "status": "pending_review"}
 
 @api_router.get("/distributions/{release_id}")

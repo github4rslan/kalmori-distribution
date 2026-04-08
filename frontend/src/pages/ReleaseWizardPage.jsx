@@ -789,7 +789,7 @@ export default function ReleaseWizardPage() {
               <h2 className="text-base font-bold text-white mb-2">Confirm Your Album Rights</h2>
               <p className="text-sm text-gray-400 mb-4">Do the above rights apply to your album?</p>
               <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer" data-testid="rights-yes">
+                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setRightsConfirmed('yes')} data-testid="rights-yes">
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${rightsConfirmed === 'yes' ? 'border-[#7C4DFF]' : 'border-gray-600'}`}>
                     {rightsConfirmed === 'yes' && <div className="w-2.5 h-2.5 rounded-full bg-[#7C4DFF]" />}
                   </div>
