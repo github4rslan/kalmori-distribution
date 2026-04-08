@@ -154,8 +154,8 @@ async def forgot_password(data: PasswordResetRequest):
     if not user:
         return {"message": "If that email exists, a reset link has been sent."}
     
-    reset_token = secrets.token_urlsafe(32)
-    expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    reset_token = secrets.token_hex(32)  # hex only (0-9, a-f) — no ambiguous chars like l/I/O/0
+    expires = datetime.now(timezone.utc) + timedelta(hours=24)
     
     await db.password_resets.insert_one({
         "id": str(uuid.uuid4()), "user_id": user["id"], "email": data.email,
