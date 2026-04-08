@@ -35,16 +35,25 @@ export default function ResetPasswordPage() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
-    if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (newPassword.length < 12) { setError('Password must be at least 12 characters'); return; }
     setLoading(true); setError('');
     try {
       const res = await fetch(`${API}/auth/reset-password`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ token, new_password: newPassword })
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.detail || 'Failed'); }
+      const d = await res.json();
+      if (!res.ok) { throw new Error(d.detail || 'Failed'); }
       setStep('done');
-    } catch (err) { setError(err.message); }
+    } catch (err) {
+      if (err.message === 'Failed to fetch') {
+        setError('Could not connect to server. Please try again.');
+      } else {
+        setError(err.message);
+      }
+    }
     finally { setLoading(false); }
   };
 
