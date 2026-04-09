@@ -524,7 +524,7 @@ async def send_verification_email(user_email: str, user_name: str, verification_
     await send_email(user_email, "Kalmori — Please Verify Your Email Address", html)
 
 
-async def send_admin_signup_notification(user_name: str, user_email: str, user_role: str):
+async def send_admin_signup_notification(user_name: str, user_email: str, user_role: str, new_user_id: str = None):
     """Notify ALL admins when a new user signs up"""
     admins = await db.users.find({"role": "admin"}, {"_id": 0, "email": 1, "id": 1}).to_list(50)
     if not admins:
@@ -532,6 +532,7 @@ async def send_admin_signup_notification(user_name: str, user_email: str, user_r
     role_labels = {"artist": "Artist", "producer": "Producer", "label": "Label", "label_producer": "Label / Producer"}
     role_label = role_labels.get(user_role, user_role.replace("_", " ").title() if user_role else "Artist")
     now = datetime.now(timezone.utc).strftime("%B %d, %Y at %I:%M %p UTC")
+    action_url = f"/admin/users/{new_user_id}" if new_user_id else "/admin/users"
     body = f"""<p style="color:#ccc;font-size:15px;margin:0 0 16px;">New Sign-Up Alert</p>
     <div style="background:#111;border:1px solid #222;border-radius:12px;padding:20px;margin:16px 0;">
     <table style="width:100%;border-collapse:collapse;">
@@ -541,7 +542,7 @@ async def send_admin_signup_notification(user_name: str, user_email: str, user_r
     <tr><td style="padding:6px 0;color:#888;font-size:13px;">Signed Up</td><td style="padding:6px 0;color:#ccc;font-size:13px;">{now}</td></tr>
     </table></div>
     <div style="text-align:center;margin:20px 0;">
-    <a href="{FRONTEND_URL}/admin/users" style="background:#E53935;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">View All Users</a>
+    <a href="{FRONTEND_URL}{action_url}" style="background:#E53935;color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:bold;font-size:13px;display:inline-block;">View User Profile</a>
     </div>"""
     html = email_base(
         "linear-gradient(135deg,#E53935 0%,#FF5722 100%)",
@@ -561,7 +562,8 @@ async def send_admin_signup_notification(user_name: str, user_email: str, user_r
             "type": "new_signup",
             "message": f"New {role_label} signed up: {user_name} ({user_email})",
             "read": False,
-            "action_url": "/admin/users",
+            "action_url": action_url,
+            "related_id": new_user_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
 

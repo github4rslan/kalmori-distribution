@@ -31,6 +31,8 @@ const AdminUserDetailPage = () => {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [beats, setBeats] = useState([]);
+  const [promotions, setPromotions] = useState([]);
 
   useEffect(() => { fetchDetail(); }, [userId]);
 
@@ -69,15 +71,9 @@ const AdminUserDetailPage = () => {
     } finally { setSaving(false); }
   };
 
-  if (loading) return <AdminLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-[#E53935] border-t-transparent rounded-full animate-spin" /></div></AdminLayout>;
-  if (!data) return null;
-
-  const { user, stats, releases, platform_breakdown, country_breakdown, weekly_trends, goals } = data;
-  const [beats, setBeats] = useState([]);
-  const [promotions, setPromotions] = useState([]);
-
   useEffect(() => {
     if (data) {
+      const user = data.user;
       axios.get(`${API}/admin/beats`, { withCredentials: true })
         .then(r => setBeats((r.data.beats || []).filter(b => b.created_by === user.id)))
         .catch(() => {});
@@ -86,6 +82,11 @@ const AdminUserDetailPage = () => {
         .catch(() => {});
     }
   }, [data]);
+
+  if (loading) return <AdminLayout><div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-[#E53935] border-t-transparent rounded-full animate-spin" /></div></AdminLayout>;
+  if (!data) return null;
+
+  const { user, stats, releases, platform_breakdown, country_breakdown, weekly_trends, goals } = data;
   const statusColor = (s) => s === 'distributed' ? 'text-[#1DB954]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#E53935]' : 'text-gray-400';
   const planColors = { pro: '#E040FB', rise: '#FFD700', free: '#666', single: '#7C4DFF', album: '#FF6B6B' };
 

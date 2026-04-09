@@ -106,7 +106,7 @@ async def register(user_data: UserCreate, response: Response):
         })
         asyncio.ensure_future(send_verification_email(email, user_doc.get("name", "Artist"), verify_token))
         # Admin notification
-        asyncio.ensure_future(send_admin_signup_notification(user_doc.get("name", "Artist"), email, user_data.user_role or "artist"))
+        asyncio.ensure_future(send_admin_signup_notification(user_doc.get("name", "Artist"), email, user_data.user_role or "artist", user_id))
     except Exception as e:
         logger.warning(f"Sign-up email failed: {e}")
     return {"access_token": access_token, "refresh_token": refresh_token, "user": user_doc}
@@ -618,7 +618,8 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
     for admin_user in all_admins:
         await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": admin_user["id"],
             "type": "new_submission", "message": f"New submission: {release['title']} by {user.get('artist_name', user['name'])}",
-            "release_id": release_id, "read": False, "action_url": "/admin/submissions", "created_at": datetime.now(timezone.utc).isoformat()})
+            "release_id": release_id, "related_id": release_id, "read": False,
+            "action_url": f"/admin/submissions?release={release_id}", "created_at": datetime.now(timezone.utc).isoformat()})
     try:
         from routes.email_routes import send_admin_distribution_notification
         asyncio.ensure_future(send_admin_distribution_notification(

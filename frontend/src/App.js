@@ -52,7 +52,6 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ReleasesPage from './pages/ReleasesPage';
 import ReleaseDetailPage from './pages/ReleaseDetailPage';
-import CreateReleasePage from './pages/CreateReleasePage';
 import ReleaseWizardPage from './pages/ReleaseWizardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import WalletPage from './pages/WalletPage';

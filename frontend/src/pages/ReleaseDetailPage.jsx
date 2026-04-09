@@ -7,14 +7,16 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Progress } from '../components/ui/progress';
-import { 
-  Disc, 
+import {
+  Disc,
   UploadSimple,
   Play,
   Pause,
   Trash,
   Plus,
   CheckCircle,
+  XCircle,
+  Clock,
   Globe,
   CurrencyDollar,
   MusicNotes,
@@ -602,13 +604,21 @@ const ReleaseDetailPage = () => {
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">{release.title}</h1>
                 <p className="text-[#A1A1AA] mt-1">{release.artist_name}</p>
               </div>
-              <span className={`px-3 py-1 rounded text-xs capitalize ${
-                release.status === 'distributed' ? 'bg-[#22C55E]/10 text-[#22C55E]' :
-                release.status === 'processing' ? 'bg-[#FFCC00]/10 text-[#FFCC00]' :
-                'bg-[#71717A]/10 text-[#71717A]'
-              }`}>
-                {release.status}
-              </span>
+              {(() => {
+                const sCfg = {
+                  distributed:    { label: 'Live on Stores', color: '#22C55E' },
+                  pending_review: { label: 'Under Review',   color: '#FFD700' },
+                  processing:     { label: 'Processing',     color: '#FF9500' },
+                  rejected:       { label: 'Rejected',       color: '#EF4444' },
+                  draft:          { label: 'Draft',          color: '#A1A1AA' },
+                }[release.status] || { label: release.status, color: '#A1A1AA' };
+                return (
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: `${sCfg.color}15`, color: sCfg.color }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sCfg.color }} />
+                    {sCfg.label}
+                  </span>
+                );
+              })()}
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
@@ -863,16 +873,60 @@ const ReleaseDetailPage = () => {
           </div>
         )}
 
-        {/* Distribution Status */}
+        {/* Distribution Status — shown when live */}
         {release.status === 'distributed' && (
-          <div className="bg-[#141414] border border-[#22C55E]/30 rounded-md p-6">
-            <div className="flex items-center gap-3 text-[#22C55E] mb-4">
-              <CheckCircle className="w-6 h-6" weight="fill" />
-              <h2 className="text-lg font-medium">Distributed Successfully</h2>
+          <div className="bg-[#0d0d0d] border border-[#22C55E]/25 rounded-2xl overflow-hidden">
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-[#22C55E]/15" style={{ background: '#22C55E08' }}>
+              <CheckCircle className="w-5 h-5 text-[#22C55E]" weight="fill" />
+              <div>
+                <h2 className="text-base font-bold text-[#22C55E]">Live on Streaming Platforms</h2>
+                <p className="text-xs text-[#A1A1AA] mt-0.5">Approved and distributed · Allow 24–48 hours to appear on all stores</p>
+              </div>
             </div>
-            <p className="text-[#A1A1AA] text-sm">
-              Your release has been submitted to streaming platforms. It may take 24-48 hours to appear on all stores.
-            </p>
+            {release.distributed_platforms?.length > 0 && (
+              <div className="p-6">
+                <p className="text-xs text-[#555] uppercase tracking-wider font-semibold mb-3">
+                  Distributed to {release.distributed_platforms.length} platform{release.distributed_platforms.length !== 1 ? 's' : ''}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {release.distributed_platforms.map((platform, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-3 py-1.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 capitalize font-medium"
+                    >
+                      {platform.replace(/_/g, ' ')}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Rejection notice */}
+        {release.status === 'rejected' && (
+          <div className="bg-[#0d0d0d] border border-[#EF4444]/25 rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <XCircle className="w-5 h-5 text-[#EF4444]" weight="fill" />
+              <h2 className="text-base font-bold text-[#EF4444]">Release Not Approved</h2>
+            </div>
+            {release.rejection_reason && (
+              <p className="text-sm text-[#A1A1AA] mt-1">Reason: {release.rejection_reason}</p>
+            )}
+            <p className="text-xs text-[#555] mt-3">Please fix the issues and resubmit your release.</p>
+          </div>
+        )}
+
+        {/* Pending review notice */}
+        {release.status === 'pending_review' && (
+          <div className="bg-[#0d0d0d] border border-[#FFD700]/25 rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-[#FFD700]" />
+              <div>
+                <h2 className="text-base font-bold text-[#FFD700]">Under Review</h2>
+                <p className="text-sm text-[#A1A1AA] mt-0.5">Your release has been submitted and is awaiting admin review. This usually takes 1–3 business days.</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

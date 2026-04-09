@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
 import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Bell, MagnifyingGlass, Funnel, Eye, Trash, ArrowLeft, ArrowRight, CheckCircle } from '@phosphor-icons/react';
+import {
+  Bell, MagnifyingGlass, Eye, Trash, ArrowLeft, ArrowRight,
+  CheckCircle, UserPlus, MusicNote, ChatCircle, Handshake,
+  CurrencyDollar, Star, ArrowUpRight, Lightning, Warning,
+} from '@phosphor-icons/react';
 
 const TYPES = [
   { value: '', label: 'All Types' },
   { value: 'new_signup', label: 'New Signups' },
-  { value: 'feature_announcement', label: 'Feature Announcements' },
+  { value: 'new_submission', label: 'Submissions' },
+  { value: 'feature_announcement', label: 'Announcements' },
   { value: 'new_message', label: 'Messages' },
   { value: 'collab_invite', label: 'Collab Invites' },
   { value: 'ai_insight', label: 'AI Insights' },
@@ -21,7 +27,55 @@ const TYPES = [
   { value: 'subscription_upgraded', label: 'Subscription Upgrades' },
 ];
 
+const TYPE_META = {
+  new_signup:            { color: '#1DB954', icon: UserPlus,        label: 'New Signup' },
+  new_submission:        { color: '#7C4DFF', icon: MusicNote,       label: 'Submission' },
+  feature_announcement:  { color: '#E040FB', icon: Lightning,       label: 'Announcement' },
+  new_message:           { color: '#0095FF', icon: ChatCircle,      label: 'Message' },
+  collab_invite:         { color: '#E040FB', icon: Handshake,       label: 'Collab Invite' },
+  collab_response:       { color: '#E040FB', icon: Handshake,       label: 'Collab Response' },
+  ai_insight:            { color: '#FF9500', icon: Star,            label: 'AI Insight' },
+  smart_insight:         { color: '#FF9500', icon: Star,            label: 'Smart Insight' },
+  release_approved:      { color: '#22C55E', icon: CheckCircle,     label: 'Approved' },
+  release_rejected:      { color: '#EF4444', icon: Warning,         label: 'Rejected' },
+  payout_completed:      { color: '#FFD700', icon: CurrencyDollar,  label: 'Payout' },
+  beat_purchased:        { color: '#00FFFF', icon: CurrencyDollar,  label: 'Beat Purchase' },
+  subscription_upgraded: { color: '#E040FB', icon: ArrowUpRight,    label: 'Subscription' },
+};
+
+const getActionUrl = (n) => {
+  // Use stored action_url if it's a deep link (not generic)
+  if (n.action_url && n.action_url !== '/admin/users' && n.action_url !== '/admin/submissions' && n.action_url !== '/admin') {
+    return n.action_url;
+  }
+  // Smart fallback routing by type
+  switch (n.type) {
+    case 'new_signup':
+      return n.related_id ? `/admin/users/${n.related_id}` : '/admin/users';
+    case 'new_submission':
+      return n.related_id ? `/admin/submissions?release=${n.related_id}` : '/admin/submissions';
+    case 'release_approved':
+    case 'release_rejected':
+    case 'review_result':
+      return n.release_id ? `/admin/submissions?release=${n.release_id}` : '/admin/submissions';
+    case 'beat_purchased':
+      return '/admin/beats';
+    case 'payout_completed':
+      return '/admin/payouts';
+    case 'subscription_upgraded':
+      return '/admin/users';
+    case 'new_message':
+      return '/admin';
+    case 'collab_invite':
+    case 'collab_response':
+      return '/admin';
+    default:
+      return n.action_url || '/admin';
+  }
+};
+
 export default function AdminNotificationsPage() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -49,16 +103,18 @@ export default function AdminNotificationsPage() {
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
-  const handleMarkRead = async (id) => {
+  const handleMarkRead = async (e, id) => {
+    e.stopPropagation();
     try {
       await axios.put(`${API}/admin/notifications-bank/${id}/read`, {}, { withCredentials: true });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch {}
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
     try {
-      await axios.delete(`${API}/admin/notifications-bank/${id}`, {}, { withCredentials: true });
+      await axios.delete(`${API}/admin/notifications-bank/${id}`, { withCredentials: true });
       setNotifications(prev => prev.filter(n => n.id !== id));
       setTotal(prev => prev - 1);
     } catch {}
@@ -71,101 +127,205 @@ export default function AdminNotificationsPage() {
     } catch {}
   };
 
-  const totalPages = Math.ceil(total / perPage);
-
-  const getTypeColor = (type) => {
-    const colors = {
-      new_signup: '#1DB954', feature_announcement: '#7C4DFF', new_message: '#0095FF',
-      collab_invite: '#E040FB', ai_insight: '#FF9500', smart_insight: '#FF9500',
-      release_approved: '#22C55E', release_rejected: '#EF4444', payout_completed: '#FFD700',
-      beat_purchased: '#00FFFF', subscription_upgraded: '#E040FB',
-    };
-    return colors[type] || '#A1A1AA';
+  const handleClick = async (n) => {
+    // Mark as read on click
+    if (!n.read) {
+      try {
+        await axios.put(`${API}/admin/notifications-bank/${n.id}/read`, {}, { withCredentials: true });
+        setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+      } catch {}
+    }
+    const url = getActionUrl(n);
+    navigate(url);
   };
+
+  const totalPages = Math.ceil(total / perPage);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <AdminLayout>
-      <div className="space-y-6" data-testid="admin-notifications-bank">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="space-y-5" data-testid="admin-notifications-bank">
+
+        {/* Header */}
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Notification Bank</h1>
-            <p className="text-sm text-[#A1A1AA] mt-1">Browse and manage all admin notifications. {total} total.</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+              Notification Bank
+              {unreadCount > 0 && (
+                <span className="text-xs font-bold bg-[#7C4DFF] text-white px-2 py-0.5 rounded-full">{unreadCount} new</span>
+              )}
+            </h1>
+            <p className="text-sm text-[#A1A1AA] mt-0.5">{total} total notifications</p>
           </div>
-          <Button onClick={handleMarkAllRead} variant="outline" className="border-white/10 text-white hover:bg-white/5 gap-2" data-testid="mark-all-read-bank">
-            <CheckCircle className="w-4 h-4" /> Mark All as Read
+          <Button
+            onClick={handleMarkAllRead}
+            variant="outline"
+            className="border-white/10 text-white hover:bg-white/5 gap-2 text-xs h-9"
+            data-testid="mark-all-read-bank"
+          >
+            <CheckCircle className="w-4 h-4" /> Mark All Read
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-3 flex-wrap" data-testid="notification-filters">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-testid="notification-filters">
+          <div className="relative flex-1">
             <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1AA]" />
-            <Input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+            <Input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search notifications..."
-              className="pl-9 bg-[#141414] border-white/10 text-white" data-testid="notification-search" />
+              className="pl-9 bg-[#141414] border-white/10 text-white h-9 text-sm"
+              data-testid="notification-search"
+            />
           </div>
-          <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
-            className="h-10 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm" data-testid="notification-type-filter">
-            {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <select value={readFilter} onChange={e => { setReadFilter(e.target.value); setPage(1); }}
-            className="h-10 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm" data-testid="notification-read-filter">
-            <option value="">All</option>
-            <option value="false">Unread</option>
-            <option value="true">Read</option>
-          </select>
+          <div className="flex gap-2">
+            <select
+              value={typeFilter}
+              onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
+              className="flex-1 sm:flex-none h-9 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm"
+              data-testid="notification-type-filter"
+            >
+              {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <select
+              value={readFilter}
+              onChange={e => { setReadFilter(e.target.value); setPage(1); }}
+              className="flex-1 sm:flex-none h-9 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm"
+              data-testid="notification-read-filter"
+            >
+              <option value="">All</option>
+              <option value="false">Unread</option>
+              <option value="true">Read</option>
+            </select>
+          </div>
         </div>
 
-        {/* Notifications List */}
+        {/* List */}
         {loading ? (
-          <div className="flex items-center justify-center h-40"><div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center h-40">
+            <div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
+          </div>
         ) : notifications.length === 0 ? (
-          <div className="bg-[#141414] border border-white/10 rounded-lg p-12 text-center">
+          <div className="bg-[#141414] border border-white/10 rounded-xl p-12 text-center">
             <Bell className="w-10 h-10 text-[#A1A1AA] mx-auto mb-3" />
-            <p className="text-[#A1A1AA]">No notifications found.</p>
+            <p className="text-[#A1A1AA] text-sm">No notifications found.</p>
           </div>
         ) : (
           <div className="space-y-2" data-testid="notifications-bank-list">
-            {notifications.map(n => (
-              <div key={n.id} className={`bg-[#141414] border rounded-lg p-4 flex items-start gap-4 transition-all ${!n.read ? 'border-[#7C4DFF]/30 bg-[#7C4DFF]/5' : 'border-white/10'}`}
-                data-testid={`bank-notif-${n.id}`}>
-                <div className="w-3 h-3 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: !n.read ? getTypeColor(n.type) : 'transparent', border: n.read ? '1px solid #333' : 'none' }} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: `${getTypeColor(n.type)}20`, color: getTypeColor(n.type) }}>
-                      {(n.type || 'general').replace(/_/g, ' ')}
-                    </span>
-                    {!n.read && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-2 py-0.5 rounded-full">NEW</span>}
-                  </div>
-                  <p className="text-sm text-white leading-snug">{n.message}</p>
-                  <p className="text-[10px] text-[#555] mt-1.5">
-                    {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
+            {notifications.map(n => {
+              const meta = TYPE_META[n.type] || { color: '#A1A1AA', icon: Bell, label: (n.type || 'general').replace(/_/g, ' ') };
+              const Icon = meta.icon;
+              const isClickable = !!getActionUrl(n);
+
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => handleClick(n)}
+                  className={`
+                    group relative bg-[#141414] border rounded-xl p-4
+                    flex items-center gap-3 transition-all select-none
+                    ${isClickable ? 'cursor-pointer hover:bg-white/5 active:scale-[0.99]' : ''}
+                    ${!n.read ? 'border-[#7C4DFF]/30' : 'border-white/10'}
+                  `}
+                  data-testid={`bank-notif-${n.id}`}
+                >
+                  {/* Unread indicator bar */}
                   {!n.read && (
-                    <button onClick={() => handleMarkRead(n.id)} className="p-2 text-[#A1A1AA] hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/10 rounded-lg transition-all" title="Mark as read" data-testid={`mark-read-${n.id}`}>
-                      <Eye className="w-4 h-4" />
-                    </button>
+                    <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full" style={{ backgroundColor: meta.color }} />
                   )}
-                  <button onClick={() => handleDelete(n.id)} className="p-2 text-[#A1A1AA] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all" title="Delete" data-testid={`delete-notif-${n.id}`}>
-                    <Trash className="w-4 h-4" />
-                  </button>
+
+                  {/* Icon */}
+                  <div
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${meta.color}18`, color: meta.color }}
+                  >
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5" weight={!n.read ? 'fill' : 'regular'} />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md"
+                        style={{ backgroundColor: `${meta.color}18`, color: meta.color }}
+                      >
+                        {meta.label}
+                      </span>
+                      {!n.read && (
+                        <span className="text-[10px] font-bold text-[#FFD700]">NEW</span>
+                      )}
+                    </div>
+                    <p className={`text-sm leading-snug truncate sm:whitespace-normal ${!n.read ? 'text-white font-medium' : 'text-[#ccc]'}`}>
+                      {n.message}
+                    </p>
+                    <p className="text-[11px] text-[#555] mt-1">
+                      {n.created_at
+                        ? new Date(n.created_at).toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit',
+                          })
+                        : ''}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!n.read && (
+                      <button
+                        onClick={(e) => handleMarkRead(e, n.id)}
+                        className="p-2 text-[#A1A1AA] hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/10 rounded-lg transition-all"
+                        title="Mark as read"
+                        data-testid={`mark-read-${n.id}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleDelete(e, n.id)}
+                      className="p-2 text-[#A1A1AA] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                      title="Delete"
+                      data-testid={`delete-notif-${n.id}`}
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Arrow hint for clickable items on mobile */}
+                  {isClickable && (
+                    <ArrowUpRight
+                      className="w-3.5 h-3.5 text-[#444] flex-shrink-0 sm:hidden group-hover:text-[#666]"
+                    />
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-2">
-            <p className="text-xs text-[#A1A1AA]">Page {page} of {totalPages} ({total} total)</p>
+            <p className="text-xs text-[#A1A1AA]">Page {page} of {totalPages} &middot; {total} total</p>
             <div className="flex items-center gap-2">
-              <Button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/5 gap-1" data-testid="prev-page">
+              <Button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                variant="outline"
+                size="sm"
+                className="border-white/10 text-white hover:bg-white/5 gap-1 h-8 text-xs"
+                data-testid="prev-page"
+              >
                 <ArrowLeft className="w-3 h-3" /> Prev
               </Button>
-              <Button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/5 gap-1" data-testid="next-page">
+              <Button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                variant="outline"
+                size="sm"
+                className="border-white/10 text-white hover:bg-white/5 gap-1 h-8 text-xs"
+                data-testid="next-page"
+              >
                 Next <ArrowRight className="w-3 h-3" />
               </Button>
             </div>

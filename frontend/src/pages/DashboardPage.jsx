@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
-import { Disc, Play, CurrencyDollar, TrendUp, TrendDown, Plus, ArrowRight, Fire, CaretUp, CaretDown } from '@phosphor-icons/react';
+import { Disc, Play, CurrencyDollar, TrendUp, TrendDown, Plus, ArrowRight, Fire, CaretUp, CaretDown, CheckCircle } from '@phosphor-icons/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const DashboardPage = () => {
@@ -88,28 +88,44 @@ const DashboardPage = () => {
           </div>
 
           <div className="card-kalmori p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-medium">Recent Releases</h2>
-              <Link to="/releases" className="text-xs text-[#7C4DFF] hover:underline">View all</Link>
+              <Link to="/releases" className="text-xs text-[#7C4DFF] hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
             </div>
             {releases.length === 0 ? (
               <div className="text-center py-8">
                 <Disc className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                 <p className="text-sm text-gray-400 mb-4">No releases yet</p>
-                <Link to="/releases/new"><button className="btn-red px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 mx-auto"><Plus className="w-4 h-4" /> Create Release</button></Link>
+                <Link to="/releases/new"><button className="bg-[#7C4DFF] hover:bg-[#7C4DFF]/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 mx-auto"><Plus className="w-4 h-4" /> Create Release</button></Link>
               </div>
             ) : (
-              <div className="space-y-3">
-                {releases.map((release) => (
-                  <Link key={release.id} to={`/releases/${release.id}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                    <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex items-center justify-center"><Disc className="w-5 h-5 text-gray-500" /></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{release.title}</p>
-                      <p className="text-xs text-gray-500 capitalize">{release.release_type}</p>
-                    </div>
-                    <span className={`text-xs capitalize px-2 py-1 rounded ${release.status === 'distributed' ? 'bg-[#4CAF50]/10 text-[#4CAF50]' : release.status === 'processing' ? 'bg-[#FFD700]/10 text-[#FFD700]' : 'bg-gray-600/20 text-gray-400'}`}>{release.status}</span>
-                  </Link>
-                ))}
+              <div className="space-y-2">
+                {releases.map((release) => {
+                  const statusCfg = {
+                    distributed:    { label: 'Live',         color: '#22C55E' },
+                    pending_review: { label: 'Under Review', color: '#FFD700' },
+                    processing:     { label: 'Processing',   color: '#FF9500' },
+                    rejected:       { label: 'Rejected',     color: '#EF4444' },
+                    draft:          { label: 'Draft',        color: '#A1A1AA' },
+                  }[release.status] || { label: release.status, color: '#A1A1AA' };
+                  return (
+                    <Link key={release.id} to={`/releases/${release.id}`} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-colors group">
+                      <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex-shrink-0 overflow-hidden border border-white/8">
+                        {release.cover_art_url
+                          ? <img src={release.cover_art_url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><Disc className="w-4 h-4 text-gray-600" /></div>
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate text-white">{release.title}</p>
+                        <p className="text-xs text-gray-600 capitalize">{release.release_type}</p>
+                      </div>
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: `${statusCfg.color}15`, color: statusCfg.color }}>
+                        {statusCfg.label}
+                      </span>
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>

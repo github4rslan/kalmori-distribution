@@ -7,7 +7,7 @@ import axios from 'axios';
 import { API } from '../App';
 
 const NOTIFICATION_ROUTES = {
-  'new_submission': '/admin',
+  'new_submission': '/admin/submissions',
   'milestone': '/goals',
   'goal_achieved': '/goals',
   'follower': '/dashboard',
