@@ -7,6 +7,9 @@
 # Emergent AI (old system, not needed)
 .emergent/
 
+# AI agent docs (local only)
+.ai/
+
 # Dependencies
 node_modules/
 /node_modules
