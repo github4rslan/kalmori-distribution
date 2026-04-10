@@ -649,14 +649,16 @@ const ReleaseDetailPage = () => {
               <MusicNotes className="w-5 h-5 text-[#FF3B30]" />
               Tracks
             </h2>
-            <Button
-              size="sm"
-              onClick={() => setShowAddTrack(!showAddTrack)}
-              className="bg-white/10 hover:bg-white/20 text-white"
-              data-testid="add-track-btn"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Add Track
-            </Button>
+            {release.status === 'draft' && (
+              <Button
+                size="sm"
+                onClick={() => setShowAddTrack(!showAddTrack)}
+                className="bg-white/10 hover:bg-white/20 text-white"
+                data-testid="add-track-btn"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Add Track
+              </Button>
+            )}
           </div>
 
           {showAddTrack && (
@@ -727,25 +729,29 @@ const ReleaseDetailPage = () => {
                       {track.status}
                     </span>
                     
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => editingTrack === track.id ? setEditingTrack(null) : startEditTrack(track)}
-                      className={editingTrack === track.id ? 'text-[#7C4DFF]' : 'text-[#71717A] hover:text-[#7C4DFF]'}
-                      data-testid={`edit-track-${track.id}`}
-                    >
-                      <PencilSimple className="w-4 h-4" />
-                    </Button>
+                    {release.status === 'draft' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => editingTrack === track.id ? setEditingTrack(null) : startEditTrack(track)}
+                          className={editingTrack === track.id ? 'text-[#7C4DFF]' : 'text-[#71717A] hover:text-[#7C4DFF]'}
+                          data-testid={`edit-track-${track.id}`}
+                        >
+                          <PencilSimple className="w-4 h-4" />
+                        </Button>
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteTrack(track.id)}
-                      className="text-[#71717A] hover:text-[#FF3B30]"
-                      data-testid={`delete-track-${track.id}`}
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteTrack(track.id)}
+                          className="text-[#71717A] hover:text-[#FF3B30]"
+                          data-testid={`delete-track-${track.id}`}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
 
                   {/* Expanded edit form */}
