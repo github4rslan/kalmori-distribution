@@ -760,9 +760,9 @@ export default function ReleaseWizardPage() {
                             <Plus className="w-4 h-4" /> Add New Contributor
                           </button>
                         </div>
-                        </div> {/* end expandable body */}
+                        </div>
                         )}
-                      </div> {/* end track card */}
+                      </div>
                     );
                     })}
                   </div>
