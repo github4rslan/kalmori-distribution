@@ -247,6 +247,24 @@ const ReleaseDetailPage = () => {
   const [savingTrack, setSavingTrack] = useState(null);
   const [playingTrack, setPlayingTrack] = useState(null);
   const [audioRef] = useState(new Audio());
+  const [countdown, setCountdown] = useState(null);
+
+  // Countdown timer for live_at
+  useEffect(() => {
+    if (!release?.live_at) return;
+    const target = new Date(release.live_at).getTime();
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) { setCountdown(null); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [release?.live_at]);
 
   const fetchRelease = useCallback(async () => {
     try {
@@ -915,12 +933,26 @@ const ReleaseDetailPage = () => {
         {/* Distribution Status — shown when live */}
         {release.status === 'distributed' && (
           <div className="bg-[#0d0d0d] border border-[#22C55E]/25 rounded-2xl overflow-hidden">
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-[#22C55E]/15" style={{ background: '#22C55E08' }}>
-              <CheckCircle className="w-5 h-5 text-[#22C55E]" weight="fill" />
-              <div>
-                <h2 className="text-base font-bold text-[#22C55E]">Live on Streaming Platforms</h2>
-                <p className="text-xs text-[#A1A1AA] mt-0.5">Approved and distributed · Allow 24–48 hours to appear on all stores</p>
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-[#22C55E]/15" style={{ background: '#22C55E08' }}>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-[#22C55E]" weight="fill" />
+                <div>
+                  <h2 className="text-base font-bold text-[#22C55E]">
+                    {countdown ? 'Going Live Soon' : 'Live on Streaming Platforms ✅'}
+                  </h2>
+                  <p className="text-xs text-[#A1A1AA] mt-0.5">
+                    {countdown
+                      ? `Approved · Appearing on all stores in ${release.go_live_hours || 24} hours`
+                      : 'Approved and distributed · Available on all selected stores'}
+                  </p>
+                </div>
               </div>
+              {countdown && (
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] text-[#A1A1AA] uppercase tracking-wider mb-0.5">Live in</p>
+                  <p className="text-xl font-bold font-mono text-[#22C55E] tabular-nums">{countdown}</p>
+                </div>
+              )}
             </div>
             {release.distributed_platforms?.length > 0 && (
               <div className="p-6">

@@ -6,7 +6,7 @@ import {
   CheckCircle, XCircle, Clock, Eye, CaretLeft, CaretRight,
   FunnelSimple, ClipboardText, MusicNotes, Waveform, Play, Pause,
   SpeakerHigh, SpeakerX, DownloadSimple, X, User, Globe,
-  Storefront, MusicNote, ArrowSquareOut,
+  Storefront, MusicNote, ArrowSquareOut, Rocket,
 } from '@phosphor-icons/react';
 import { Button } from '../components/ui/button';
 
@@ -155,6 +155,7 @@ const AdminSubmissionsPage = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [reviewNotes, setReviewNotes] = useState('');
   const [reviewing, setReviewing] = useState(false);
+  const [goLiveHours, setGoLiveHours] = useState(24);
   const [activeTab, setActiveTab] = useState('release');
 
   // handle ?release= query param from notification deep links
@@ -191,13 +192,13 @@ const AdminSubmissionsPage = () => {
     finally { setDetailLoading(false); }
   };
 
-  const closeModal = () => { setSelectedSub(null); setDetail(null); setReviewNotes(''); };
+  const closeModal = () => { setSelectedSub(null); setDetail(null); setReviewNotes(''); setGoLiveHours(24); };
 
   const handleReview = async (action) => {
     if (!selectedSub) return;
     setReviewing(true);
     try {
-      await axios.put(`${API}/admin/submissions/${selectedSub}/review`, { action, notes: reviewNotes || null });
+      await axios.put(`${API}/admin/submissions/${selectedSub}/review`, { action, notes: reviewNotes || null, go_live_hours: goLiveHours });
       closeModal();
       fetchSubmissions(page, filter);
     } catch (err) { alert(err.response?.data?.detail || 'Review failed'); }
@@ -591,15 +592,44 @@ const AdminSubmissionsPage = () => {
                         placeholder="Review notes (optional)..."
                         data-testid="review-notes-input"
                       />
-                      <div className="flex gap-3">
+                      {/* Go Live hours selector */}
+                      <div className="flex items-center gap-2 px-1">
+                        <Rocket className="w-4 h-4 text-[#7C4DFF] shrink-0" />
+                        <span className="text-xs text-[#A1A1AA]">Live in stores after</span>
+                        <select
+                          value={goLiveHours}
+                          onChange={e => setGoLiveHours(Number(e.target.value))}
+                          className="bg-[#111] border border-white/10 rounded-lg text-xs text-white px-2 py-1 focus:outline-none focus:border-[#7C4DFF]"
+                        >
+                          <option value={1}>1 hour</option>
+                          <option value={6}>6 hours</option>
+                          <option value={12}>12 hours</option>
+                          <option value={24}>24 hours</option>
+                          <option value={48}>48 hours</option>
+                          <option value={72}>72 hours</option>
+                        </select>
+                        <span className="text-xs text-[#555]">of approval</span>
+                      </div>
+                      <div className="flex gap-2">
                         <Button
                           onClick={() => handleReview('approve')}
                           disabled={reviewing}
-                          className="flex-1 bg-[#22C55E] hover:bg-[#16a34a] text-white font-semibold h-10"
+                          className="flex-1 text-white font-semibold h-10 border-0"
+                          style={{ background: 'linear-gradient(135deg,#22C55E,#16a34a)' }}
                           data-testid="approve-btn"
                         >
-                          <CheckCircle className="w-4 h-4 mr-2" weight="fill" />
+                          <CheckCircle className="w-4 h-4 mr-1.5" weight="fill" />
                           {reviewing ? 'Processing…' : 'Approve'}
+                        </Button>
+                        <Button
+                          onClick={() => handleReview('approve')}
+                          disabled={reviewing}
+                          className="flex-1 text-white font-semibold h-10 border-0"
+                          style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                          data-testid="go-live-btn"
+                        >
+                          <Rocket className="w-4 h-4 mr-1.5" weight="fill" />
+                          {reviewing ? 'Processing…' : `Go Live · ${goLiveHours}h`}
                         </Button>
                         <Button
                           onClick={() => handleReview('reject')}
@@ -607,7 +637,7 @@ const AdminSubmissionsPage = () => {
                           className="flex-1 bg-[#EF4444] hover:bg-[#dc2626] text-white font-semibold h-10"
                           data-testid="reject-btn"
                         >
-                          <XCircle className="w-4 h-4 mr-2" weight="fill" />
+                          <XCircle className="w-4 h-4 mr-1.5" weight="fill" />
                           {reviewing ? 'Processing…' : 'Reject'}
                         </Button>
                       </div>

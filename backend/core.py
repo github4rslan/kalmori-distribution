@@ -243,6 +243,7 @@ class SplitUpdate(BaseModel):
 class AdminReviewAction(BaseModel):
     action: str
     notes: Optional[str] = None
+    go_live_hours: Optional[int] = 24  # hours until release goes live on stores
 
 class AdminUserUpdate(BaseModel):
     role: Optional[str] = None

@@ -173,23 +173,31 @@ async def review_submission(release_id: str, review: AdminReviewAction, request:
     if not submission: raise HTTPException(status_code=404, detail="Submission not found")
     if submission["status"] != "pending_review": raise HTTPException(status_code=400, detail="Submission already reviewed")
     new_status = "approved" if review.action == "approve" else "rejected"
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    go_live_hours = review.go_live_hours if review.go_live_hours is not None else 24
+    live_at = (now + timedelta(hours=go_live_hours)).isoformat()
     await db.submissions.update_one({"release_id": release_id},
-        {"$set": {"status": new_status, "reviewed_at": now, "reviewed_by": admin["id"], "review_notes": review.notes}})
+        {"$set": {"status": new_status, "reviewed_at": now_iso, "reviewed_by": admin["id"], "review_notes": review.notes}})
     if review.action == "approve":
-        await db.releases.update_one({"id": release_id}, {"$set": {"status": "distributed"}})
-        await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "live", "approved_at": now}})
-        notify_msg = "Your release has been approved and is now live on all selected stores!"
+        await db.releases.update_one({"id": release_id}, {"$set": {
+            "status": "distributed",
+            "approved_at": now_iso,
+            "live_at": live_at,
+            "go_live_hours": go_live_hours,
+        }})
+        await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "live", "approved_at": now_iso, "live_at": live_at}})
+        notify_msg = f"Your release has been approved! It will be live on all stores in {go_live_hours} hours."
     else:
         await db.releases.update_one({"id": release_id}, {"$set": {"status": "rejected", "rejection_reason": review.notes}})
         await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "rejected"}})
         notify_msg = f"Your release was not approved. Reason: {review.notes or 'Does not meet guidelines.'}"
     await db.notifications.insert_one({"id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": submission["artist_id"],
-        "type": "review_result", "message": notify_msg, "release_id": release_id, "read": False, "action_url": f"/releases/{release_id}", "created_at": now})
+        "type": "review_result", "message": notify_msg, "release_id": release_id, "read": False, "action_url": f"/releases/{release_id}", "created_at": now_iso})
     await db.admin_actions.insert_one({"id": f"act_{uuid.uuid4().hex[:12]}", "admin_id": admin["id"],
         "action": f"review_{review.action}", "target_type": "release", "target_id": release_id,
-        "notes": review.notes, "created_at": now})
-    return {"message": f"Submission {new_status}", "status": new_status}
+        "notes": review.notes, "created_at": now_iso})
+    return {"message": f"Submission {new_status}", "status": new_status, "live_at": live_at if review.action == "approve" else None}
 
 
 # ============= USERS =============
