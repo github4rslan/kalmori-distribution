@@ -522,9 +522,10 @@ const AdminSubmissionsPage = () => {
                           </div>
                         );
                       })()}
-                      <div className="mt-4 pt-4 border-t border-white/8 grid grid-cols-2 gap-4">
-                        <Field label="Tracks Stored" value={String(detail.audio_bank?.length || detail.tracks?.length || 0)} />
-                        <Field label="Total Stores" value={String((detail.submission?.stores || detail.release?.distributed_platforms || []).length)} />
+                      <div className="mt-4 pt-4 border-t border-white/8 grid grid-cols-3 gap-4">
+                        <Field label="Tracks" value={String(detail.audio_bank?.length || detail.tracks?.length || 0)} />
+                        <Field label="Artist Selected" value={String((detail.submission?.stores || detail.release?.distributed_platforms || []).length)} />
+                        <Field label="Platform Coverage" value="150+ Stores" />
                       </div>
                     </Section>
                   )}
