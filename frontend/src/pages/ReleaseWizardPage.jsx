@@ -128,6 +128,12 @@ export default function ReleaseWizardPage() {
     contributors: [],
   };
   const [volumes, setVolumes] = useState([{ id: 1, tracks: [{ ...defaultTrack }] }]);
+  // track key = `${volIdx}-${trackIdx}`, value = bool (expanded)
+  const [expandedTracks, setExpandedTracks] = useState({ '0-0': true });
+  const toggleTrack = (volIdx, trackIdx) => {
+    const key = `${volIdx}-${trackIdx}`;
+    setExpandedTracks(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Territory
   const [territory, setTerritory] = useState('worldwide');
@@ -163,9 +169,14 @@ export default function ReleaseWizardPage() {
 
   // Track management
   const addTrack = (volIdx) => {
-    setVolumes(prev => prev.map((v, i) => i === volIdx ? {
-      ...v, tracks: [...v.tracks, { ...defaultTrack, track_number: v.tracks.length + 1 }]
-    } : v));
+    setVolumes(prev => {
+      const updated = prev.map((v, i) => i === volIdx ? {
+        ...v, tracks: [...v.tracks, { ...defaultTrack, track_number: v.tracks.length + 1 }]
+      } : v);
+      const newTrackIdx = updated[volIdx].tracks.length - 1;
+      setExpandedTracks(prev2 => ({ ...prev2, [`${volIdx}-${newTrackIdx}`]: true }));
+      return updated;
+    });
   };
 
   const removeTrack = (volIdx, trackIdx) => {
@@ -504,15 +515,40 @@ export default function ReleaseWizardPage() {
                   </div>
 
                   {/* Track List */}
-                  <div className="space-y-4">
-                    {vol.tracks.map((track, trackIdx) => (
-                      <div key={trackIdx} className="bg-[#0a0a14] border border-white/5 rounded-xl p-5 space-y-5" data-testid={`track-${trackIdx}`}>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-500 tracking-wider">TRACK {track.track_number}</span>
-                          {vol.tracks.length > 1 && (
-                            <button onClick={() => removeTrack(volIdx, trackIdx)} className="text-gray-600 hover:text-red-400 p-1 transition-colors"><Trash className="w-4 h-4" /></button>
-                          )}
-                        </div>
+                  <div className="space-y-3">
+                    {vol.tracks.map((track, trackIdx) => {
+                      const isExpanded = expandedTracks[`${volIdx}-${trackIdx}`] ?? false;
+                      return (
+                      <div key={trackIdx} className="bg-[#0a0a14] border border-white/8 rounded-xl overflow-hidden" data-testid={`track-${trackIdx}`}>
+                        {/* Collapsible header — always visible */}
+                        <button
+                          type="button"
+                          onClick={() => toggleTrack(volIdx, trackIdx)}
+                          className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/4 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] font-bold text-[#7C4DFF] tracking-widest">TRACK {track.track_number}</span>
+                            {track.title && <span className="text-sm text-white font-medium">{track.title}{track.title_version ? ` (${track.title_version})` : ''}</span>}
+                            {track.audioName && (
+                              <span className="hidden sm:flex items-center gap-1 text-[11px] text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-full">
+                                <Check className="w-3 h-3" weight="bold" /> Audio
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {vol.tracks.length > 1 && (
+                              <span onClick={e => { e.stopPropagation(); removeTrack(volIdx, trackIdx); }}
+                                className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-colors">
+                                <Trash className="w-3.5 h-3.5" />
+                              </span>
+                            )}
+                            {isExpanded ? <CaretUp className="w-4 h-4 text-gray-500" /> : <CaretDown className="w-4 h-4 text-gray-500" />}
+                          </div>
+                        </button>
+
+                        {/* Expandable body */}
+                        {isExpanded && (
+                        <div className="px-5 pb-5 space-y-5 border-t border-white/5 pt-4">
 
                         {/* === TITLE === */}
                         <div className="space-y-3">
@@ -720,8 +756,11 @@ export default function ReleaseWizardPage() {
                             <Plus className="w-4 h-4" /> Add New Contributor
                           </button>
                         </div>
-                      </div>
-                    ))}
+                        </div> {/* end expandable body */}
+                        )}
+                      </div> {/* end track card */}
+                    );
+                    })}
                   </div>
                 </div>
               </div>
