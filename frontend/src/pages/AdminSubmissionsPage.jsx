@@ -9,6 +9,7 @@ import {
   Storefront, MusicNote, ArrowSquareOut, Rocket,
 } from '@phosphor-icons/react';
 import { Button } from '../components/ui/button';
+import { toast } from 'sonner';
 
 /* ── helpers ─────────────────────────────────────────── */
 const fmtList = (items = []) => {
@@ -194,14 +195,20 @@ const AdminSubmissionsPage = () => {
 
   const closeModal = () => { setSelectedSub(null); setDetail(null); setReviewNotes(''); setGoLiveHours(24); };
 
-  const handleReview = async (action) => {
+  const handleReview = async (action, hours = goLiveHours) => {
     if (!selectedSub) return;
     setReviewing(true);
     try {
-      await axios.put(`${API}/admin/submissions/${selectedSub}/review`, { action, notes: reviewNotes || null, go_live_hours: goLiveHours });
+      await axios.put(`${API}/admin/submissions/${selectedSub}/review`, { action, notes: reviewNotes || null, go_live_hours: hours });
+      const msg = action === 'approve'
+        ? hours === 0 ? 'Release approved — now live.' : `Release approved. Goes live in ${hours}h.`
+        : 'Release rejected.';
+      toast.success(msg);
       closeModal();
       fetchSubmissions(page, filter);
-    } catch (err) { alert(err.response?.data?.detail || 'Review failed'); }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Review failed. Please try again.');
+    }
     finally { setReviewing(false); }
   };
 
@@ -611,28 +618,32 @@ const AdminSubmissionsPage = () => {
                         <span className="text-xs text-[#555]">of approval</span>
                       </div>
                       <div className="flex gap-2">
+                        {/* Approve = instant live (0h delay) */}
                         <Button
-                          onClick={() => handleReview('approve')}
+                          onClick={() => handleReview('approve', 0)}
                           disabled={reviewing}
                           className="flex-1 text-white font-semibold h-10 border-0"
                           style={{ background: 'linear-gradient(135deg,#22C55E,#16a34a)' }}
                           data-testid="approve-btn"
+                          title="Approve and mark as live immediately"
                         >
                           <CheckCircle className="w-4 h-4 mr-1.5" weight="fill" />
                           {reviewing ? 'Processing…' : 'Approve'}
                         </Button>
+                        {/* Go Live = approve with custom countdown timer */}
                         <Button
-                          onClick={() => handleReview('approve')}
+                          onClick={() => handleReview('approve', goLiveHours)}
                           disabled={reviewing}
                           className="flex-1 text-white font-semibold h-10 border-0"
                           style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
                           data-testid="go-live-btn"
+                          title={`Approve and show ${goLiveHours}h countdown to artist`}
                         >
                           <Rocket className="w-4 h-4 mr-1.5" weight="fill" />
                           {reviewing ? 'Processing…' : `Go Live · ${goLiveHours}h`}
                         </Button>
                         <Button
-                          onClick={() => handleReview('reject')}
+                          onClick={() => handleReview('reject', 0)}
                           disabled={reviewing}
                           className="flex-1 bg-[#EF4444] hover:bg-[#dc2626] text-white font-semibold h-10"
                           data-testid="reject-btn"
