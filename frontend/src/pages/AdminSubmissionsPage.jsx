@@ -458,8 +458,8 @@ const AdminSubmissionsPage = () => {
                         </div>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
-                        <Field label="Full Name" value={detail.artist?.name} />
-                        <Field label="Legal Name" value={detail.artist?.legal_name} />
+                        <Field label="Artist Name" value={detail.artist?.artist_name || detail.artist?.name} />
+                        <Field label="Legal Name" value={detail.artist?.legal_name || detail.artist?.name} />
                         <Field label="Phone" value={detail.artist?.phone_number} />
                         <Field label="Country" value={detail.artist?.country || detail.artist_profile?.country} />
                         <Field label="State" value={detail.artist?.state} />

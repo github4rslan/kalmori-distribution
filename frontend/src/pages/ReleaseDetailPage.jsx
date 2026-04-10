@@ -838,23 +838,56 @@ const ReleaseDetailPage = () => {
             </div>
 
             {release.payment_status !== 'paid' && release.payment_status !== 'free_tier' ? (
-              <div className="flex items-center justify-between p-4 bg-[#0A0A0A] rounded-md mb-4">
-                <div>
-                  <p className="font-medium flex items-center gap-2">
-                    <CurrencyDollar className="w-5 h-5 text-[#FFCC00]" />
-                    Payment Required
-                  </p>
-                  <p className="text-sm text-[#A1A1AA]">
-                    ${release.release_type === 'single' ? '20.00' : release.release_type === 'ep' ? '35.00' : '50.00'} for {release.release_type} or use free tier (15% share)
-                  </p>
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                {/* Rise Plan Card */}
+                <div className="flex-1 rounded-xl p-4 border border-[#7C4DFF]/40 bg-[#7C4DFF]/8 flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}>
+                      <MusicNotes className="w-5 h-5 text-white" weight="fill" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white">Rise Plan</p>
+                      <p className="text-xs text-[#A1A1AA] mt-0.5 leading-relaxed">Keep 95% of your revenue. Pay per single — no monthly fee required.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
+                    <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
+                    <Button
+                      onClick={handleCheckout}
+                      size="sm"
+                      className="text-xs px-3 h-7 text-white border-0"
+                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}
+                      data-testid="checkout-btn"
+                    >
+                      Upgrade to Rise
+                    </Button>
+                  </div>
                 </div>
-                <Button 
-                  onClick={handleCheckout}
-                  className="bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black"
-                  data-testid="checkout-btn"
-                >
-                  Pay Now
-                </Button>
+
+                {/* Pro Plan Card */}
+                <div className="flex-1 rounded-xl p-4 border border-[#E040FB]/40 bg-[#E040FB]/8 flex flex-col gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }}>
+                      <CurrencyDollar className="w-5 h-5 text-white" weight="fill" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white">Pro Plan</p>
+                      <p className="text-xs text-[#A1A1AA] mt-0.5 leading-relaxed">Keep 100% of your revenue. Unlimited releases, AI features, albums & more.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-[#E040FB]/20">
+                    <span className="text-xs text-[#E040FB] font-semibold">$49.99/mo · 0% share</span>
+                    <Button
+                      onClick={handleCheckout}
+                      size="sm"
+                      className="text-xs px-3 h-7 text-white border-0"
+                      style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }}
+                      data-testid="checkout-btn-pro"
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               <Button
