@@ -429,12 +429,43 @@ const AdminSubmissionsPage = () => {
                         </div>
                         {detail.release?.cover_art_url && (
                           <div className="mt-5 pt-4 border-t border-white/8">
-                            <p className="text-[11px] text-[#555] uppercase tracking-wider mb-2">Cover Art</p>
-                            <img
-                              src={detail.release.cover_art_url}
-                              alt="Cover Art"
-                              className="w-28 h-28 rounded-xl object-cover border border-white/10"
-                            />
+                            <p className="text-[11px] text-[#555] uppercase tracking-wider mb-3">Cover Art</p>
+                            <div className="flex items-start gap-4">
+                              <div className="relative group">
+                                <img
+                                  src={detail.release.cover_art_url}
+                                  alt="Cover Art"
+                                  className="w-36 h-36 rounded-xl object-cover border border-white/10"
+                                />
+                                <div className="absolute inset-0 rounded-xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <a
+                                    href={detail.release.cover_art_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    download
+                                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                                    title="Download cover art"
+                                  >
+                                    <DownloadSimple className="w-5 h-5 text-white" weight="bold" />
+                                  </a>
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2 pt-1">
+                                <p className="text-xs text-white font-medium">{detail.release?.title}</p>
+                                <p className="text-[11px] text-[#A1A1AA]">3000 × 3000 px recommended</p>
+                                <a
+                                  href={detail.release.cover_art_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white mt-1"
+                                  style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                                >
+                                  <DownloadSimple className="w-3.5 h-3.5" weight="bold" />
+                                  Download Cover Art
+                                </a>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </Section>
