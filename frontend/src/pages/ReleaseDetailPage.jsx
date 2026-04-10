@@ -735,17 +735,22 @@ const ReleaseDetailPage = () => {
                       <p className="text-xs text-[#71717A] font-mono">{track.isrc}</p>
                     </div>
                     
-                    {track.duration > 0 && (
+                    {track.duration != null && track.duration > 0 && (
                       <span className="text-sm text-[#71717A] font-mono">
                         {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, '0')}
                       </span>
                     )}
-                    
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      track.status === 'ready' ? 'bg-[#22C55E]/10 text-[#22C55E]' : 'bg-[#FFCC00]/10 text-[#FFCC00]'
-                    }`}>
-                      {track.status}
-                    </span>
+
+                    {track.status && (
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        track.status === 'ready' ? 'bg-[#22C55E]/10 text-[#22C55E]'
+                        : track.status === 'processing' ? 'bg-[#7C4DFF]/10 text-[#7C4DFF]'
+                        : track.status === 'error' ? 'bg-[#EF4444]/10 text-[#EF4444]'
+                        : 'bg-[#FFD700]/10 text-[#FFD700]'
+                      }`}>
+                        {track.status === 'ready' ? 'Ready' : track.status === 'processing' ? 'Processing' : track.status === 'error' ? 'Error' : track.status}
+                      </span>
+                    )}
                     
                     {release.status === 'draft' && (
                       <>

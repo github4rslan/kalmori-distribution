@@ -176,7 +176,8 @@ async def review_submission(release_id: str, review: AdminReviewAction, request:
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
     go_live_hours = review.go_live_hours if review.go_live_hours is not None else 24
-    live_at = (now + timedelta(hours=go_live_hours)).isoformat()
+    # 0h = instant live, otherwise schedule countdown
+    live_at = now_iso if go_live_hours == 0 else (now + timedelta(hours=go_live_hours)).isoformat()
     await db.submissions.update_one({"release_id": release_id},
         {"$set": {"status": new_status, "reviewed_at": now_iso, "reviewed_by": admin["id"], "review_notes": review.notes}})
     if review.action == "approve":
@@ -187,7 +188,8 @@ async def review_submission(release_id: str, review: AdminReviewAction, request:
             "go_live_hours": go_live_hours,
         }})
         await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "live", "approved_at": now_iso, "live_at": live_at}})
-        notify_msg = f"Your release has been approved! It will be live on all stores in {go_live_hours} hours."
+        live_msg = "immediately" if go_live_hours == 0 else f"in {go_live_hours} hour{'s' if go_live_hours != 1 else ''}"
+        notify_msg = f"Your release has been approved! It will be live on all stores {live_msg}."
     else:
         await db.releases.update_one({"id": release_id}, {"$set": {"status": "rejected", "rejection_reason": review.notes}})
         await db.distributions.update_many({"release_id": release_id}, {"$set": {"status": "rejected"}})

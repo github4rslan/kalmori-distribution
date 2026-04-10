@@ -87,7 +87,8 @@ const AdminUserDetailPage = () => {
   if (!data) return null;
 
   const { user, stats, releases, platform_breakdown, country_breakdown, weekly_trends, goals } = data;
-  const statusColor = (s) => s === 'distributed' ? 'text-[#1DB954]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#E53935]' : 'text-gray-400';
+  const STATUS_LABEL = { distributed: 'Live', pending_review: 'Under Review', processing: 'Processing', rejected: 'Rejected', draft: 'Draft' };
+  const statusColor = (s) => s === 'distributed' ? 'text-[#22C55E]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#EF4444]' : s === 'processing' ? 'text-[#7C4DFF]' : 'text-gray-400';
   const planColors = { pro: '#E040FB', rise: '#FFD700', free: '#666', single: '#7C4DFF', album: '#FF6B6B' };
 
   return (
@@ -310,7 +311,7 @@ const AdminUserDetailPage = () => {
                       </td>
                       <td className="py-2.5 px-4 text-xs text-gray-400 capitalize">{r.release_type}</td>
                       <td className="py-2.5 px-4 text-xs text-gray-400">{r.genre || '-'}</td>
-                      <td className="py-2.5 px-4"><span className={`text-xs capitalize ${statusColor(r.status)}`}>{r.status?.replace('_', ' ')}</span></td>
+                      <td className="py-2.5 px-4"><span className={`text-xs font-semibold ${statusColor(r.status)}`}>{STATUS_LABEL[r.status] || r.status?.replace('_', ' ') || '—'}</span></td>
                       <td className="py-2.5 px-4 text-xs text-gray-400 font-mono">{r.track_count || 0}</td>
                       <td className="py-2.5 px-4 text-xs text-gray-500">{r.created_at ? new Date(r.created_at).toLocaleDateString() : '-'}</td>
                     </tr>

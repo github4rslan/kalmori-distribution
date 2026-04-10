@@ -299,7 +299,7 @@ const AdminSubmissionsPage = () => {
                             <span className="text-sm font-medium text-white truncate max-w-[120px]">{sub.release_title}</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 text-sm text-[#A1A1AA]">{sub.artist_name}</td>
+                        <td className="py-3.5 px-4 text-sm text-[#A1A1AA]">{sub.artist_name || sub.artist?.artist_name || '—'}</td>
                         <td className="py-3.5 px-4 text-sm text-[#A1A1AA] capitalize hidden sm:table-cell">{sub.release_type}</td>
                         <td className="py-3.5 px-4 text-sm text-[#A1A1AA] font-mono hidden md:table-cell">{sub.track_count}</td>
                         <td className="py-3.5 px-4">

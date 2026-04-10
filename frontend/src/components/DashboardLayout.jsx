@@ -51,7 +51,7 @@ const NOTIFICATION_ROUTES = {
   'new_signup': '/admin/users',
 };
 
-const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate }) => (
+const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate, userRole }) => (
   <div
     className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 sm:left-auto top-[72px] sm:top-full sm:mt-2 w-auto sm:w-96 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]"
     data-testid="notification-panel">
@@ -66,7 +66,12 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
         <div className="p-6 text-center text-sm text-gray-500">No notifications yet</div>
       ) : (
         notifications.map(n => {
-          const targetUrl = n.action_url || NOTIFICATION_ROUTES[n.type] || '/dashboard';
+          const isAdmin = userRole === 'admin';
+          const targetUrl = n.action_url
+            || (n.type === 'new_submission' ? (isAdmin ? '/admin/submissions' : '/releases') : null)
+            || (n.type === 'new_signup' ? (isAdmin ? '/admin/users' : '/dashboard') : null)
+            || NOTIFICATION_ROUTES[n.type]
+            || '/dashboard';
           return (
             <div key={n.id} className={`group p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/5' : 'bg-[#7C4DFF]/5') : ''}`}
               onClick={async () => { if (!n.read) await onMarkRead(n.id); onNavigate(targetUrl); onClose(); }}
@@ -322,7 +327,7 @@ const DashboardLayout = ({ children }) => {
                   )}
                 </button>
                 {showNotifications && (
-                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} />
+                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={user?.user_role || user?.role} />
                 )}
               </div>
               <Link to="/releases/new">

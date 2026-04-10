@@ -280,8 +280,12 @@ export default function ReleaseWizardPage() {
 
       // Upload tracks
       const allTracks = volumes.flatMap(v => v.tracks);
+      const skippedTracks = allTracks.filter(t => !t.title?.trim());
+      if (skippedTracks.length > 0) {
+        toast.warning(`${skippedTracks.length} track${skippedTracks.length > 1 ? 's' : ''} skipped — no title provided.`);
+      }
       for (const track of allTracks) {
-        if (!track.title) continue;
+        if (!track.title?.trim()) continue;
         const trackRes = await axios.post(`${API}/tracks`, {
           release_id: newId,
           title: track.title,

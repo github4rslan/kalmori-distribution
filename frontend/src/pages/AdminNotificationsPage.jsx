@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'sonner';
 import { API } from '../App';
 import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
@@ -108,7 +109,7 @@ export default function AdminNotificationsPage() {
     try {
       await axios.put(`${API}/admin/notifications-bank/${id}/read`, {}, { withCredentials: true });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    } catch {}
+    } catch { toast.error('Failed to mark notification as read'); }
   };
 
   const handleDelete = async (e, id) => {
@@ -117,14 +118,14 @@ export default function AdminNotificationsPage() {
       await axios.delete(`${API}/admin/notifications-bank/${id}`, { withCredentials: true });
       setNotifications(prev => prev.filter(n => n.id !== id));
       setTotal(prev => prev - 1);
-    } catch {}
+    } catch { toast.error('Failed to delete notification'); }
   };
 
   const handleMarkAllRead = async () => {
     try {
       await axios.put(`${API}/admin/notifications-bank/read-all`, {}, { withCredentials: true });
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch {}
+    } catch { toast.error('Failed to mark all as read'); }
   };
 
   const handleClick = async (n) => {
@@ -133,7 +134,7 @@ export default function AdminNotificationsPage() {
       try {
         await axios.put(`${API}/admin/notifications-bank/${n.id}/read`, {}, { withCredentials: true });
         setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-      } catch {}
+      } catch { /* non-critical, navigation still proceeds */ }
     }
     const url = getActionUrl(n);
     navigate(url);

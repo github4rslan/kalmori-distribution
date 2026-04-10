@@ -9,6 +9,7 @@
 
 # AI agent docs (local only)
 .ai/
+CLAUDE.md
 
 # Dependencies
 node_modules/
