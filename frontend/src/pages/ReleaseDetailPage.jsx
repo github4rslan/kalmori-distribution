@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '../App';
+import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -226,6 +226,10 @@ const TrackForm = ({ track, onChange, onSave, onCancel, onGenerateISRC, isNew, s
 const ReleaseDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userRole = user?.user_role || user?.role;
+  const userPlan = user?.plan || 'free'; // 'free' | 'rise' | 'pro'
+  const isAdmin = userRole === 'admin';
   const [release, setRelease] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -866,34 +870,37 @@ const ReleaseDetailPage = () => {
               ))}
             </div>
 
-            {release.payment_status !== 'paid' && release.payment_status !== 'free_tier' ? (
+            {/* Upgrade cards — only shown when there's a higher plan to upgrade to */}
+            {!isAdmin && userPlan !== 'pro' && (
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                {/* Rise Plan Card */}
-                <div className="flex-1 rounded-xl p-4 border border-[#7C4DFF]/40 bg-[#7C4DFF]/8 flex flex-col gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}>
-                      <MusicNotes className="w-5 h-5 text-white" weight="fill" />
+                {/* Rise Plan Card — only shown to free users */}
+                {userPlan === 'free' && (
+                  <div className="flex-1 rounded-xl p-4 border border-[#7C4DFF]/40 bg-[#7C4DFF]/8 flex flex-col gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}>
+                        <MusicNotes className="w-5 h-5 text-white" weight="fill" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white">Rise Plan</p>
+                        <p className="text-xs text-[#A1A1AA] mt-0.5 leading-relaxed">Keep 95% of your revenue. Pay per single — no monthly fee required.</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white">Rise Plan</p>
-                      <p className="text-xs text-[#A1A1AA] mt-0.5 leading-relaxed">Keep 95% of your revenue. Pay per single — no monthly fee required.</p>
+                    <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
+                      <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
+                      <Button
+                        onClick={handleCheckout}
+                        size="sm"
+                        className="text-xs px-3 h-7 text-white border-0"
+                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}
+                        data-testid="checkout-btn"
+                      >
+                        Upgrade to Rise
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
-                    <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
-                    <Button
-                      onClick={handleCheckout}
-                      size="sm"
-                      className="text-xs px-3 h-7 text-white border-0"
-                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}
-                      data-testid="checkout-btn"
-                    >
-                      Upgrade to Rise
-                    </Button>
-                  </div>
-                </div>
+                )}
 
-                {/* Pro Plan Card */}
+                {/* Pro Plan Card — shown to free and rise users */}
                 <div className="flex-1 rounded-xl p-4 border border-[#E040FB]/40 bg-[#E040FB]/8 flex flex-col gap-3">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }}>
@@ -918,7 +925,8 @@ const ReleaseDetailPage = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+            )}
+            {(isAdmin || userPlan === 'pro' || release.payment_status === 'paid' || release.payment_status === 'free_tier') && (
               <Button
                 onClick={handleDistribute}
                 disabled={distributing || selectedStores.length === 0}
