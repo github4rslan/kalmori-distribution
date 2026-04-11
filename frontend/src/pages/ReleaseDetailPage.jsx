@@ -226,10 +226,12 @@ const TrackForm = ({ track, onChange, onSave, onCancel, onGenerateISRC, isNew, s
 const ReleaseDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const userRole = user?.user_role || user?.role;
-  const userPlan = user?.plan || 'free'; // 'free' | 'rise' | 'pro'
   const isAdmin = userRole === 'admin';
+  const [freshPlan, setFreshPlan] = useState(null);
+  // Always use fresh plan from server; fall back to auth context while loading
+  const userPlan = freshPlan || user?.plan || 'free';
   const [release, setRelease] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -272,13 +274,18 @@ const ReleaseDetailPage = () => {
 
   const fetchRelease = useCallback(async () => {
     try {
-      const [releaseRes, storesRes] = await Promise.all([
+      const [releaseRes, storesRes, meRes] = await Promise.all([
         axios.get(`${API}/releases/${id}`),
-        axios.get(`${API}/distributions/stores`)
+        axios.get(`${API}/distributions/stores`),
+        axios.get(`${API}/auth/me`).catch(() => null),
       ]);
       setRelease(releaseRes.data);
       setStores(storesRes.data);
       setSelectedStores(storesRes.data.map(s => s.store_id));
+      if (meRes?.data?.plan) {
+        setFreshPlan(meRes.data.plan);
+        updateUser?.({ plan: meRes.data.plan });
+      }
     } catch (error) {
       toast.error('Failed to load release');
       navigate('/releases');
