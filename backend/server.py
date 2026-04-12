@@ -550,8 +550,10 @@ async def submit_distribution(release_id: str, stores: List[str], request: Reque
     if not release.get("cover_art_url"): raise HTTPException(status_code=400, detail="Release must have cover art")
     tracks = await db.tracks.find({"release_id": release_id, "audio_url": {"$ne": None}}, {"_id": 0}).sort("track_number", 1).to_list(50)
     if not tracks: raise HTTPException(status_code=400, detail="Release must have at least one track with audio")
-    if user.get("plan") != "free" and release.get("payment_status") != "paid":
-        raise HTTPException(status_code=400, detail="Payment required before distribution")
+    user_plan = user.get("plan", "free")
+    payment_ok = user_plan in ("rise", "pro") or release.get("payment_status") == "paid"
+    if not payment_ok:
+        raise HTTPException(status_code=400, detail="Please upgrade your plan to distribute")
     artist_profile = await db.artist_profiles.find_one({"user_id": user["id"]}, {"_id": 0}) or {}
     submitted_at = datetime.now(timezone.utc).isoformat()
     track_bank = []
