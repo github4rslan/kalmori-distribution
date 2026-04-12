@@ -877,10 +877,10 @@ const ReleaseDetailPage = () => {
               ))}
             </div>
 
-            {/* Upgrade cards — only shown when there's a higher plan to upgrade to */}
-            {!isAdmin && userPlan !== 'pro' && (
+            {/* Upgrade cards: free users see Rise + Pro, rise users see only Pro, pro/admin see nothing */}
+            {!isAdmin && userPlan !== 'pro' && release.payment_status !== 'paid' && (
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                {/* Rise Plan Card — only shown to free users */}
+                {/* Rise Plan Card — free users only */}
                 {userPlan === 'free' && (
                   <div className="flex-1 rounded-xl p-4 border border-[#7C4DFF]/40 bg-[#7C4DFF]/8 flex flex-col gap-3">
                     <div className="flex items-start gap-3">
@@ -894,20 +894,13 @@ const ReleaseDetailPage = () => {
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
                       <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
-                      <Button
-                        onClick={handleCheckout}
-                        size="sm"
-                        className="text-xs px-3 h-7 text-white border-0"
-                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }}
-                        data-testid="checkout-btn"
-                      >
+                      <Button onClick={handleCheckout} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }} data-testid="checkout-btn">
                         Upgrade to Rise
                       </Button>
                     </div>
                   </div>
                 )}
-
-                {/* Pro Plan Card — shown to free and rise users */}
+                {/* Pro Plan Card — free and rise users */}
                 <div className="flex-1 rounded-xl p-4 border border-[#E040FB]/40 bg-[#E040FB]/8 flex flex-col gap-3">
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }}>
@@ -920,20 +913,15 @@ const ReleaseDetailPage = () => {
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-[#E040FB]/20">
                     <span className="text-xs text-[#E040FB] font-semibold">$49.99/mo · 0% share</span>
-                    <Button
-                      onClick={handleCheckout}
-                      size="sm"
-                      className="text-xs px-3 h-7 text-white border-0"
-                      style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }}
-                      data-testid="checkout-btn-pro"
-                    >
+                    <Button onClick={handleCheckout} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }} data-testid="checkout-btn-pro">
                       Upgrade to Pro
                     </Button>
                   </div>
                 </div>
               </div>
             )}
-            {(isAdmin || userPlan === 'pro' || release.payment_status === 'paid' || release.payment_status === 'free_tier') && (
+            {/* Distribute button: only for paid, rise, pro, or admin — never for free plan */}
+            {(isAdmin || userPlan === 'pro' || userPlan === 'rise' || release.payment_status === 'paid') && (
               <Button
                 onClick={handleDistribute}
                 disabled={distributing || selectedStores.length === 0}
