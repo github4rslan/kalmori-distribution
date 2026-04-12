@@ -92,8 +92,16 @@ export default function PricingPage() {
   const [customPage, setCustomPage] = useState(null);
   const [checkingCustom, setCheckingCustom] = useState(true);
 
+  const [saleCampaign, setSaleCampaign] = useState(null);
   const currentPlan = user?.plan || 'free';
   const planOrder = ['free', 'rise', 'pro'];
+
+  useEffect(() => {
+    fetch(`${API}/api/plan-sale`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => { if (data.active) setSaleCampaign(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`${API}/pages/pricing`)
@@ -218,19 +226,43 @@ export default function PricingPage() {
           <p className="text-center text-xs text-gray-500 mt-4">On $1,000/mo royalties: Free keeps $800 · Rise keeps $900 · Pro keeps <span className="text-[#FFD700] font-bold">$1,000</span></p>
         </div>
 
+        {/* Sale Campaign Banner */}
+        {saleCampaign && (
+          <div className="mb-6 rounded-2xl p-4 text-center border border-[#FFD700]/30 bg-[#FFD700]/5" data-testid="sale-banner">
+            <p className="text-[#FFD700] font-black tracking-wider text-sm sm:text-base">
+              🔥 {saleCampaign.name || 'LIMITED TIME SALE'} — Up to {Math.max(parseFloat(saleCampaign.rise_discount || 0), parseFloat(saleCampaign.pro_discount || 0))}% OFF
+            </p>
+            {saleCampaign.ends_at && (
+              <p className="text-xs text-white/40 mt-1">
+                Ends {new Date(saleCampaign.ends_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Plan Cards - DistroKid Style */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12" data-testid="plan-cards">
           {plans.map(plan => {
             const isCurrent = user && plan.id === currentPlan;
             const isPro = plan.id === 'pro';
-            // Calculate discounted price if a valid promo is applied and applicable to this plan
+
+            // Sale campaign discount (sitewide)
+            const salePct = saleCampaign && plan.price > 0
+              ? parseFloat(saleCampaign[`${plan.id}_discount`] || 0)
+              : 0;
+            const salePrice = salePct > 0
+              ? Math.max(plan.price - plan.price * salePct / 100, 0.50).toFixed(2)
+              : null;
+
+            // Promo code discount (stacks on sale price)
             const promoApplicable = promoResult && plan.price > 0 &&
               (!promoResult.applicable_plans || promoResult.applicable_plans.includes(plan.id));
+            const baseForPromo = salePrice ? parseFloat(salePrice) : plan.price;
             const discountedPrice = promoApplicable
               ? promoResult.discount_type === 'percent'
-                ? Math.max(plan.price - plan.price * promoResult.discount_value / 100, 0.50).toFixed(2)
-                : Math.max(plan.price - promoResult.discount_value, 0.50).toFixed(2)
-              : null;
+                ? Math.max(baseForPromo - baseForPromo * promoResult.discount_value / 100, 0.50).toFixed(2)
+                : Math.max(baseForPromo - promoResult.discount_value, 0.50).toFixed(2)
+              : salePrice;
             return (
               <div
                 key={plan.id}
@@ -274,7 +306,13 @@ export default function PricingPage() {
                           <span className="text-sm text-gray-500 ml-1">{plan.period}</span>
                         </div>
                         {discountedPrice && (
-                          <p className="text-xs text-green-400 mt-1">Promo applied</p>
+                          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30">
+                            <span className="text-xs font-bold text-[#FFD700]">
+                              Save ${(plan.price - parseFloat(discountedPrice)).toFixed(2)}
+                              {salePrice && !promoApplicable ? ` · ${salePct}% off` : ''}
+                              {promoApplicable && salePrice ? ' · Sale + Promo' : promoApplicable ? ' · Promo applied' : ''}
+                            </span>
+                          </div>
                         )}
                       </div>
                     ) : (

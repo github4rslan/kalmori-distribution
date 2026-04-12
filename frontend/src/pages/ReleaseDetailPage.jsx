@@ -230,6 +230,7 @@ const ReleaseDetailPage = () => {
   const userRole = user?.user_role || user?.role;
   const isAdmin = userRole === 'admin';
   const [freshPlan, setFreshPlan] = useState(null);
+  const [saleCampaign, setSaleCampaign] = useState(null);
   // Always use fresh plan from server; fall back to auth context while loading
   const userPlan = freshPlan || user?.plan || 'free';
   const [release, setRelease] = useState(null);
@@ -274,10 +275,11 @@ const ReleaseDetailPage = () => {
 
   const fetchRelease = useCallback(async () => {
     try {
-      const [releaseRes, storesRes, meRes] = await Promise.all([
+      const [releaseRes, storesRes, meRes, saleRes] = await Promise.all([
         axios.get(`${API}/releases/${id}`),
         axios.get(`${API}/distributions/stores`),
         axios.get(`${API}/auth/me`).catch(() => null),
+        axios.get(`${API}/plan-sale`).catch(() => null),
       ]);
       setRelease(releaseRes.data);
       setStores(storesRes.data);
@@ -286,6 +288,7 @@ const ReleaseDetailPage = () => {
         setFreshPlan(meRes.data.plan);
         updateUser?.({ plan: meRes.data.plan });
       }
+      if (saleRes?.data?.active) setSaleCampaign(saleRes.data);
     } catch (error) {
       toast.error('Failed to load release');
       navigate('/releases');
@@ -891,7 +894,17 @@ const ReleaseDetailPage = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
-                      <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
+                      <div>
+                        {saleCampaign && parseFloat(saleCampaign.rise_discount || 0) > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-gray-500 line-through">${(24.99).toFixed(2)}</span>
+                            <span className="text-xs text-[#22C55E] font-bold">${Math.max(24.99 - 24.99 * parseFloat(saleCampaign.rise_discount) / 100, 0.50).toFixed(2)}/mo</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/15 text-[#FFD700] font-bold">{saleCampaign.rise_discount}% OFF</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
+                        )}
+                      </div>
                       <Button onClick={() => handleCheckout('rise')} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }} data-testid="checkout-btn">
                         Upgrade to Rise
                       </Button>
@@ -910,7 +923,17 @@ const ReleaseDetailPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-[#E040FB]/20">
-                    <span className="text-xs text-[#E040FB] font-semibold">$49.99/mo · 0% share</span>
+                    <div>
+                      {saleCampaign && parseFloat(saleCampaign.pro_discount || 0) > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-gray-500 line-through">${(49.99).toFixed(2)}</span>
+                          <span className="text-xs text-[#22C55E] font-bold">${Math.max(49.99 - 49.99 * parseFloat(saleCampaign.pro_discount) / 100, 0.50).toFixed(2)}/mo</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFD700]/15 text-[#FFD700] font-bold">{saleCampaign.pro_discount}% OFF</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-[#E040FB] font-semibold">$49.99/mo · 0% share</span>
+                      )}
+                    </div>
                     <Button onClick={() => handleCheckout('pro')} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }} data-testid="checkout-btn-pro">
                       Upgrade to Pro
                     </Button>

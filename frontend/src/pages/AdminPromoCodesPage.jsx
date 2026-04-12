@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
-import { Tag, Plus, Trash, ToggleLeft, ToggleRight, Copy, CheckCircle, XCircle, Percent, CurrencyDollar } from '@phosphor-icons/react';
+import { Tag, Plus, Trash, ToggleLeft, ToggleRight, Copy, CheckCircle, XCircle, Percent, CurrencyDollar, Megaphone, FloppyDisk } from '@phosphor-icons/react';
+import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+const RISE_PRICE = 24.99;
+const PRO_PRICE = 49.99;
 
 export default function AdminPromoCodesPage() {
   const [codes, setCodes] = useState([]);
@@ -17,6 +21,12 @@ export default function AdminPromoCodesPage() {
   const [success, setSuccess] = useState('');
   const [copied, setCopied] = useState('');
 
+  // Plan Sale Campaign state
+  const [sale, setSale] = useState({ name: '', rise_discount: 0, pro_discount: 0, ends_at: '', active: false });
+  const [saleLoading, setSaleLoading] = useState(true);
+  const [saleSaving, setSaleSaving] = useState(false);
+  const [saleSuccess, setSaleSuccess] = useState('');
+
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -28,7 +38,40 @@ export default function AdminPromoCodesPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchCodes(); }, [fetchCodes]);
+  const fetchSale = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/plan-sale`, { withCredentials: true });
+      if (res.data && res.data.name !== undefined) {
+        setSale({
+          name: res.data.name || '',
+          rise_discount: res.data.rise_discount ?? 0,
+          pro_discount: res.data.pro_discount ?? 0,
+          ends_at: res.data.ends_at ? res.data.ends_at.split('T')[0] : '',
+          active: res.data.active ?? false,
+        });
+      }
+    } catch (e) { /* no sale yet */ }
+    setSaleLoading(false);
+  }, []);
+
+  const handleSaveSale = async () => {
+    setSaleSaving(true); setSaleSuccess('');
+    try {
+      const payload = {
+        name: sale.name,
+        rise_discount: parseFloat(sale.rise_discount) || 0,
+        pro_discount: parseFloat(sale.pro_discount) || 0,
+        ends_at: sale.ends_at ? new Date(sale.ends_at).toISOString() : null,
+        active: sale.active,
+      };
+      await axios.put(`${API}/api/admin/plan-sale`, payload, { withCredentials: true });
+      setSaleSuccess('Campaign saved!');
+      setTimeout(() => setSaleSuccess(''), 3000);
+    } catch (e) { setError(e.response?.data?.detail || 'Failed to save campaign'); }
+    setSaleSaving(false);
+  };
+
+  useEffect(() => { fetchCodes(); fetchSale(); }, [fetchCodes, fetchSale]);
 
   const handleCreate = async () => {
     if (!form.code.trim()) { setError('Enter a promo code'); return; }
@@ -303,6 +346,141 @@ export default function AdminPromoCodesPage() {
             ))}
           </div>
         )}
+        {/* ===== PLAN SALE CAMPAIGN ===== */}
+        <div className="mt-10">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>
+              <Megaphone className="w-5 h-5 text-white" weight="fill" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Plan Sale Campaign</h2>
+              <p className="text-gray-500 text-xs mt-0.5">Set a sitewide discount on Rise &amp; Pro — shows everywhere prices appear</p>
+            </div>
+          </div>
+
+          {saleLoading ? (
+            <div className="text-center py-8 text-gray-500 text-sm">Loading...</div>
+          ) : (
+            <div className="bg-[#111] border border-[#222] rounded-xl p-5 space-y-5">
+              {/* Active toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-white">Campaign Active</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Turn on to show discounted prices on the site</p>
+                </div>
+                <button onClick={() => setSale(s => ({ ...s, active: !s.active }))}
+                  className="transition-colors" data-testid="sale-active-toggle">
+                  {sale.active
+                    ? <ToggleRight className="w-8 h-8 text-[#22C55E]" />
+                    : <ToggleLeft className="w-8 h-8 text-gray-600" />}
+                </button>
+              </div>
+
+              {/* Campaign name */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1.5 block">Campaign Name</label>
+                <input
+                  className={inputCls}
+                  placeholder='e.g. "Black Friday Sale", "Launch Week"'
+                  value={sale.name}
+                  onChange={e => setSale(s => ({ ...s, name: e.target.value }))}
+                  data-testid="sale-name-input"
+                />
+              </div>
+
+              {/* Discounts */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1.5 block">Rise Discount (%)</label>
+                  <div className="relative">
+                    <input type="number" min="0" max="100" step="1"
+                      className={inputCls}
+                      value={sale.rise_discount}
+                      onChange={e => setSale(s => ({ ...s, rise_discount: e.target.value }))}
+                      data-testid="sale-rise-input"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#E040FB] mb-1.5 block">Pro Discount (%)</label>
+                  <div className="relative">
+                    <input type="number" min="0" max="100" step="1"
+                      className={inputCls}
+                      value={sale.pro_discount}
+                      onChange={e => setSale(s => ({ ...s, pro_discount: e.target.value }))}
+                      data-testid="sale-pro-input"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* End date */}
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1.5 block">End Date (optional — auto-expires)</label>
+                <input type="date" className={inputCls}
+                  value={sale.ends_at}
+                  onChange={e => setSale(s => ({ ...s, ends_at: e.target.value }))}
+                  data-testid="sale-ends-input"
+                />
+              </div>
+
+              {/* Live preview */}
+              {(parseFloat(sale.rise_discount) > 0 || parseFloat(sale.pro_discount) > 0) && (
+                <div className="bg-black/40 border border-white/8 rounded-xl p-4 space-y-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Preview</p>
+                  {parseFloat(sale.rise_discount) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#7C4DFF]" />
+                        <span className="text-sm font-semibold text-white">Rise Plan</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#7C4DFF]/20 text-[#7C4DFF] font-bold">{sale.rise_discount}% OFF</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-500 line-through mr-2">${RISE_PRICE}</span>
+                        <span className="text-sm font-bold text-[#22C55E]">
+                          ${Math.max(RISE_PRICE - RISE_PRICE * parseFloat(sale.rise_discount) / 100, 0.50).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-500">/mo</span>
+                      </div>
+                    </div>
+                  )}
+                  {parseFloat(sale.pro_discount) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[#E040FB]" />
+                        <span className="text-sm font-semibold text-white">Pro Plan</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#E040FB]/20 text-[#E040FB] font-bold">{sale.pro_discount}% OFF</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs text-gray-500 line-through mr-2">${PRO_PRICE}</span>
+                        <span className="text-sm font-bold text-[#22C55E]">
+                          ${Math.max(PRO_PRICE - PRO_PRICE * parseFloat(sale.pro_discount) / 100, 0.50).toFixed(2)}
+                        </span>
+                        <span className="text-xs text-gray-500">/mo</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {saleSuccess && (
+                <div className="flex items-center gap-2 text-green-400 text-sm bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-2.5">
+                  <CheckCircle className="w-4 h-4" /> {saleSuccess}
+                </div>
+              )}
+
+              <button onClick={handleSaveSale} disabled={saleSaving}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-60"
+                style={{ background: 'linear-gradient(90deg,#7C4DFF,#E040FB)' }}
+                data-testid="save-sale-btn">
+                <FloppyDisk className="w-4 h-4" weight="bold" />
+                {saleSaving ? 'Saving...' : 'Save Campaign'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

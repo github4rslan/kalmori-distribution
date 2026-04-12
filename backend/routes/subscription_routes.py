@@ -57,6 +57,56 @@ async def upgrade_subscription(plan: str, request: Request):
         "status": "active",
     }
 
+# ============= PLAN SALE CAMPAIGN =============
+
+@subscription_router.get("/plan-sale")
+async def get_plan_sale():
+    """Public endpoint — returns active sale campaign or null."""
+    sale = await db.plan_sale.find_one({"active": True}, {"_id": 0})
+    if not sale:
+        return {"active": False}
+    # Check expiry
+    if sale.get("ends_at"):
+        if datetime.fromisoformat(sale["ends_at"]) < datetime.now(timezone.utc):
+            await db.plan_sale.update_one({"_id": sale.get("id")}, {"$set": {"active": False}})
+            return {"active": False}
+    return sale
+
+@subscription_router.get("/admin/plan-sale")
+async def get_admin_plan_sale(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    sale = await db.plan_sale.find_one({}, {"_id": 0}, sort=[("created_at", -1)])
+    return sale or {}
+
+@subscription_router.put("/admin/plan-sale")
+async def save_plan_sale(request: Request):
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    allowed = {"name", "active", "rise_discount", "pro_discount", "ends_at"}
+    updates = {k: v for k, v in body.items() if k in allowed}
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    # Validate discounts
+    for field in ("rise_discount", "pro_discount"):
+        if field in updates:
+            val = float(updates[field])
+            if val < 0 or val > 100:
+                raise HTTPException(status_code=400, detail=f"{field} must be 0–100")
+            updates[field] = val
+    existing = await db.plan_sale.find_one({}, sort=[("created_at", -1)])
+    if existing:
+        await db.plan_sale.update_one({"_id": existing["_id"]}, {"$set": updates})
+    else:
+        updates["id"] = f"sale_{uuid.uuid4().hex[:12]}"
+        updates.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+        await db.plan_sale.insert_one(updates)
+    result = await db.plan_sale.find_one({}, {"_id": 0}, sort=[("created_at", -1)])
+    return result
+
+
 class SubscriptionCheckout(BaseModel):
     plan: str
     origin_url: str
@@ -74,8 +124,22 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
         return {"message": "Downgraded to Free", "redirect_url": None}
     stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
 
-    # Resolve promo code discount
+    # Resolve active plan sale campaign discount first
     final_price = plan_info["price"]
+    sale_discount = 0.0
+    sale_doc = await db.plan_sale.find_one({"active": True}, {"_id": 0})
+    if sale_doc:
+        if sale_doc.get("ends_at"):
+            if datetime.fromisoformat(sale_doc["ends_at"]) < datetime.now(timezone.utc):
+                sale_doc = None
+    if sale_doc:
+        pct_field = f"{data.plan}_discount"
+        pct = float(sale_doc.get(pct_field, 0))
+        if pct > 0:
+            sale_discount = round(plan_info["price"] * pct / 100, 2)
+            final_price = max(round(plan_info["price"] - sale_discount, 2), 0.50)
+
+    # Resolve promo code discount (stacks on top of sale price if both present)
     promo_doc = None
     discount_amount = 0.0
     if data.promo_code:
@@ -94,10 +158,10 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
                 promo_doc = None
         if promo_doc:
             if promo_doc["discount_type"] == "percent":
-                discount_amount = round(plan_info["price"] * promo_doc["discount_value"] / 100, 2)
+                discount_amount = round(final_price * promo_doc["discount_value"] / 100, 2)
             else:
-                discount_amount = min(promo_doc["discount_value"], plan_info["price"])
-            final_price = max(round(plan_info["price"] - discount_amount, 2), 0.50)  # Stripe min $0.50
+                discount_amount = min(promo_doc["discount_value"], final_price)
+            final_price = max(round(final_price - discount_amount, 2), 0.50)  # Stripe min $0.50
 
     # Build Stripe session kwargs
     session_kwargs = dict(
@@ -119,13 +183,16 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
     await db.payment_transactions.insert_one({
         "id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
         "user_id": user["id"], "amount": final_price, "original_amount": plan_info["price"],
-        "discount_amount": discount_amount, "promo_code": promo_doc["code"] if promo_doc else None,
+        "sale_discount": sale_discount, "discount_amount": discount_amount,
+        "promo_code": promo_doc["code"] if promo_doc else None,
+        "sale_name": sale_doc["name"] if sale_doc else None,
         "currency": "usd", "type": "subscription", "plan": data.plan,
         "payment_status": "pending", "provider": "stripe",
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return {"checkout_url": session.url, "session_id": session.id,
-            "final_price": final_price, "discount_amount": discount_amount}
+            "final_price": final_price, "sale_discount": sale_discount,
+            "discount_amount": discount_amount}
 
 
 # ============= PROMO CODES =============
