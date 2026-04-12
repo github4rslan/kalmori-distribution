@@ -389,7 +389,7 @@ export default function AdminPromoCodesPage() {
               </div>
 
               {/* Discounts */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF] mb-1.5 block">Rise Discount (%)</label>
                   <div className="relative">
@@ -431,14 +431,14 @@ export default function AdminPromoCodesPage() {
                 <div className="bg-black/40 border border-white/8 rounded-xl p-4 space-y-3">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Live Preview</p>
                   {parseFloat(sale.rise_discount) > 0 && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#7C4DFF]" />
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="w-2 h-2 rounded-full bg-[#7C4DFF] shrink-0" />
                         <span className="text-sm font-semibold text-white">Rise Plan</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-[#7C4DFF]/20 text-[#7C4DFF] font-bold">{sale.rise_discount}% OFF</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500 line-through mr-2">${RISE_PRICE}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs text-gray-500 line-through">${RISE_PRICE}</span>
                         <span className="text-sm font-bold text-[#22C55E]">
                           ${Math.max(RISE_PRICE - RISE_PRICE * parseFloat(sale.rise_discount) / 100, 0.50).toFixed(2)}
                         </span>
@@ -447,14 +447,14 @@ export default function AdminPromoCodesPage() {
                     </div>
                   )}
                   {parseFloat(sale.pro_discount) > 0 && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#E040FB]" />
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="w-2 h-2 rounded-full bg-[#E040FB] shrink-0" />
                         <span className="text-sm font-semibold text-white">Pro Plan</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-[#E040FB]/20 text-[#E040FB] font-bold">{sale.pro_discount}% OFF</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-xs text-gray-500 line-through mr-2">${PRO_PRICE}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs text-gray-500 line-through">${PRO_PRICE}</span>
                         <span className="text-sm font-bold text-[#22C55E]">
                           ${Math.max(PRO_PRICE - PRO_PRICE * parseFloat(sale.pro_discount) / 100, 0.50).toFixed(2)}
                         </span>

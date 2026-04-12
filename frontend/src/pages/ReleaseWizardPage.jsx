@@ -206,6 +206,12 @@ export default function ReleaseWizardPage() {
     setVolumes(prev => [...prev, { id: prev.length + 1, tracks: [{ ...defaultTrack }] }]);
   };
 
+  const removeVolume = (volIdx) => {
+    if (volumes.length <= 1) return;
+    if (!window.confirm(`Remove Volume ${volumes[volIdx].id} and all its tracks?`)) return;
+    setVolumes(prev => prev.filter((_, i) => i !== volIdx).map((v, i) => ({ ...v, id: i + 1 })));
+  };
+
   // Validation
   const getValidation = () => {
     const missing = [];
@@ -485,12 +491,24 @@ export default function ReleaseWizardPage() {
           <div className="space-y-6" data-testid="tab-tracks">
             {volumes.map((vol, volIdx) => (
               <div key={vol.id}>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {volumes.map((v, vi) => (
-                      <button key={v.id} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${vi === volIdx ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>
-                        Volume {v.id}
-                      </button>
+                      <div key={v.id} className="flex items-center gap-1">
+                        <button className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${vi === volIdx ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>
+                          Volume {v.id}
+                        </button>
+                        {volumes.length > 1 && (
+                          <button
+                            onClick={() => removeVolume(vi)}
+                            className="p-1 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                            title={`Remove Volume ${v.id}`}
+                            data-testid={`remove-volume-${vi}`}
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     ))}
                     <button onClick={addVolume} className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/5 transition-all" data-testid="add-volume-btn">
                       <Plus className="w-4 h-4" />
