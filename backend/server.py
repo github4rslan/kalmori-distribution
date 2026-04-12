@@ -649,9 +649,6 @@ async def create_checkout(checkout: PaymentCheckout, request: Request):
     user = await get_current_user(request)
     release = await db.releases.find_one({"id": checkout.release_id, "artist_id": user["id"]})
     if not release: raise HTTPException(status_code=404, detail="Release not found")
-    if user.get("plan") == "free":
-        await db.releases.update_one({"id": checkout.release_id}, {"$set": {"payment_status": "free_tier"}})
-        return {"message": "Free tier activated", "redirect_url": None}
     stripe_api_key = os.environ.get("STRIPE_API_KEY")
     if not stripe_api_key:
         raise HTTPException(status_code=503, detail="Payment processing not configured")
