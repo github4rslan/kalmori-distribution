@@ -475,19 +475,17 @@ const ReleaseDetailPage = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (plan = 'rise') => {
     try {
       const response = await axios.post(`${API}/payments/checkout`, {
         release_id: id,
-        origin_url: window.location.origin
+        origin_url: window.location.origin,
+        plan,
       });
-      
       if (response.data.checkout_url) {
         window.location.href = response.data.checkout_url;
       } else {
-        // Free tier
-        toast.success('Free tier activated!');
-        fetchRelease();
+        toast.error('Checkout failed. Please try again.');
       }
     } catch (error) {
       toast.error('Failed to initiate checkout');
@@ -894,7 +892,7 @@ const ReleaseDetailPage = () => {
                     </div>
                     <div className="flex items-center justify-between pt-1 border-t border-[#7C4DFF]/20">
                       <span className="text-xs text-[#7C4DFF] font-semibold">$24.99/mo · 5% share</span>
-                      <Button onClick={handleCheckout} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }} data-testid="checkout-btn">
+                      <Button onClick={() => handleCheckout('rise')} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#9C6FFF)' }} data-testid="checkout-btn">
                         Upgrade to Rise
                       </Button>
                     </div>
@@ -913,7 +911,7 @@ const ReleaseDetailPage = () => {
                   </div>
                   <div className="flex items-center justify-between pt-1 border-t border-[#E040FB]/20">
                     <span className="text-xs text-[#E040FB] font-semibold">$49.99/mo · 0% share</span>
-                    <Button onClick={handleCheckout} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }} data-testid="checkout-btn-pro">
+                    <Button onClick={() => handleCheckout('pro')} size="sm" className="text-xs px-3 h-7 text-white border-0" style={{ background: 'linear-gradient(135deg,#E040FB,#FF6FFF)' }} data-testid="checkout-btn-pro">
                       Upgrade to Pro
                     </Button>
                   </div>

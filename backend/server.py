@@ -661,11 +661,12 @@ async def create_checkout(checkout: PaymentCheckout, request: Request):
             mode="payment",
             success_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{checkout.origin_url}/releases/{checkout.release_id}?payment=cancelled",
-            metadata={"release_id": checkout.release_id, "user_id": user["id"], "release_type": release["release_type"]}
+            metadata={"release_id": checkout.release_id, "user_id": user["id"], "release_type": release["release_type"], "plan": checkout.plan or ""}
         )
         await db.payment_transactions.insert_one({"id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
             "user_id": user["id"], "release_id": checkout.release_id, "amount": amount, "currency": "usd",
-            "payment_status": "pending", "provider": "stripe", "created_at": datetime.now(timezone.utc).isoformat()})
+            "plan": checkout.plan or "", "payment_status": "pending", "provider": "stripe",
+            "created_at": datetime.now(timezone.utc).isoformat()})
         return {"checkout_url": session.url, "session_id": session.id}
     except Exception as e:
         logger.error(f"Stripe checkout error: {e}")
@@ -680,9 +681,16 @@ async def check_payment_status(session_id: str, request: Request):
         if session.payment_status == "paid":
             txn = await db.payment_transactions.find_one({"session_id": session_id})
             if txn and txn["payment_status"] != "paid":
+                now = datetime.now(timezone.utc).isoformat()
                 await db.payment_transactions.update_one({"session_id": session_id},
-                    {"$set": {"payment_status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}})
+                    {"$set": {"payment_status": "paid", "paid_at": now}})
                 await db.releases.update_one({"id": txn["release_id"]}, {"$set": {"payment_status": "paid"}})
+                # Upgrade user plan if stored on transaction
+                txn_plan = txn.get("plan")
+                if txn_plan in ("rise", "pro") and txn.get("user_id"):
+                    await db.users.update_one({"id": txn["user_id"]}, {"$set": {"plan": txn_plan}})
+                    await db.subscriptions.update_one({"user_id": txn["user_id"]}, {"$set": {
+                        "user_id": txn["user_id"], "plan": txn_plan, "status": "active", "updated_at": now}}, upsert=True)
         return {"status": session.status, "payment_status": session.payment_status,
             "amount": session.amount_total / 100 if session.amount_total else 0, "currency": session.currency}
     except Exception as e:
@@ -796,10 +804,18 @@ async def stripe_webhook(request: Request):
         # Handle release payments
         else:
             release_id = metadata.get("release_id")
+            user_id = metadata.get("user_id")
+            plan = metadata.get("plan")
             if release_id:
                 await db.releases.update_one({"id": release_id}, {"$set": {"payment_status": "paid"}})
                 await db.payment_transactions.update_one({"session_id": session_id},
                     {"$set": {"payment_status": "paid", "paid_at": now}})
+            # Upgrade user plan if a plan was selected
+            if user_id and plan in ("rise", "pro"):
+                await db.users.update_one({"id": user_id}, {"$set": {"plan": plan}})
+                await db.subscriptions.update_one({"user_id": user_id}, {"$set": {
+                    "user_id": user_id, "plan": plan, "status": "active",
+                    "updated_at": now}}, upsert=True)
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Webhook error: {e}")

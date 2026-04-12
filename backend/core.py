@@ -207,6 +207,7 @@ class WithdrawalRequest(BaseModel):
 class PaymentCheckout(BaseModel):
     release_id: str
     origin_url: str
+    plan: Optional[str] = None  # 'rise' or 'pro'
 
 class AnalyticsResponse(BaseModel):
     total_streams: int
