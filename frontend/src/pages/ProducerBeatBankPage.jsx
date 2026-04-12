@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useAuth, API } from '../App';
 import {
   MusicNote, Plus, Trash, PencilSimple, Upload, Play, Pause,
-  X, Check, CurrencyDollar, ShoppingBag, Waveform, Tag
+  X, Check, CurrencyDollar, ShoppingBag, Waveform, Tag, DownloadSimple, Archive
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -151,6 +151,23 @@ export default function ProducerBeatBankPage() {
       toast.error('Audio upload failed');
     } finally {
       setUploading(prev => ({ ...prev, [beatId]: false }));
+    }
+  };
+
+  const handleStemsUpload = async (beatId, file) => {
+    setUploading(prev => ({ ...prev, [`stems_${beatId}`]: true }));
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.post(`${API}/beats/${beatId}/stems`, formData, {
+        withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      await fetchAll();
+      toast.success('Stems uploaded!');
+    } catch (e) {
+      toast.error('Stems upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [`stems_${beatId}`]: false }));
     }
   };
 
@@ -338,6 +355,9 @@ export default function ProducerBeatBankPage() {
                       <div className="hidden sm:flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${beat.audio_url ? 'bg-green-400' : 'bg-yellow-400'}`}
                           title={beat.audio_url ? 'Audio ready' : 'No audio'} />
+                        {beat.has_stems && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-[#7C4DFF]/40 text-[#7C4DFF]">STEMS</span>
+                        )}
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${
                           beat.status === 'active' ? 'border-green-400/30 text-green-400' : 'border-yellow-400/30 text-yellow-400'
                         }`}>{beat.status}</span>
@@ -353,6 +373,17 @@ export default function ProducerBeatBankPage() {
                           {uploading[beat.id]
                             ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${SECONDARY} transparent transparent transparent` }} />
                             : <Upload className="w-4 h-4" />}
+                        </label>
+                        {/* Upload stems */}
+                        <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors"
+                          style={{ color: beat.has_stems ? '#7C4DFF' : 'rgba(255,255,255,0.4)' }}
+                          title={beat.has_stems ? 'Replace Stems' : 'Upload Stems (ZIP/WAV)'}>
+                          <input type="file" accept=".zip,.wav,.mp3,.flac,audio/*,application/zip" className="hidden"
+                            onChange={(e) => e.target.files[0] && handleStemsUpload(beat.id, e.target.files[0])}
+                            data-testid={`upload-stems-${beat.id}`} />
+                          {uploading[`stems_${beat.id}`]
+                            ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${PRIMARY} transparent transparent transparent` }} />
+                            : <Archive className="w-4 h-4" />}
                         </label>
                         {/* Upload cover */}
                         <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors" title="Upload Cover">

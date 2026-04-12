@@ -5,7 +5,7 @@ import { useAuth, API } from '../App';
 import {
   MusicNote, Plus, Trash, PencilSimple, Upload, Play, Pause,
   X, Check, CurrencyDollar, User, Percent, ChartBar, ShoppingBag,
-  Waveform, ArrowClockwise, Funnel
+  Waveform, ArrowClockwise, Funnel, Archive
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -159,6 +159,20 @@ export default function AdminBeatsPage() {
       toast.success('Audio uploaded!');
     } catch (e) { toast.error('Audio upload failed'); }
     finally { setUploading(prev => ({ ...prev, [beatId]: false })); }
+  };
+
+  const handleStemsUpload = async (beatId, file) => {
+    setUploading(prev => ({ ...prev, [`stems_${beatId}`]: true }));
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.post(`${API}/beats/${beatId}/stems`, formData, {
+        withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      await fetchAll();
+      toast.success('Stems uploaded!');
+    } catch (e) { toast.error('Stems upload failed'); }
+    finally { setUploading(prev => ({ ...prev, [`stems_${beatId}`]: false })); }
   };
 
   const handleCoverUpload = async (beatId, file) => {
@@ -347,6 +361,9 @@ export default function AdminBeatsPage() {
                         </div>
                         <div className={`w-2 h-2 rounded-full ${beat.audio_url ? 'bg-green-400' : 'bg-yellow-400'}`}
                           title={beat.audio_url ? 'Audio ready' : 'No audio'} />
+                        {beat.has_stems && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-[#7C4DFF]/40 text-[#7C4DFF]">STEMS</span>
+                        )}
                       </div>
 
                       {/* Actions */}
@@ -358,6 +375,16 @@ export default function AdminBeatsPage() {
                           {uploading[beat.id]
                             ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${SECONDARY} transparent` }} />
                             : <Upload className="w-4 h-4" />}
+                        </label>
+                        <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors"
+                          style={{ color: beat.has_stems ? '#7C4DFF' : 'rgba(255,255,255,0.4)' }}
+                          title={beat.has_stems ? 'Replace Stems' : 'Upload Stems (ZIP/WAV)'}>
+                          <input type="file" accept=".zip,.wav,.mp3,.flac,audio/*,application/zip" className="hidden"
+                            onChange={(e) => e.target.files[0] && handleStemsUpload(beat.id, e.target.files[0])}
+                            data-testid={`upload-stems-${beat.id}`} />
+                          {uploading[`stems_${beat.id}`]
+                            ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${PRIMARY} transparent` }} />
+                            : <Archive className="w-4 h-4" />}
                         </label>
                         <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors" title="Upload Cover">
                           <input type="file" accept="image/*" className="hidden"

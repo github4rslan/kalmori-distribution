@@ -247,6 +247,8 @@ async def create_beat(beat: BeatCreate, request: Request):
         "audio_url": None,
         "preview_url": None,
         "cover_url": None,
+        "stems_url": None,
+        "has_stems": False,
         "duration": None,
         "status": "active",
         "plays": 0,
@@ -451,3 +453,178 @@ async def regenerate_watermark(beat_id: str, request: Request):
         {"$set": {"preview_url": preview_url, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     return {"preview_url": preview_url, "message": "Watermark preview regenerated"}
+
+
+# ─── STEMS UPLOAD ────────────────────────────────────────────────────────────
+
+@beats_router.post("/{beat_id}/stems")
+async def upload_beat_stems(beat_id: str, request: Request, file: UploadFile = File(...)):
+    """Producer (owner) or admin can upload stems (ZIP file)"""
+    user = await _require_producer_or_admin(request)
+    beat = await db.beats.find_one({"id": beat_id})
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+    role = user.get("user_role") or user.get("role") or ""
+    if beat["created_by"] != user["id"] and role != "admin":
+        raise HTTPException(status_code=403, detail="Not your beat")
+
+    allowed = ["application/zip", "application/x-zip-compressed", "application/octet-stream",
+               "audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp3", "audio/flac"]
+    content_type = file.content_type or "application/zip"
+    ext = file.filename.split(".")[-1].lower() if "." in file.filename else "zip"
+
+    file_id = uuid.uuid4().hex
+    path = f"{APP_NAME}/beats/{beat_id}/stems_{file_id}.{ext}"
+    data = await file.read()
+    result = put_object(path, data, content_type)
+    stems_url = result["url"]
+
+    await db.beats.update_one(
+        {"id": beat_id},
+        {"$set": {"stems_url": stems_url, "has_stems": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"stems_url": stems_url, "message": "Stems uploaded successfully"}
+
+
+# ─── BEAT CHECKOUT (Stripe) ──────────────────────────────────────────────────
+
+@beats_router.post("/{beat_id}/checkout")
+async def beat_checkout(beat_id: str, request: Request):
+    """Initiate Stripe checkout for a beat purchase"""
+    import stripe as stripe_sdk
+    import json
+    user = await get_current_user(request)
+    beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+    if beat.get("status") != "active":
+        raise HTTPException(status_code=400, detail="Beat is not available for purchase")
+
+    body = await request.json()
+    license_type = body.get("license_type", "basic_lease")
+    origin_url = body.get("origin_url", "")
+
+    price_map = {
+        "basic_lease": beat.get("prices", {}).get("basic_lease", 29.99),
+        "premium_lease": beat.get("prices", {}).get("premium_lease", 79.99),
+        "unlimited_lease": beat.get("prices", {}).get("unlimited_lease", 149.99),
+        "exclusive": beat.get("prices", {}).get("exclusive", 499.99),
+    }
+    amount = price_map.get(license_type, 29.99)
+
+    stripe_api_key = os.environ.get("STRIPE_API_KEY")
+    if not stripe_api_key:
+        raise HTTPException(status_code=503, detail="Payment processing not configured")
+    stripe_sdk.api_key = stripe_api_key
+
+    license_labels = {
+        "basic_lease": "Basic Lease",
+        "premium_lease": "Premium Lease",
+        "unlimited_lease": "Unlimited Lease",
+        "exclusive": "Exclusive Rights",
+    }
+
+    try:
+        purchase_id = f"bpurch_{uuid.uuid4().hex[:12]}"
+        session = stripe_sdk.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": f"{beat['title']} — {license_labels.get(license_type, license_type)}",
+                        "description": f"By {beat.get('producer_name', 'Producer')}",
+                    },
+                    "unit_amount": int(amount * 100),
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=f"{origin_url}/beat-bank?purchase=success&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{origin_url}/beat-bank?purchase=cancelled",
+            metadata={
+                "type": "beat_purchase",
+                "beat_id": beat_id,
+                "user_id": user["id"],
+                "license_type": license_type,
+                "purchase_id": purchase_id,
+            }
+        )
+        now = datetime.now(timezone.utc).isoformat()
+        await db.beat_purchases.insert_one({
+            "id": purchase_id,
+            "session_id": session.id,
+            "beat_id": beat_id,
+            "beat_title": beat.get("title", ""),
+            "buyer_id": user["id"],
+            "buyer_email": user.get("email", ""),
+            "producer_id": beat.get("created_by"),
+            "license_type": license_type,
+            "amount": amount,
+            "payment_status": "pending",
+            "created_at": now,
+        })
+        return {"checkout_url": session.url, "session_id": session.id}
+    except Exception as e:
+        logger.error(f"Beat checkout error: {e}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+
+
+# ─── DOWNLOAD AFTER PURCHASE ─────────────────────────────────────────────────
+
+@beats_router.get("/{beat_id}/download")
+async def download_beat(beat_id: str, request: Request):
+    """Download full audio + stems after verified purchase"""
+    from fastapi.responses import JSONResponse
+    user = await get_current_user(request)
+
+    # Check if user has a completed purchase for this beat
+    purchase = await db.beat_purchases.find_one({
+        "beat_id": beat_id,
+        "buyer_id": user["id"],
+        "payment_status": "paid",
+    }, {"_id": 0})
+
+    # Admin can always download
+    role = user.get("user_role") or user.get("role") or ""
+    beat = await db.beats.find_one({"id": beat_id}, {"_id": 0})
+    if not beat:
+        raise HTTPException(status_code=404, detail="Beat not found")
+
+    is_owner = beat.get("created_by") == user["id"]
+    is_admin = role == "admin"
+
+    if not purchase and not is_owner and not is_admin:
+        raise HTTPException(status_code=403, detail="Purchase required to download this beat")
+
+    files = {}
+    if beat.get("audio_url"):
+        files["audio"] = beat["audio_url"]
+    if beat.get("stems_url"):
+        files["stems"] = beat["stems_url"]
+
+    return {
+        "beat_id": beat_id,
+        "title": beat.get("title"),
+        "license_type": purchase.get("license_type") if purchase else "owner",
+        "files": files,
+    }
+
+
+# ─── PURCHASE HISTORY ────────────────────────────────────────────────────────
+
+@beats_router.get("/my/purchases")
+async def my_beat_purchases(request: Request):
+    """Get all beats purchased by the current user"""
+    user = await get_current_user(request)
+    purchases = await db.beat_purchases.find(
+        {"buyer_id": user["id"], "payment_status": "paid"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+
+    # Attach beat info
+    for p in purchases:
+        beat = await db.beats.find_one({"id": p["beat_id"]}, {"_id": 0, "title": 1, "cover_url": 1, "producer_name": 1})
+        if beat:
+            p["beat"] = beat
+    return purchases
