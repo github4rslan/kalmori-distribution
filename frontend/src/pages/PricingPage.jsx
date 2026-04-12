@@ -131,6 +131,7 @@ export default function PricingPage() {
       if (planId !== 'free') {
         const res = await axios.post(`${API_URL}/api/subscriptions/checkout`, {
           plan: planId, origin_url: window.location.origin,
+          promo_code: promoResult ? promoCode : undefined,
         }, { withCredentials: true });
         if (res.data.checkout_url) { window.location.href = res.data.checkout_url; return; }
       }
@@ -222,6 +223,14 @@ export default function PricingPage() {
           {plans.map(plan => {
             const isCurrent = user && plan.id === currentPlan;
             const isPro = plan.id === 'pro';
+            // Calculate discounted price if a valid promo is applied and applicable to this plan
+            const promoApplicable = promoResult && plan.price > 0 &&
+              (!promoResult.applicable_plans || promoResult.applicable_plans.includes(plan.id));
+            const discountedPrice = promoApplicable
+              ? promoResult.discount_type === 'percent'
+                ? Math.max(plan.price - plan.price * promoResult.discount_value / 100, 0.50).toFixed(2)
+                : Math.max(plan.price - promoResult.discount_value, 0.50).toFixed(2)
+              : null;
             return (
               <div
                 key={plan.id}
@@ -253,10 +262,20 @@ export default function PricingPage() {
                   {/* Price */}
                   <div className="text-center mb-5">
                     {plan.price > 0 ? (
-                      <div className="flex items-baseline justify-center">
-                        <span className="text-xl font-bold" style={{ color: plan.color }}>$</span>
-                        <span className="text-5xl font-black text-white">{plan.price}</span>
-                        <span className="text-sm text-gray-500 ml-1">{plan.period}</span>
+                      <div>
+                        {discountedPrice && (
+                          <p className="text-sm text-gray-500 line-through mb-0.5">${plan.price}{plan.period}</p>
+                        )}
+                        <div className="flex items-baseline justify-center">
+                          <span className="text-xl font-bold" style={{ color: discountedPrice ? '#22C55E' : plan.color }}>$</span>
+                          <span className="text-5xl font-black" style={{ color: discountedPrice ? '#22C55E' : 'white' }}>
+                            {discountedPrice ?? plan.price}
+                          </span>
+                          <span className="text-sm text-gray-500 ml-1">{plan.period}</span>
+                        </div>
+                        {discountedPrice && (
+                          <p className="text-xs text-green-400 mt-1">Promo applied</p>
+                        )}
                       </div>
                     ) : (
                       <p className="text-5xl font-black text-white">FREE</p>
@@ -328,7 +347,7 @@ export default function PricingPage() {
                 if (!promoCode.trim()) return;
                 setApplyingPromo(true); setPromoError(''); setPromoResult(null);
                 try {
-                  const res = await axios.post(`${API_URL}/api/promo-codes/validate`, { code: promoCode, plan: 'pro' });
+                  const res = await axios.post(`${API_URL}/api/promo-codes/validate`, { code: promoCode });
                   setPromoResult(res.data);
                 } catch (e) { setPromoError(e.response?.data?.detail || 'Invalid code'); }
                 setApplyingPromo(false);

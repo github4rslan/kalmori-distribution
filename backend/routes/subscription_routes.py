@@ -60,6 +60,7 @@ async def upgrade_subscription(plan: str, request: Request):
 class SubscriptionCheckout(BaseModel):
     plan: str
     origin_url: str
+    promo_code: Optional[str] = None
 
 @subscription_router.post("/subscriptions/checkout")
 async def create_subscription_checkout(data: SubscriptionCheckout, request: Request):
@@ -72,18 +73,59 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
         await db.users.update_one({"id": user["id"]}, {"$set": {"plan": "free"}})
         return {"message": "Downgraded to Free", "redirect_url": None}
     stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
-    session = stripe_sdk.checkout.Session.create(
+
+    # Resolve promo code discount
+    final_price = plan_info["price"]
+    promo_doc = None
+    discount_amount = 0.0
+    if data.promo_code:
+        code_upper = data.promo_code.strip().upper()
+        promo_doc = await db.promo_codes.find_one({"code": code_upper, "active": True}, {"_id": 0})
+        if promo_doc:
+            # Check expiry
+            if promo_doc.get("expires_at"):
+                if datetime.fromisoformat(promo_doc["expires_at"]) < datetime.now(timezone.utc):
+                    promo_doc = None
+            # Check usage limit
+            if promo_doc and promo_doc.get("max_uses") and promo_doc.get("used_count", 0) >= promo_doc["max_uses"]:
+                promo_doc = None
+            # Check plan applicability
+            if promo_doc and promo_doc.get("applicable_plans") and data.plan not in promo_doc["applicable_plans"]:
+                promo_doc = None
+        if promo_doc:
+            if promo_doc["discount_type"] == "percent":
+                discount_amount = round(plan_info["price"] * promo_doc["discount_value"] / 100, 2)
+            else:
+                discount_amount = min(promo_doc["discount_value"], plan_info["price"])
+            final_price = max(round(plan_info["price"] - discount_amount, 2), 0.50)  # Stripe min $0.50
+
+    # Build Stripe session kwargs
+    session_kwargs = dict(
         payment_method_types=["card"],
-        line_items=[{"price_data": {"currency": "usd", "product_data": {"name": f"Kalmori {plan_info['name']} Plan"}, "unit_amount": int(plan_info["price"] * 100)}, "quantity": 1}],
+        line_items=[{"price_data": {"currency": "usd", "product_data": {"name": f"Kalmori {plan_info['name']} Plan"}, "unit_amount": int(final_price * 100)}, "quantity": 1}],
         mode="payment",
         success_url=f"{data.origin_url}/pricing?subscription=success&plan={data.plan}&session_id={{CHECKOUT_SESSION_ID}}",
         cancel_url=f"{data.origin_url}/pricing?subscription=cancelled",
-        metadata={"user_id": user["id"], "plan": data.plan, "type": "subscription"})
-    await db.payment_transactions.insert_one({"id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
-        "user_id": user["id"], "amount": plan_info["price"], "currency": "usd", "type": "subscription",
-        "plan": data.plan, "payment_status": "pending", "provider": "stripe",
-        "created_at": datetime.now(timezone.utc).isoformat()})
-    return {"checkout_url": session.url, "session_id": session.id}
+        metadata={"user_id": user["id"], "plan": data.plan, "type": "subscription",
+                  "promo_code": promo_doc["code"] if promo_doc else ""},
+    )
+
+    session = stripe_sdk.checkout.Session.create(**session_kwargs)
+
+    # Increment promo usage
+    if promo_doc:
+        await db.promo_codes.update_one({"code": promo_doc["code"]}, {"$inc": {"used_count": 1}})
+
+    await db.payment_transactions.insert_one({
+        "id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
+        "user_id": user["id"], "amount": final_price, "original_amount": plan_info["price"],
+        "discount_amount": discount_amount, "promo_code": promo_doc["code"] if promo_doc else None,
+        "currency": "usd", "type": "subscription", "plan": data.plan,
+        "payment_status": "pending", "provider": "stripe",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"checkout_url": session.url, "session_id": session.id,
+            "final_price": final_price, "discount_amount": discount_amount}
 
 
 # ============= PROMO CODES =============
@@ -156,7 +198,6 @@ async def delete_promo_code(promo_id: str, request: Request):
 async def validate_promo_code(request: Request):
     body = await request.json()
     code = body.get("code", "").strip().upper()
-    plan = body.get("plan", "")
     if not code:
         raise HTTPException(status_code=400, detail="No code provided")
     promo = await db.promo_codes.find_one({"code": code, "active": True}, {"_id": 0})
@@ -167,19 +208,11 @@ async def validate_promo_code(request: Request):
             raise HTTPException(status_code=400, detail="This promo code has expired")
     if promo.get("max_uses") and promo.get("used_count", 0) >= promo["max_uses"]:
         raise HTTPException(status_code=400, detail="This promo code has reached its usage limit")
-    if plan and promo.get("applicable_plans") and plan not in promo["applicable_plans"]:
-        raise HTTPException(status_code=400, detail=f"This code doesn't apply to the {plan} plan")
-    original_price = SUBSCRIPTION_PLANS.get(plan, {}).get("price", 0)
-    if promo["discount_type"] == "percent":
-        discount_amount = round(original_price * promo["discount_value"] / 100, 2)
-    else:
-        discount_amount = min(promo["discount_value"], original_price)
-    final_price = max(0, round(original_price - discount_amount, 2))
     return {
         "valid": True, "code": promo["code"],
         "discount_type": promo["discount_type"], "discount_value": promo["discount_value"],
         "duration_months": promo.get("duration_months", 0),
-        "original_price": original_price, "discount_amount": discount_amount, "final_price": final_price,
+        "applicable_plans": promo.get("applicable_plans", ["rise", "pro"]),
     }
 
 @subscription_router.post("/promo-codes/redeem")
