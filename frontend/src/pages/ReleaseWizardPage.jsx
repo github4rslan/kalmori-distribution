@@ -7,10 +7,10 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 const TABS = [
-  { id: 'general', label: 'General Information' },
-  { id: 'tracks', label: 'Tracks & Assets' },
-  { id: 'territory', label: 'Territory & Platform Rights' },
-  { id: 'summary', label: 'Summary' },
+  { id: 'general', label: 'General Information', shortLabel: 'General' },
+  { id: 'tracks', label: 'Tracks & Assets', shortLabel: 'Tracks' },
+  { id: 'territory', label: 'Territory & Platform Rights', shortLabel: 'Territory' },
+  { id: 'summary', label: 'Summary', shortLabel: 'Summary' },
 ];
 
 const PRODUCT_TYPES = ['Single', 'EP', 'Album', 'Compilation', 'Mixtape'];
@@ -344,11 +344,12 @@ export default function ReleaseWizardPage() {
         <div className="flex gap-1 bg-[#0d0d1a] rounded-xl p-1 border border-white/10 mb-8">
           {TABS.map((tab, i) => (
             <button key={tab.id} onClick={() => goToTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                 activeTab === tab.id ? 'bg-[#1a1a3e] text-white' : 'text-gray-500 hover:text-gray-300'
               }`} data-testid={`tab-${tab.id}`}>
-              {tabComplete[tab.id] && <Check className="w-3.5 h-3.5 text-[#4CAF50]" weight="bold" />}
-              {tab.label}
+              {tabComplete[tab.id] && <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#4CAF50] shrink-0" weight="bold" />}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.shortLabel}</span>
             </button>
           ))}
         </div>
@@ -497,25 +498,16 @@ export default function ReleaseWizardPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-6">
-                  <div className="flex flex-col sm:flex-row gap-8 items-start justify-center mb-8">
-                    {/* Add New Track */}
-                    <div className="text-center">
-                      <div className="w-32 h-32 bg-[#1a1a2e] rounded-2xl flex items-center justify-center mx-auto mb-3 relative">
-                        <MusicNote className="w-12 h-12 text-gray-500" />
-                        <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#7C4DFF] rounded-full flex items-center justify-center">
-                          <Plus className="w-4 h-4 text-white" weight="bold" />
-                        </div>
-                      </div>
-                      <p className="text-sm font-medium text-gray-300">Add New Track</p>
-                      <div className="flex items-center gap-2 mt-2 justify-center">
-                        <input type="number" min="1" value={vol.tracks.length + 1} readOnly
-                          className="w-12 bg-[#0a0a14] border border-white/10 rounded px-2 py-1 text-white text-sm text-center" />
-                        <button onClick={() => addTrack(volIdx)} className="px-3 py-1 bg-[#1a1a2e] text-gray-300 text-sm rounded hover:bg-white/10 transition-colors" data-testid="add-track-btn">
-                          Add
-                        </button>
-                      </div>
-                    </div>
+                <div className="bg-[#0d0d1a] border border-white/10 rounded-xl p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <p className="text-sm text-gray-400">
+                      <span className="text-white font-bold">{vol.tracks.length}</span> track{vol.tracks.length !== 1 ? 's' : ''}
+                    </p>
+                    <button onClick={() => addTrack(volIdx)}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#7C4DFF] text-white text-sm font-medium rounded-xl hover:brightness-110 transition-all active:scale-95"
+                      data-testid="add-track-btn">
+                      <Plus className="w-4 h-4" weight="bold" /> Add Track
+                    </button>
                   </div>
 
                   {/* Track List */}
@@ -528,22 +520,23 @@ export default function ReleaseWizardPage() {
                         <button
                           type="button"
                           onClick={() => toggleTrack(volIdx, trackIdx)}
-                          className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-white/4 transition-colors"
+                          className="w-full flex items-center justify-between px-4 sm:px-5 py-4 hover:bg-white/4 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-bold text-[#7C4DFF] tracking-widest">TRACK {track.track_number}</span>
-                            {track.title && <span className="text-sm text-white font-medium">{track.title}{track.title_version ? ` (${track.title_version})` : ''}</span>}
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <span className="text-[11px] font-bold text-[#7C4DFF] tracking-widest shrink-0">TRACK {track.track_number}</span>
+                            {track.title && <span className="text-sm text-white font-medium truncate">{track.title}{track.title_version ? ` (${track.title_version})` : ''}</span>}
                             {track.audioName && (
-                              <span className="hidden sm:flex items-center gap-1 text-[11px] text-[#22C55E] bg-[#22C55E]/10 px-2 py-0.5 rounded-full">
-                                <Check className="w-3 h-3" weight="bold" /> Audio
+                              <span className="shrink-0 flex items-center gap-1 text-[10px] text-[#22C55E] bg-[#22C55E]/10 px-1.5 py-0.5 rounded-full">
+                                <Check className="w-2.5 h-2.5" weight="bold" />
+                                <span className="hidden sm:inline">Audio</span>
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2">
                             {vol.tracks.length > 1 && (
                               <span onClick={e => { e.stopPropagation(); removeTrack(volIdx, trackIdx); }}
-                                className="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-colors">
-                                <Trash className="w-3.5 h-3.5" />
+                                className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition-colors">
+                                <Trash className="w-4 h-4" />
                               </span>
                             )}
                             {isExpanded ? <CaretUp className="w-4 h-4 text-gray-500" /> : <CaretDown className="w-4 h-4 text-gray-500" />}
