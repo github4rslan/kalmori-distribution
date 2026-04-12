@@ -918,20 +918,29 @@ const ReleaseDetailPage = () => {
                 </div>
               </div>
             )}
-            {/* Distribute button: only for paid, rise, pro, or admin — never for free plan */}
+            {/* Distribute button: only for paid/rise/pro/admin, and only when draft */}
             {(isAdmin || userPlan === 'pro' || userPlan === 'rise' || release.payment_status === 'paid') && (
-              <Button
-                onClick={handleDistribute}
-                disabled={distributing || selectedStores.length === 0}
-                className="w-full bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
-                data-testid="distribute-btn"
-              >
-                {distributing ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>Distribute to {selectedStores.length} Platforms</>
-                )}
-              </Button>
+              release.status === 'draft' ? (
+                <Button
+                  onClick={handleDistribute}
+                  disabled={distributing || selectedStores.length === 0}
+                  className="w-full bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
+                  data-testid="distribute-btn"
+                >
+                  {distributing ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>Distribute to {selectedStores.length} Platforms</>
+                  )}
+                </Button>
+              ) : (
+                <div className="w-full text-center py-3 px-4 rounded-xl bg-white/5 border border-white/10 text-sm text-[#A1A1AA]">
+                  {release.status === 'pending_review' ? '⏳ Under review — distribution begins after admin approval' :
+                   release.status === 'distributed' ? '✅ Already distributed to all selected platforms' :
+                   release.status === 'processing' ? '⚙️ Your release is being processed' :
+                   '📋 Release has been submitted'}
+                </div>
+              )
             )}
           </div>
         )}
