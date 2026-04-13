@@ -590,11 +590,11 @@ const ReleaseDetailPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-8" data-testid="release-detail-page">
+      <div className="max-w-5xl mx-auto space-y-6 px-0 sm:px-0" data-testid="release-detail-page">
         {/* Header */}
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
           {/* Cover Art */}
-          <div className="w-48 h-48 flex-shrink-0">
+          <div className="w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0 mx-auto sm:mx-0">
             <label className="relative block w-full h-full bg-[#141414] border border-white/10 rounded-md overflow-hidden cursor-pointer group">
               {release.cover_art_url ? (
                 <img
@@ -673,7 +673,7 @@ const ReleaseDetailPage = () => {
         </div>
 
         {/* Tracks */}
-        <div className="bg-[#141414] border border-white/10 rounded-md p-6">
+        <div className="bg-[#141414] border border-white/10 rounded-md p-4 sm:p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-medium flex items-center gap-2">
               <MusicNotes className="w-5 h-5 text-[#FF3B30]" />
@@ -833,7 +833,7 @@ const ReleaseDetailPage = () => {
                   >{r}</button>
                 ))}
               </div>
-              <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-auto shrink-0">
                 <span className="text-xs text-gray-500">{selectedStores.length}/{stores.length} selected</span>
                 <button onClick={() => {
                   const filteredIds = stores
@@ -992,23 +992,33 @@ const ReleaseDetailPage = () => {
                 </div>
               )}
             </div>
-            {release.distributed_platforms?.length > 0 && (
-              <div className="p-6">
-                <p className="text-xs text-[#555] uppercase tracking-wider font-semibold mb-3">
-                  Distributed to {release.distributed_platforms.length} platform{release.distributed_platforms.length !== 1 ? 's' : ''}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {release.distributed_platforms.map((platform, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-3 py-1.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 capitalize font-medium"
-                    >
-                      {platform.replace(/_/g, ' ')}
-                    </span>
-                  ))}
+            {(() => {
+              // Use submitted_stores (all stores user selected) — fall back to distributed_platforms
+              const platformList = release.submitted_stores?.length > 0
+                ? release.submitted_stores
+                : release.distributed_platforms || [];
+              if (platformList.length === 0) return null;
+              // Map store_id to store_name using the stores list loaded from API
+              const nameFor = (id) => {
+                const found = stores.find(s => s.store_id === id);
+                return found ? found.store_name : id.replace(/_/g, ' ');
+              };
+              return (
+                <div className="p-4 sm:p-6">
+                  <p className="text-xs text-[#555] uppercase tracking-wider font-semibold mb-3">
+                    Distributed to {platformList.length} platform{platformList.length !== 1 ? 's' : ''}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {platformList.map((platform, i) => (
+                      <span key={i}
+                        className="text-xs px-3 py-1.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 font-medium capitalize">
+                        {nameFor(platform)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
