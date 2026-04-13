@@ -59,6 +59,10 @@ async def upgrade_subscription(plan: str, request: Request):
 
 # ============= PLAN SALE CAMPAIGN =============
 
+def _parse_dt(s: str) -> datetime:
+    """Parse ISO datetime string, handling 'Z' suffix for Python < 3.11."""
+    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+
 @subscription_router.get("/plan-sale")
 async def get_plan_sale():
     """Public endpoint — returns active sale campaign or null."""
@@ -67,9 +71,15 @@ async def get_plan_sale():
         return {"active": False}
     # Check expiry
     if sale.get("ends_at"):
-        if datetime.fromisoformat(sale["ends_at"]) < datetime.now(timezone.utc):
-            await db.plan_sale.update_one({"_id": sale.get("id")}, {"$set": {"active": False}})
-            return {"active": False}
+        try:
+            ends = _parse_dt(sale["ends_at"])
+            if ends.tzinfo is None:
+                ends = ends.replace(tzinfo=timezone.utc)
+            if ends < datetime.now(timezone.utc):
+                await db.plan_sale.update_many({"active": True}, {"$set": {"active": False}})
+                return {"active": False}
+        except Exception:
+            pass
     return sale
 
 @subscription_router.get("/admin/plan-sale")
@@ -130,8 +140,14 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
     sale_doc = await db.plan_sale.find_one({"active": True}, {"_id": 0})
     if sale_doc:
         if sale_doc.get("ends_at"):
-            if datetime.fromisoformat(sale_doc["ends_at"]) < datetime.now(timezone.utc):
-                sale_doc = None
+            try:
+                ends = _parse_dt(sale_doc["ends_at"])
+                if ends.tzinfo is None:
+                    ends = ends.replace(tzinfo=timezone.utc)
+                if ends < datetime.now(timezone.utc):
+                    sale_doc = None
+            except Exception:
+                pass
     if sale_doc:
         pct_field = f"{data.plan}_discount"
         pct = float(sale_doc.get(pct_field, 0))
@@ -148,8 +164,14 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
         if promo_doc:
             # Check expiry
             if promo_doc.get("expires_at"):
-                if datetime.fromisoformat(promo_doc["expires_at"]) < datetime.now(timezone.utc):
-                    promo_doc = None
+                try:
+                    exp = _parse_dt(promo_doc["expires_at"])
+                    if exp.tzinfo is None:
+                        exp = exp.replace(tzinfo=timezone.utc)
+                    if exp < datetime.now(timezone.utc):
+                        promo_doc = None
+                except Exception:
+                    pass
             # Check usage limit
             if promo_doc and promo_doc.get("max_uses") and promo_doc.get("used_count", 0) >= promo_doc["max_uses"]:
                 promo_doc = None

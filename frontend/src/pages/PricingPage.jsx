@@ -97,7 +97,7 @@ export default function PricingPage() {
   const planOrder = ['free', 'rise', 'pro'];
 
   useEffect(() => {
-    fetch(`${API}/api/plan-sale`, { credentials: 'include' })
+    fetch(`${API_URL}/api/plan-sale`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => { if (data.active) setSaleCampaign(data); })
       .catch(() => {});
