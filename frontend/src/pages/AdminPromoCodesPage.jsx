@@ -27,13 +27,10 @@ export default function AdminPromoCodesPage() {
   const [saleSaving, setSaleSaving] = useState(false);
   const [saleSuccess, setSaleSuccess] = useState('');
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
   const fetchCodes = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/promo-codes`, { headers });
-      if (res.ok) setCodes(await res.json());
+      const res = await axios.get(`${API}/api/admin/promo-codes`, { withCredentials: true });
+      setCodes(res.data || []);
     } catch (e) { console.error(e); }
     setLoading(false);
   }, []);
@@ -78,29 +75,27 @@ export default function AdminPromoCodesPage() {
     if (form.discount_value <= 0) { setError('Discount must be positive'); return; }
     setError('');
     try {
-      const res = await fetch(`${API}/api/admin/promo-codes`, {
-        method: 'POST', headers, body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
-      setSuccess(`Promo code "${data.code}" created!`);
+      const res = await axios.post(`${API}/api/admin/promo-codes`, form, { withCredentials: true });
+      setSuccess(`Promo code "${res.data.code}" created!`);
       setShowForm(false);
       setForm({ code: '', discount_type: 'percent', discount_value: 50, applicable_plans: ['rise', 'pro'], max_uses: 100, duration_months: 3, expires_at: '', active: true });
       fetchCodes();
-    } catch (e) { setError(e.message); }
+    } catch (e) { setError(e.response?.data?.detail || e.message); }
   };
 
   const toggleActive = async (promo) => {
-    await fetch(`${API}/api/admin/promo-codes/${promo.id}`, {
-      method: 'PUT', headers, body: JSON.stringify({ active: !promo.active }),
-    });
-    fetchCodes();
+    try {
+      await axios.put(`${API}/api/admin/promo-codes/${promo.id}`, { active: !promo.active }, { withCredentials: true });
+      fetchCodes();
+    } catch (e) { console.error(e); }
   };
 
   const deleteCode = async (id) => {
     if (!window.confirm('Delete this promo code?')) return;
-    await fetch(`${API}/api/admin/promo-codes/${id}`, { method: 'DELETE', headers });
-    fetchCodes();
+    try {
+      await axios.delete(`${API}/api/admin/promo-codes/${id}`, { withCredentials: true });
+      fetchCodes();
+    } catch (e) { console.error(e); }
   };
 
   const copyCode = (code) => {
