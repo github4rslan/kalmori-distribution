@@ -84,6 +84,24 @@ const SettingsPage = () => {
       toast.error(`Spotify connection failed: ${params.get('reason') || 'Unknown error'}`);
       window.history.replaceState({}, '', '/settings');
     }
+    // Handle Stripe subscription success redirect
+    const subscription = params.get('subscription');
+    const plan = params.get('plan');
+    const sessionId = params.get('session_id');
+    if (subscription === 'success' && plan) {
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${plan}${sessionId ? `&session_id=${sessionId}` : ''}`, {}, { withCredentials: true })
+        .then(async (res) => {
+          updateUser?.({ plan });
+          await checkAuth?.();
+          toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
+          window.history.replaceState({}, '', '/settings');
+        })
+        .catch(() => toast.error('Failed to activate plan — contact support'));
+    } else if (subscription === 'cancelled') {
+      toast.error('Payment was cancelled');
+      window.history.replaceState({}, '', '/settings');
+    }
   }, []);
 
   const fetchSpotifyStatus = async () => {
