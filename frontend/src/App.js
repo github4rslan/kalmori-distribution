@@ -95,6 +95,7 @@ import LabelDashboardPage from './pages/LabelDashboardPage';
 import ProducerBeatBankPage from './pages/ProducerBeatBankPage';
 import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
 import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
+import AdminPlansPage from './pages/AdminPlansPage';
 import ReferralPage from './pages/ReferralPage';
 import AdminReferralsPage from './pages/AdminReferralsPage';
 import AdminAnalyticsReportsPage from './pages/AdminAnalyticsReportsPage';
@@ -359,6 +360,7 @@ const AppRouter = () => {
               <Route path="/admin/leads" element={<AdminRoute><AdminLeadsPage /></AdminRoute>} />
               <Route path="/admin/email-settings" element={<AdminRoute><AdminEmailSettingsPage /></AdminRoute>} />
               <Route path="/admin/promo-codes" element={<AdminRoute><AdminPromoCodesPage /></AdminRoute>} />
+              <Route path="/admin/plans" element={<AdminRoute><AdminPlansPage /></AdminRoute>} />
               <Route path="/admin/referrals" element={<AdminRoute><AdminReferralsPage /></AdminRoute>} />
               <Route path="/admin/analytics-reports" element={<AdminRoute><AdminAnalyticsReportsPage /></AdminRoute>} />
               <Route path="/admin/contracts" element={<AdminRoute><AdminContractsPage /></AdminRoute>} />
