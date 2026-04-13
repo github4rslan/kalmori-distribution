@@ -31,13 +31,26 @@ async def get_my_plan(request: Request):
     }
 
 @subscription_router.post("/subscriptions/upgrade")
-async def upgrade_subscription(plan: str, request: Request):
+async def upgrade_subscription(plan: str, request: Request, session_id: Optional[str] = None):
     user = await get_current_user(request)
     if plan not in SUBSCRIPTION_PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan")
     current_plan = user.get("plan", "free")
     target_plan = SUBSCRIPTION_PLANS[plan]
     if target_plan["price"] > 0 and plan != current_plan:
+        # If Stripe session_id is provided, verify with Stripe and mark transaction paid
+        if session_id:
+            import stripe as stripe_sdk
+            stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
+            try:
+                session = stripe_sdk.checkout.Session.retrieve(session_id)
+                if session.payment_status == "paid" and session.metadata.get("user_id") == user["id"]:
+                    await db.payment_transactions.update_one(
+                        {"session_id": session_id},
+                        {"$set": {"payment_status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}}
+                    )
+            except Exception:
+                pass
         paid_transactions = await db.payment_transactions.find(
             {"user_id": user["id"], "type": "subscription", "plan": plan, "payment_status": "paid"},
             {"_id": 0},

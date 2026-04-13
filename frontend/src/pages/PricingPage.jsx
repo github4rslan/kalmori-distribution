@@ -115,8 +115,10 @@ export default function PricingPage() {
     const params = new URLSearchParams(window.location.search);
     const subscription = params.get('subscription');
     const plan = params.get('plan');
+    const sessionId = params.get('session_id');
     if (subscription === 'success' && plan) {
-      axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${plan}`, {}, {
+      const upgradeUrl = `${API_URL}/api/subscriptions/upgrade?plan=${plan}${sessionId ? `&session_id=${sessionId}` : ''}`;
+      axios.post(upgradeUrl, {}, {
         withCredentials: true,
       }).then(async () => {
         updateUser?.({ plan });
