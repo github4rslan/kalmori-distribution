@@ -999,7 +999,8 @@ async def stripe_cart_webhook(request: Request):
                     await db.cart.delete_many({"user_id": order["user_id"]})
                     await db.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": order["user_id"], "type": "payment",
                         "message": f"Your order has been processed successfully. Total: ${order['total_amount']:.2f}",
-                        "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
+                        "read": False, "action_url": "/wallet",
+                        "created_at": datetime.now(timezone.utc).isoformat()})
         return {"received": True}
     except Exception as e:
         logger.error(f"Cart webhook error: {e}")
@@ -1231,9 +1232,11 @@ async def follow_artist(artist_id: str, request: Request):
     if existing:
         raise HTTPException(status_code=400, detail="Already following this artist")
     await db.followers.insert_one({"id": str(uuid.uuid4()), "follower_id": current_user["id"], "following_id": artist_id, "created_at": datetime.now(timezone.utc)})
+    follower_slug = current_user.get("slug") or current_user.get("id", "")
     await db.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": artist_id, "type": "follower",
         "message": f"{current_user.get('artist_name', current_user.get('name', 'Someone'))} started following you",
-        "read": False, "created_at": datetime.now(timezone.utc).isoformat()})
+        "read": False, "action_url": f"/artist/{follower_slug}" if follower_slug else "/dashboard",
+        "created_at": datetime.now(timezone.utc).isoformat()})
     return {"message": "Successfully followed artist"}
 
 @kalmori_router.delete("/artists/{artist_id}/follow")

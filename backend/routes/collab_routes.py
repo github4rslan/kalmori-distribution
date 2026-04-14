@@ -76,7 +76,7 @@ async def invite_collaborator(data: CollaborationInvite, request: Request):
             "message": f"{user.get('artist_name', user.get('name', 'An artist'))} invited you to collaborate on \"{release.get('title', 'a release')}\" as {data.role} ({data.split_percentage}% split)",
             "metadata": {"collaboration_id": collab_id, "release_id": data.release_id},
             "read": False,
-            "action_url": "/collaborations",
+            "action_url": f"/collaborations?invite={collab_id}",
             "created_at": now,
         })
     # Send invitation email
@@ -140,7 +140,8 @@ async def accept_invitation(collab_id: str, request: Request):
         "user_id": collab["owner_id"],
         "type": "collaboration_accepted",
         "message": f"{user.get('artist_name', user.get('name', 'A collaborator'))} accepted your collaboration invite for \"{collab.get('release_title', '')}\"",
-        "read": False, "action_url": "/collaborations", "created_at": now,
+        "read": False, "action_url": f"/releases/{collab.get('release_id', '')}",
+        "created_at": now,
     })
     return {"message": "Invitation accepted"}
 
@@ -161,7 +162,8 @@ async def decline_invitation(collab_id: str, request: Request):
         "user_id": collab["owner_id"],
         "type": "collaboration_declined",
         "message": f"{user.get('artist_name', user.get('name', 'A collaborator'))} declined your collaboration invite for \"{collab.get('release_title', '')}\"",
-        "read": False, "action_url": "/collaborations", "created_at": now,
+        "read": False, "action_url": "/collaborations",
+        "created_at": now,
     })
     return {"message": "Invitation declined"}
 

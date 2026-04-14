@@ -1128,7 +1128,7 @@ async def check_due_schedules(request: Request):
                 "type": "schedule_reminder",
                 "message": f"Scheduled import due: {sched['name']}{artist_part}{template_part}. Upload the {sched['frequency']} report now.",
                 "read": False,
-                "action_url": "/admin",
+                "action_url": "/admin/royalty-import",
                 "created_at": now_str,
             })
 

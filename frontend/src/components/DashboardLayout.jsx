@@ -74,7 +74,7 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
             || '/dashboard';
           return (
             <div key={n.id} className={`group p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/5' : 'bg-[#7C4DFF]/5') : ''}`}
-              onClick={async () => { if (!n.read) await onMarkRead(n.id); onNavigate(targetUrl); onClose(); }}
+              onClick={async () => { if (!n.read) { try { await onMarkRead(n.id); } catch {} } onClose(); onNavigate(targetUrl); }}
               data-testid={`notification-${n.id}`}>
               <div className="flex items-start gap-3">
                 {n.type === 'ai_insight' || n.type === 'smart_insight' ? (

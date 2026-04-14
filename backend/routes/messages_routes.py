@@ -114,7 +114,8 @@ async def send_message(conversation_id: str, request: Request):
             "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": oid,
             "type": "new_message",
             "message": f"New message from {user.get('artist_name', 'Someone')}",
-            "read": False, "action_url": "/messages", "created_at": datetime.now(timezone.utc).isoformat(),
+            "read": False, "action_url": f"/messages?conversation={conversation_id}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
         })
     return msg
 
@@ -161,7 +162,8 @@ async def upload_chat_file(conversation_id: str, request: Request, file: UploadF
             "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": oid,
             "type": "new_message",
             "message": f"{user.get('artist_name', 'Someone')} shared a file",
-            "read": False, "action_url": "/messages", "created_at": datetime.now(timezone.utc).isoformat(),
+            "read": False, "action_url": f"/messages?conversation={conversation_id}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
         })
     return msg
 

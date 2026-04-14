@@ -973,7 +973,8 @@ async def send_collab_invite(request: Request):
         "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": post["user_id"],
         "type": "collab_invite",
         "message": f"{user.get('artist_name', 'Someone')} wants to collaborate on \"{post['title']}\"",
-        "read": False, "action_url": "/collaborations", "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False, "action_url": f"/collaborations?tab=invites&post={post_id}",
+        "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return invite
 
@@ -1025,7 +1026,8 @@ async def respond_to_invite(invite_id: str, request: Request):
         "id": f"notif_{uuid.uuid4().hex[:12]}", "user_id": invite["from_user_id"],
         "type": "collab_response",
         "message": f"{user.get('artist_name', 'Someone')} {new_status} your collaboration invite for \"{invite['post_title']}\"",
-        "read": False, "action_url": "/collaborations", "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False, "action_url": f"/collaborations?tab=sent&post={invite.get('post_id', '')}",
+        "created_at": datetime.now(timezone.utc).isoformat(),
     })
     return {"message": f"Invite {new_status}"}
 
