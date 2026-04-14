@@ -84,22 +84,11 @@ const SettingsPage = () => {
       toast.error(`Spotify connection failed: ${params.get('reason') || 'Unknown error'}`);
       window.history.replaceState({}, '', '/settings');
     }
-    // Handle Stripe subscription success redirect
-    const subscription = params.get('subscription');
-    const plan = params.get('plan');
-    const sessionId = params.get('session_id');
-    if (subscription === 'success' && plan) {
-      const API_URL = process.env.REACT_APP_BACKEND_URL;
-      axios.post(`${API_URL}/api/subscriptions/upgrade?plan=${plan}${sessionId ? `&session_id=${sessionId}` : ''}`, {}, { withCredentials: true })
-        .then(async (res) => {
-          updateUser?.({ plan });
-          await checkAuth?.();
-          toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
-          window.history.replaceState({}, '', '/settings');
-        })
-        .catch(() => toast.error('Failed to activate plan — contact support'));
-    } else if (subscription === 'cancelled') {
-      toast.error('Payment was cancelled');
+    // Check for pending upgrade activated from PricingPage redirect
+    // (Stripe always redirects to /pricing, which then redirects here after activation)
+    const upgraded = params.get('upgraded');
+    if (upgraded) {
+      toast.success(`You are now on the ${upgraded.charAt(0).toUpperCase() + upgraded.slice(1)} plan!`);
       window.history.replaceState({}, '', '/settings');
     }
   }, []);
@@ -247,17 +236,19 @@ const SettingsPage = () => {
   };
 
   const handleUpgradePlan = async (plan) => {
+    const API_URL = process.env.REACT_APP_BACKEND_URL;
     try {
       if (plan === 'free') {
-        const res = await axios.post(`${API}/subscriptions/upgrade`, null, { params: { plan }, withCredentials: true });
-        updateUser?.({ plan: res.data.plan });
-        setPlanStatus(res.data.status || 'free');
-        toast.success('Plan updated');
+        const res = await axios.post(`${API_URL}/api/subscriptions/upgrade?plan=free`, {}, { withCredentials: true });
+        updateUser?.({ plan: 'free' });
+        setPlanStatus('free');
         await checkAuth();
+        toast.success(res.data.message || 'Downgraded to Free plan.');
         return;
       }
 
-      const checkoutRes = await axios.post(`${API}/subscriptions/checkout`, {
+      // Paid plan — go to Stripe checkout (always redirects to /pricing on return)
+      const checkoutRes = await axios.post(`${API_URL}/api/subscriptions/checkout`, {
         plan,
         origin_url: window.location.origin,
       }, { withCredentials: true });
@@ -267,9 +258,10 @@ const SettingsPage = () => {
         return;
       }
 
-      toast.error('Unable to start checkout');
+      toast.error('Could not start checkout. Please try again.');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to upgrade plan');
+      const detail = error.response?.data?.detail || 'Failed to start upgrade. Please try again.';
+      toast.error(detail);
     }
   };
 

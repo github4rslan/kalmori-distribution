@@ -796,13 +796,31 @@ async def stripe_webhook(request: Request):
         elif purchase_type == "subscription":
             plan = metadata.get("plan")
             user_id = metadata.get("user_id")
-            if plan and user_id:
+            if plan and user_id and plan in ("rise", "pro"):
                 await db.users.update_one({"id": user_id}, {"$set": {"plan": plan}})
-                await db.subscriptions.update_one({"user_id": user_id}, {"$set": {
-                    "user_id": user_id, "plan": plan, "status": "active",
-                    "updated_at": now}}, upsert=True)
-                await db.payment_transactions.update_one({"session_id": session_id},
-                    {"$set": {"payment_status": "paid", "paid_at": now}})
+                await db.subscriptions.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"user_id": user_id, "plan": plan, "status": "active",
+                              "session_id": session_id, "updated_at": now}},
+                    upsert=True
+                )
+                # Mark transaction paid — upsert in case frontend beat the webhook
+                await db.payment_transactions.update_one(
+                    {"session_id": session_id},
+                    {"$set": {"payment_status": "paid", "paid_at": now,
+                              "user_id": user_id, "plan": plan, "type": "subscription"},
+                     "$setOnInsert": {"id": f"txn_wh_{uuid.uuid4().hex[:12]}",
+                                      "provider": "stripe", "created_at": now}},
+                    upsert=True
+                )
+                logger.info(f"Webhook: activated {plan} plan for user {user_id}")
+                # Increment promo usage now that payment is confirmed
+                promo_code = metadata.get("promo_code", "")
+                if promo_code:
+                    await db.promo_codes.update_one(
+                        {"code": promo_code},
+                        {"$inc": {"used_count": 1}}
+                    )
         # Handle release payments
         else:
             release_id = metadata.get("release_id")

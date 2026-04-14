@@ -116,20 +116,73 @@ export default function PricingPage() {
     const subscription = params.get('subscription');
     const plan = params.get('plan');
     const sessionId = params.get('session_id');
-    if (subscription === 'success' && plan) {
-      const upgradeUrl = `${API_URL}/api/subscriptions/upgrade?plan=${plan}${sessionId ? `&session_id=${sessionId}` : ''}`;
-      axios.post(upgradeUrl, {}, {
-        withCredentials: true,
-      }).then(async () => {
-        updateUser?.({ plan });
-        await checkAuth?.();
-        toast.success(`Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
-        window.history.replaceState({}, '', '/pricing');
-        setTimeout(() => window.location.assign('/settings'), 500);
-      }).catch(() => toast.error('Failed to activate plan'));
-    } else if (subscription === 'cancelled') {
-      toast.error('Payment was cancelled');
+
+    if (subscription === 'success' && plan && sessionId) {
+      // Store session_id in localStorage as fallback in case activation fails
+      localStorage.setItem('pending_upgrade_session', JSON.stringify({ plan, sessionId }));
+
+      const upgradeUrl = `${API_URL}/api/subscriptions/upgrade?plan=${plan}&session_id=${sessionId}`;
+      // Clean URL immediately so refresh doesn't re-trigger
       window.history.replaceState({}, '', '/pricing');
+
+      axios.post(upgradeUrl, {}, { withCredentials: true })
+        .then(async (res) => {
+          localStorage.removeItem('pending_upgrade_session');
+          await checkAuth?.();
+          toast.success(res.data.message || `Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)}!`);
+          setTimeout(() => window.location.assign(`/settings?upgraded=${plan}`), 800);
+        })
+        .catch((err) => {
+          const detail = err.response?.data?.detail || 'Failed to activate plan.';
+          const status = err.response?.status;
+          if (status === 503 || status === 502) {
+            toast.error(`Payment received but activation failed: ${detail}`, { duration: 8000 });
+          } else if (status === 402) {
+            toast.error(`Payment not confirmed yet. Please wait a moment and try again. (${detail})`, { duration: 8000 });
+          } else {
+            toast.error(detail, { duration: 8000 });
+          }
+        });
+
+    } else if (subscription === 'success' && plan && !sessionId) {
+      window.history.replaceState({}, '', '/pricing');
+      toast.error('Payment session ID missing. Please contact support if you were charged.');
+
+    } else if (subscription === 'cancelled') {
+      window.history.replaceState({}, '', '/pricing');
+      toast.error('Payment was cancelled. You have not been charged.');
+    }
+
+    // Check for a pending upgrade from a previous failed attempt
+    const pending = localStorage.getItem('pending_upgrade_session');
+    if (pending && subscription !== 'success') {
+      try {
+        const { plan: pendingPlan, sessionId: pendingSession } = JSON.parse(pending);
+        toast.info(
+          `You have a pending ${pendingPlan.toUpperCase()} upgrade. Click to retry activation.`,
+          {
+            duration: 10000,
+            action: {
+              label: 'Activate Now',
+              onClick: () => {
+                const url = `${API_URL}/api/subscriptions/upgrade?plan=${pendingPlan}&session_id=${pendingSession}`;
+                axios.post(url, {}, { withCredentials: true })
+                  .then(async (res) => {
+                    localStorage.removeItem('pending_upgrade_session');
+                    await checkAuth?.();
+                    toast.success(res.data.message || `Activated ${pendingPlan} plan!`);
+                    setTimeout(() => window.location.assign('/settings'), 800);
+                  })
+                  .catch((err) => {
+                    toast.error(err.response?.data?.detail || 'Retry failed. Please contact support.');
+                  });
+              },
+            },
+          }
+        );
+      } catch {
+        localStorage.removeItem('pending_upgrade_session');
+      }
     }
   }, []);
 

@@ -32,42 +32,111 @@ async def get_my_plan(request: Request):
 
 @subscription_router.post("/subscriptions/upgrade")
 async def upgrade_subscription(plan: str, request: Request, session_id: Optional[str] = None):
+    """
+    Activate a plan after Stripe payment.
+    - If session_id provided: verify with Stripe directly (primary path)
+    - If no session_id and plan is free: allow downgrade without payment
+    - Never silently swallows errors — always returns a clear message
+    """
+    import stripe as stripe_sdk
     user = await get_current_user(request)
+
     if plan not in SUBSCRIPTION_PLANS:
-        raise HTTPException(status_code=400, detail="Invalid plan")
-    current_plan = user.get("plan", "free")
+        raise HTTPException(status_code=400, detail="Invalid plan selected.")
+
     target_plan = SUBSCRIPTION_PLANS[plan]
-    if target_plan["price"] > 0 and plan != current_plan:
-        # If Stripe session_id is provided, verify with Stripe and mark transaction paid
-        if session_id:
-            import stripe as stripe_sdk
-            stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
-            try:
-                session = stripe_sdk.checkout.Session.retrieve(session_id)
-                if session.payment_status == "paid" and session.metadata.get("user_id") == user["id"]:
-                    await db.payment_transactions.update_one(
-                        {"session_id": session_id},
-                        {"$set": {"payment_status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}}
-                    )
-            except Exception:
-                pass
-        paid_transactions = await db.payment_transactions.find(
-            {"user_id": user["id"], "type": "subscription", "plan": plan, "payment_status": "paid"},
-            {"_id": 0},
-        ).sort("created_at", -1).to_list(1)
-        txn = paid_transactions[0] if paid_transactions else None
-        if not txn:
-            raise HTTPException(status_code=402, detail="Payment required before upgrading this plan")
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Free downgrade — no payment needed
+    if target_plan["price"] == 0:
+        await db.users.update_one({"id": user["id"]}, {"$set": {"plan": "free"}})
+        await db.subscriptions.update_one(
+            {"user_id": user["id"]},
+            {"$set": {"user_id": user["id"], "plan": "free", "status": "free", "updated_at": now}},
+            upsert=True
+        )
+        return {"message": "Plan changed to Free.", "plan": "free", "status": "free"}
+
+    # Paid plan — must have a valid Stripe session_id
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="No payment session found. Please complete checkout first."
+        )
+
+    # Verify with Stripe directly
+    stripe_sdk.api_key = os.environ.get("STRIPE_API_KEY")
+    if not stripe_sdk.api_key:
+        raise HTTPException(status_code=503, detail="Payment system is not configured. Please contact support.")
+
+    try:
+        session = stripe_sdk.checkout.Session.retrieve(session_id)
+    except stripe_sdk.error.InvalidRequestError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Payment session not found. If you were charged, please contact support with session ID: {session_id}"
+        )
+    except stripe_sdk.error.AuthenticationError:
+        raise HTTPException(status_code=503, detail="Payment system authentication failed. Please contact support.")
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not reach payment provider. Please try again or contact support. (Ref: {session_id})"
+        )
+
+    # Validate payment status
+    if session.payment_status != "paid":
+        raise HTTPException(
+            status_code=402,
+            detail=f"Payment not completed. Status: '{session.payment_status}'. Please complete payment and try again."
+        )
+
+    # Validate session belongs to this user
+    session_user_id = (session.metadata or {}).get("user_id", "")
+    if session_user_id != user["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="This payment session does not belong to your account."
+        )
+
+    # Validate plan matches what was purchased
+    session_plan = (session.metadata or {}).get("plan", "")
+    if session_plan and session_plan != plan:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Session was for '{session_plan}' plan but '{plan}' was requested. Please contact support."
+        )
+
+    # Check session hasn't already been used for a different upgrade (prevent replay)
+    already_used = await db.payment_transactions.find_one(
+        {"session_id": session_id, "payment_status": "paid"},
+        {"_id": 0}
+    )
+
+    # Mark transaction as paid (idempotent)
+    await db.payment_transactions.update_one(
+        {"session_id": session_id},
+        {"$set": {"payment_status": "paid", "paid_at": now}},
+        upsert=False
+    )
+
+    # Activate plan
     await db.users.update_one({"id": user["id"]}, {"$set": {"plan": plan}})
-    await db.subscriptions.update_one({"user_id": user["id"]}, {"$set": {
-        "user_id": user["id"], "plan": plan, "status": "active",
-        "price": target_plan["price"],
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    }}, upsert=True)
+    await db.subscriptions.update_one(
+        {"user_id": user["id"]},
+        {"$set": {
+            "user_id": user["id"], "plan": plan, "status": "active",
+            "price": target_plan["price"], "session_id": session_id,
+            "updated_at": now
+        }},
+        upsert=True
+    )
+
     return {
-        "message": f"Upgraded to {target_plan['name']} plan",
+        "message": f"Successfully upgraded to {target_plan['name']}! Welcome.",
         "plan": plan,
         "status": "active",
+        "already_active": bool(already_used),
     }
 
 # ============= PLAN SALE CAMPAIGN =============
@@ -198,36 +267,58 @@ async def create_subscription_checkout(data: SubscriptionCheckout, request: Requ
                 discount_amount = min(promo_doc["discount_value"], final_price)
             final_price = max(round(final_price - discount_amount, 2), 0.50)  # Stripe min $0.50
 
-    # Build Stripe session kwargs
-    session_kwargs = dict(
-        payment_method_types=["card"],
-        line_items=[{"price_data": {"currency": "usd", "product_data": {"name": f"Kalmori {plan_info['name']} Plan"}, "unit_amount": int(final_price * 100)}, "quantity": 1}],
-        mode="payment",
-        success_url=f"{data.origin_url}/pricing?subscription=success&plan={data.plan}&session_id={{CHECKOUT_SESSION_ID}}",
-        cancel_url=f"{data.origin_url}/pricing?subscription=cancelled",
-        metadata={"user_id": user["id"], "plan": data.plan, "type": "subscription",
-                  "promo_code": promo_doc["code"] if promo_doc else ""},
-    )
+    # Build Stripe session
+    try:
+        session = stripe_sdk.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": f"Kalmori {plan_info['name']} Plan"},
+                    "unit_amount": int(final_price * 100),
+                },
+                "quantity": 1,
+            }],
+            mode="payment",
+            success_url=f"{data.origin_url}/pricing?subscription=success&plan={data.plan}&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{data.origin_url}/pricing?subscription=cancelled",
+            metadata={
+                "user_id": user["id"],
+                "plan": data.plan,
+                "type": "subscription",
+                "promo_code": promo_doc["code"] if promo_doc else "",
+            },
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Could not create payment session: {str(e)}")
 
-    session = stripe_sdk.checkout.Session.create(**session_kwargs)
-
-    # Increment promo usage
-    if promo_doc:
-        await db.promo_codes.update_one({"code": promo_doc["code"]}, {"$inc": {"used_count": 1}})
-
+    # Save pending transaction — promo usage incremented only after payment confirmed (via webhook)
     await db.payment_transactions.insert_one({
-        "id": f"txn_{uuid.uuid4().hex[:12]}", "session_id": session.id,
-        "user_id": user["id"], "amount": final_price, "original_amount": plan_info["price"],
-        "sale_discount": sale_discount, "discount_amount": discount_amount,
+        "id": f"txn_{uuid.uuid4().hex[:12]}",
+        "session_id": session.id,
+        "user_id": user["id"],
+        "amount": final_price,
+        "original_amount": plan_info["price"],
+        "sale_discount": sale_discount,
+        "discount_amount": discount_amount,
         "promo_code": promo_doc["code"] if promo_doc else None,
         "sale_name": sale_doc["name"] if sale_doc else None,
-        "currency": "usd", "type": "subscription", "plan": data.plan,
-        "payment_status": "pending", "provider": "stripe",
+        "currency": "usd",
+        "type": "subscription",
+        "plan": data.plan,
+        "payment_status": "pending",
+        "provider": "stripe",
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
-    return {"checkout_url": session.url, "session_id": session.id,
-            "final_price": final_price, "sale_discount": sale_discount,
-            "discount_amount": discount_amount}
+
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "final_price": final_price,
+        "original_price": plan_info["price"],
+        "sale_discount": sale_discount,
+        "discount_amount": discount_amount,
+    }
 
 
 # ============= PROMO CODES =============
