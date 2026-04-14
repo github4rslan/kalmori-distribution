@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
@@ -45,70 +45,71 @@ axios.interceptors.response.use(
   }
 );
 
-// Pages
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import ReleasesPage from './pages/ReleasesPage';
-import ReleaseDetailPage from './pages/ReleaseDetailPage';
-import ReleaseWizardPage from './pages/ReleaseWizardPage';
-import AnalyticsPage from './pages/AnalyticsPage';
-import WalletPage from './pages/WalletPage';
-import SettingsPage from './pages/SettingsPage';
-import AuthCallback from './pages/AuthCallback';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminBeatsPage from './pages/AdminBeatsPage';
-import AdminRoyaltyImportPage from './pages/AdminRoyaltyImportPage';
-import AdminUserDetailPage from './pages/AdminUserDetailPage';
-import AdminCampaignsPage from './pages/AdminCampaignsPage';
-import AdminLeadsPage from './pages/AdminLeadsPage';
-import AdminFeatureAnnouncementsPage from './pages/AdminFeatureAnnouncementsPage';
-import AdminNotificationsPage from './pages/AdminNotificationsPage';
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import AgreementPage from './pages/AgreementPage';
-import PricingPage from './pages/PricingPage';
-import ServicesPage from './pages/ServicesPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import PromotingPage from './pages/PromotingPage';
-import PublishingPage from './pages/PublishingPage';
-import StoresPage from './pages/StoresPage';
-import InstrumentalsPage from './pages/InstrumentalsPage';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import SpotifyCanvasPage from './pages/SpotifyCanvasPage';
-import ContentIdPage from './pages/ContentIdPage';
-import MyPurchasesPage from './pages/MyPurchasesPage';
-import CollaborationsPage from './pages/CollaborationsPage';
-import PreSaveManagerPage, { PreSaveLandingPage } from './pages/PreSavePage';
-import FanAnalyticsPage from './pages/FanAnalyticsPage';
-import RevenueAnalyticsPage from './pages/RevenueAnalyticsPage';
-import LeaderboardPage from './pages/LeaderboardPage';
-import GoalsPage from './pages/GoalsPage';
-import ArtistProfilePage from './pages/ArtistProfilePage';
-import RoleSelectionPage from './pages/RoleSelectionPage';
-import LabelDashboardPage from './pages/LabelDashboardPage';
-import ProducerBeatBankPage from './pages/ProducerBeatBankPage';
-import AdminEmailSettingsPage from './pages/AdminEmailSettingsPage';
-import AdminPromoCodesPage from './pages/AdminPromoCodesPage';
-import AdminPlansPage from './pages/AdminPlansPage';
-import ReferralPage from './pages/ReferralPage';
-import AdminReferralsPage from './pages/AdminReferralsPage';
-import AdminAnalyticsReportsPage from './pages/AdminAnalyticsReportsPage';
-import AdminContractsPage from './pages/AdminContractsPage';
-import AdminPayoutsPage from './pages/AdminPayoutsPage';
-import CalendarPage from './pages/CalendarPage';
-import CollabHubPage from './pages/CollabHubPage';
-import MessagesPage from './pages/MessagesPage';
-import RoyaltySplitsPage from './pages/RoyaltySplitsPage';
-import PageBuilderPage from './pages/PageBuilderPage';
-import SpotifyAnalyticsPage from './pages/SpotifyAnalyticsPage';
-import FeaturesPage from './pages/FeaturesPage';
-import FAQPage from './pages/FAQPage';
+// Pages (lazy-loaded for code splitting)
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ReleasesPage = lazy(() => import('./pages/ReleasesPage'));
+const ReleaseDetailPage = lazy(() => import('./pages/ReleaseDetailPage'));
+const ReleaseWizardPage = lazy(() => import('./pages/ReleaseWizardPage'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const WalletPage = lazy(() => import('./pages/WalletPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const AuthCallback = lazy(() => import('./pages/AuthCallback'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const AdminSubmissionsPage = lazy(() => import('./pages/AdminSubmissionsPage'));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const AdminBeatsPage = lazy(() => import('./pages/AdminBeatsPage'));
+const AdminRoyaltyImportPage = lazy(() => import('./pages/AdminRoyaltyImportPage'));
+const AdminUserDetailPage = lazy(() => import('./pages/AdminUserDetailPage'));
+const AdminCampaignsPage = lazy(() => import('./pages/AdminCampaignsPage'));
+const AdminLeadsPage = lazy(() => import('./pages/AdminLeadsPage'));
+const AdminFeatureAnnouncementsPage = lazy(() => import('./pages/AdminFeatureAnnouncementsPage'));
+const AdminNotificationsPage = lazy(() => import('./pages/AdminNotificationsPage'));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
+const AgreementPage = lazy(() => import('./pages/AgreementPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const PromotingPage = lazy(() => import('./pages/PromotingPage'));
+const PublishingPage = lazy(() => import('./pages/PublishingPage'));
+const StoresPage = lazy(() => import('./pages/StoresPage'));
+const InstrumentalsPage = lazy(() => import('./pages/InstrumentalsPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const SpotifyCanvasPage = lazy(() => import('./pages/SpotifyCanvasPage'));
+const ContentIdPage = lazy(() => import('./pages/ContentIdPage'));
+const MyPurchasesPage = lazy(() => import('./pages/MyPurchasesPage'));
+const CollaborationsPage = lazy(() => import('./pages/CollaborationsPage'));
+const PreSaveManagerPage = lazy(() => import('./pages/PreSavePage'));
+const PreSaveLandingPage = lazy(() => import('./pages/PreSavePage').then(m => ({ default: m.PreSaveLandingPage })));
+const FanAnalyticsPage = lazy(() => import('./pages/FanAnalyticsPage'));
+const RevenueAnalyticsPage = lazy(() => import('./pages/RevenueAnalyticsPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+const GoalsPage = lazy(() => import('./pages/GoalsPage'));
+const ArtistProfilePage = lazy(() => import('./pages/ArtistProfilePage'));
+const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage'));
+const LabelDashboardPage = lazy(() => import('./pages/LabelDashboardPage'));
+const ProducerBeatBankPage = lazy(() => import('./pages/ProducerBeatBankPage'));
+const AdminEmailSettingsPage = lazy(() => import('./pages/AdminEmailSettingsPage'));
+const AdminPromoCodesPage = lazy(() => import('./pages/AdminPromoCodesPage'));
+const AdminPlansPage = lazy(() => import('./pages/AdminPlansPage'));
+const ReferralPage = lazy(() => import('./pages/ReferralPage'));
+const AdminReferralsPage = lazy(() => import('./pages/AdminReferralsPage'));
+const AdminAnalyticsReportsPage = lazy(() => import('./pages/AdminAnalyticsReportsPage'));
+const AdminContractsPage = lazy(() => import('./pages/AdminContractsPage'));
+const AdminPayoutsPage = lazy(() => import('./pages/AdminPayoutsPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const CollabHubPage = lazy(() => import('./pages/CollabHubPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const RoyaltySplitsPage = lazy(() => import('./pages/RoyaltySplitsPage'));
+const PageBuilderPage = lazy(() => import('./pages/PageBuilderPage'));
+const SpotifyAnalyticsPage = lazy(() => import('./pages/SpotifyAnalyticsPage'));
+const FeaturesPage = lazy(() => import('./pages/FeaturesPage'));
+const FAQPage = lazy(() => import('./pages/FAQPage'));
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -313,11 +314,18 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+const PageFallback = () => (
+  <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 // App Router
 const AppRouter = () => {
   const location = useLocation();
-  if (location.hash?.includes('session_id=')) return <AuthCallback />;
+  if (location.hash?.includes('session_id=')) return <Suspense fallback={<PageFallback />}><AuthCallback /></Suspense>;
   return (
+    <Suspense fallback={<PageFallback />}>
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -387,6 +395,7 @@ const AppRouter = () => {
       <Route path="/forgot-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 };
 
