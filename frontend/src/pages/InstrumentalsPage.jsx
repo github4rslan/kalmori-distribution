@@ -198,7 +198,7 @@ export default function InstrumentalsPage() {
   return (
     <PublicLayout>
       <div className="max-w-2xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
-        style={{ paddingBottom: currentBeat ? '88px' : '0' }}>
+        style={{ paddingBottom: currentBeat ? '110px' : '0' }}>
 
         {/* ── PAGE HEADER ── */}
         <div className="px-4 pt-6 pb-3">
@@ -310,78 +310,101 @@ export default function InstrumentalsPage() {
 
           {/* Beat list */}
           {loadingBeats ? (
-            <div className="flex justify-center py-12">
-              <div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
+            <div className="flex justify-center py-16">
+              <div className="w-10 h-10 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : beats.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <MusicNote className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No beats available yet. Check back soon!</p>
+            <div className="text-center py-16 text-gray-500">
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C4DFF20,#E040FB20)' }}>
+                <MusicNote className="w-8 h-8 opacity-40" weight="fill" />
+              </div>
+              <p className="text-sm font-medium">No beats available yet</p>
+              <p className="text-xs text-gray-600 mt-1">Check back soon!</p>
             </div>
           ) : (
-            <div className="space-y-0 divide-y divide-white/5 rounded-2xl overflow-hidden border border-white/5">
+            <div className="rounded-2xl overflow-hidden border border-white/[0.06]">
               {beats.map((beat, idx) => {
                 const isPlaying = playingBeat === beat.id;
                 return (
                   <div
                     key={beat.id}
-                    className={`flex items-center gap-3 px-3 py-3 transition-all ${isPlaying ? 'bg-[#7C4DFF]/10' : 'bg-[#111] hover:bg-[#161616]'}`}
+                    className={`relative flex items-center gap-3 px-4 py-3.5 transition-all border-b border-white/[0.04] last:border-b-0 ${isPlaying ? 'bg-gradient-to-r from-[#7C4DFF]/15 to-[#E040FB]/8' : 'bg-[#111] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
-                    {/* Cover + play */}
+                    {/* Active bar */}
+                    {isPlaying && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
+
+                    {/* Row number / playing indicator */}
+                    <div className="w-5 flex-shrink-0 text-center">
+                      {isPlaying
+                        ? <div className="flex items-end justify-center gap-0.5 h-4">
+                            {[1,2,3].map(i => (
+                              <div key={i} className="w-0.5 rounded-full animate-pulse"
+                                style={{ height: `${8 + i * 4}px`, background: 'linear-gradient(180deg,#7C4DFF,#E040FB)', animationDelay: `${i * 0.15}s` }} />
+                            ))}
+                          </div>
+                        : <span className="text-[11px] text-gray-600 font-mono">{idx + 1}</span>
+                      }
+                    </div>
+
+                    {/* Cover art */}
                     <button onClick={() => toggleBeat(beat)}
-                      className="relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden"
-                      style={{ background: beat.cover_url ? undefined : '#1a1a1a' }}
+                      className="relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden group"
+                      style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
                       data-testid={`play-beat-${beat.id}`}>
                       {beat.cover_url
                         ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center">
-                            <MusicNote className="w-5 h-5 text-white/20" weight="fill" />
+                            <MusicNote className="w-6 h-6 text-white/20" weight="fill" />
                           </div>
                       }
-                      {/* Play overlay */}
-                      <div className={`absolute inset-0 flex items-center justify-center rounded-xl transition-opacity ${isPlaying ? 'bg-[#7C4DFF]/70 opacity-100' : 'bg-black/40 opacity-0 hover:opacity-100'}`}>
+                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ${isPlaying ? 'opacity-100 bg-black/50' : 'opacity-0 group-active:opacity-100 bg-black/60'}`}>
                         {isPlaying
-                          ? <Pause className="w-5 h-5 text-white" weight="fill" />
-                          : <Play className="w-5 h-5 text-white" weight="fill" />
+                          ? <Pause className="w-5 h-5 text-white drop-shadow" weight="fill" />
+                          : <Play className="w-5 h-5 text-white drop-shadow" weight="fill" />
                         }
                       </div>
-                      {/* Always-visible play icon when no cover */}
-                      {!beat.cover_url && !isPlaying && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Play className="w-5 h-5 text-white/60" weight="fill" />
-                        </div>
-                      )}
-                      {isPlaying && beat.cover_url && null}
                     </button>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0" onClick={() => toggleBeat(beat)}>
-                      <p className={`text-sm font-semibold truncate ${isPlaying ? 'text-white' : 'text-gray-100'}`}>
+                      <p className={`text-[14px] font-semibold truncate leading-tight ${isPlaying ? 'text-white' : 'text-gray-100'}`}>
                         {beat.title}
                       </p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
+                      <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                        {beat.producer_name || 'Kalmori'}
                       </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-md">{beat.bpm} BPM</span>
+                        <span className="text-[10px] text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-md">{beat.key}</span>
+                        {beat.genre && <span className="text-[10px] text-gray-600 truncate">{beat.genre.split('/')[0]}</span>}
+                      </div>
+                    </div>
+
+                    {/* Price tag */}
+                    <div className="flex-shrink-0 text-right mr-1">
+                      <p className="text-sm font-bold text-white">${beat.prices?.basic_lease || '29.99'}</p>
+                      <p className="text-[10px] text-gray-600">lease</p>
                     </div>
 
                     {/* Cart button */}
                     <button
                       onClick={() => openPurchaseModal(beat)}
-                      className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border border-white/10 bg-white/5 hover:bg-[#7C4DFF]/20 hover:border-[#7C4DFF]/40 transition-all active:scale-95"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
                       data-testid={`buy-beat-${beat.id}`}>
-                      <ShoppingCart className="w-4 h-4 text-gray-300" />
+                      <ShoppingCart className="w-4 h-4 text-white" />
                     </button>
 
                     {/* 3-dot menu */}
                     <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
-                        className="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-gray-400">
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all">
                         <DotsThreeVertical className="w-4 h-4" weight="bold" />
                       </button>
                       {openMenuId === beat.id && (
-                        <div className="absolute right-0 bottom-12 z-30 bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
+                        <div className="absolute right-0 bottom-12 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
                           <button
                             onClick={() => { openPurchaseModal(beat); setOpenMenuId(null); }}
                             className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
@@ -562,50 +585,65 @@ export default function InstrumentalsPage() {
             STICKY BOTTOM PLAYER BAR
         ══════════════════════════════════════════ */}
         {currentBeat && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#0d0d0d]/95 backdrop-blur-xl border-t border-white/10"
+          <div className="fixed bottom-0 left-0 right-0 z-50"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
-              {/* Cover */}
-              <div className="w-11 h-11 rounded-lg flex-shrink-0 overflow-hidden bg-[#1a1a1a]">
-                {currentBeat.cover_url
-                  ? <img src={currentBeat.cover_url} alt="" className="w-full h-full object-cover" />
-                  : <div className="w-full h-full flex items-center justify-center">
-                      <MusicNote className="w-5 h-5 text-white/30" weight="fill" />
+            {/* Gradient fade above player */}
+            <div className="h-6 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+            <div className="bg-[#0f0f0f] border-t border-white/10 shadow-2xl"
+              style={{ boxShadow: '0 -8px 40px rgba(124,77,255,0.15)' }}>
+              <div className="max-w-2xl mx-auto px-4 py-3">
+                <div className="flex items-center gap-3">
+
+                  {/* Cover art */}
+                  <div className="relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden"
+                    style={{ background: 'linear-gradient(135deg,#1a1a2e,#16213e)' }}>
+                    {currentBeat.cover_url
+                      ? <img src={currentBeat.cover_url} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center">
+                          <MusicNote className="w-6 h-6 text-white/20" weight="fill" />
+                        </div>
+                    }
+                    {/* Animated ring */}
+                    <div className="absolute inset-0 rounded-xl border-2 animate-pulse" style={{ borderColor: '#7C4DFF40' }} />
+                  </div>
+
+                  {/* Title + producer + genre tags */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-bold text-white truncate leading-tight">{currentBeat.title}</p>
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">{currentBeat.producer_name || 'Kalmori'}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[9px] text-[#7C4DFF] bg-[#7C4DFF]/10 px-1.5 py-0.5 rounded-md font-semibold">{currentBeat.bpm} BPM</span>
+                      <span className="text-[9px] text-[#E040FB] bg-[#E040FB]/10 px-1.5 py-0.5 rounded-md font-semibold">{currentBeat.key}</span>
                     </div>
-                }
-              </div>
+                  </div>
 
-              {/* Title + producer */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{currentBeat.title}</p>
-                <p className="text-xs text-gray-500 truncate">{currentBeat.producer_name || 'Kalmori'}</p>
-              </div>
+                  {/* Controls */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => skipBeat(-1)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 active:text-white active:scale-95 transition-all">
+                      <SkipBack className="w-4 h-4" weight="fill" />
+                    </button>
+                    <button onClick={() => toggleBeat(currentBeat)}
+                      className="w-12 h-12 flex items-center justify-center rounded-full transition-all active:scale-90 shadow-lg"
+                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)', boxShadow: '0 4px 20px rgba(124,77,255,0.5)' }}>
+                      <Pause className="w-5 h-5 text-white" weight="fill" />
+                    </button>
+                    <button onClick={() => skipBeat(1)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 active:text-white active:scale-95 transition-all">
+                      <SkipForward className="w-4 h-4" weight="fill" />
+                    </button>
+                  </div>
 
-              {/* Controls */}
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button onClick={() => skipBeat(-1)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white transition-colors">
-                  <SkipBack className="w-4 h-4" weight="fill" />
-                </button>
-                <button onClick={() => toggleBeat(currentBeat)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-[#7C4DFF] text-white transition-all active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #7C4DFF, #E040FB)' }}>
-                  <Pause className="w-4 h-4" weight="fill" />
-                </button>
-                <button onClick={() => skipBeat(1)}
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white transition-colors">
-                  <SkipForward className="w-4 h-4" weight="fill" />
-                </button>
+                  {/* Buy button */}
+                  <button
+                    onClick={() => openPurchaseModal(currentBeat)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-xs font-bold flex-shrink-0 transition-all active:scale-95"
+                    style={{ background: 'linear-gradient(90deg,#7C4DFF,#E040FB)', boxShadow: '0 2px 12px rgba(124,77,255,0.4)' }}>
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    Buy
+                  </button>
+                </div>
               </div>
-
-              {/* Buy button */}
-              <button
-                onClick={() => openPurchaseModal(currentBeat)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-xs font-bold flex-shrink-0 transition-all active:scale-95"
-                style={{ background: 'linear-gradient(90deg, #7C4DFF, #E040FB)' }}>
-                <ShoppingCart className="w-3.5 h-3.5" />
-                Buy
-              </button>
             </div>
           </div>
         )}
