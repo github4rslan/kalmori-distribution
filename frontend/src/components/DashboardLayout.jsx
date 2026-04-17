@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Button } from './ui/button';
@@ -68,91 +69,99 @@ const getMobileTitle = (pathname) => {
   return 'Dashboard';
 };
 
-const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate, userRole }) => (
-  <>
-    <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-[2px] sm:hidden" onClick={onClose} />
-    <div
-      className="fixed inset-x-0 bottom-0 z-[100] max-h-[min(78vh,42rem)] rounded-t-[1.5rem] border border-white/10 bg-[#111111]/95 shadow-[0_-24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl safe-bottom-pad sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:bottom-auto sm:mt-3 sm:max-h-[28rem] sm:w-[26rem] sm:rounded-2xl"
-      data-testid="notification-panel">
-      <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-white/10 sm:hidden" />
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-4">
-        <div>
-          <h3 className="text-sm font-bold text-white">Notifications</h3>
-          <p className="mt-0.5 text-xs text-white/45 sm:hidden">Stay on top of releases, payments, and activity.</p>
+const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate, userRole, panelRef }) => {
+  if (typeof document === 'undefined') return null;
+
+  const content = (
+    <>
+      <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
+      <div
+        ref={panelRef}
+        className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-3 z-[100] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111111]/95 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:bottom-auto sm:mt-3 sm:h-auto sm:max-h-[28rem] sm:w-[26rem] sm:rounded-2xl"
+        data-testid="notification-panel">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
+          <div>
+            <h3 className="text-sm font-bold text-white">Notifications</h3>
+            <p className="mt-0.5 text-xs text-white/45 sm:hidden">Stay on top of releases, payments, and activity.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {notifications.some(n => !n.read) && (
+              <button onClick={onMarkAllRead} className="touch-target rounded-full px-3 text-xs font-semibold text-[#B58CFF] hover:bg-white/5" data-testid="mark-all-read-btn">Mark all read</button>
+            )}
+            <button onClick={onClose} className="touch-target inline-flex items-center justify-center rounded-full text-white/60 hover:bg-white/5 sm:hidden" aria-label="Close notifications">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {notifications.some(n => !n.read) && (
-            <button onClick={onMarkAllRead} className="touch-target rounded-full px-3 text-xs font-semibold text-[#B58CFF] hover:bg-white/5" data-testid="mark-all-read-btn">Mark all read</button>
-          )}
-          <button onClick={onClose} className="touch-target inline-flex items-center justify-center rounded-full text-white/60 hover:bg-white/5 sm:hidden" aria-label="Close notifications">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-      <div className="max-h-[calc(min(78vh,42rem)-4.5rem)] overflow-y-auto px-3 pb-3 pt-2 sm:max-h-[23rem] sm:px-0 sm:pb-0 sm:pt-0">
-      {notifications.length === 0 ? (
-        <div className="p-8 text-center text-sm text-gray-500">No notifications yet</div>
-      ) : (
-        notifications.map(n => {
-          const isAdmin = userRole === 'admin';
-          const targetUrl = n.action_url
-            || (n.type === 'new_submission' ? (isAdmin ? '/admin/submissions' : '/releases') : null)
-            || (n.type === 'new_signup' ? (isAdmin ? '/admin/users' : '/dashboard') : null)
-            || NOTIFICATION_ROUTES[n.type]
-            || '/dashboard';
-          return (
-            <div key={n.id} className={`group mb-2 cursor-pointer rounded-2xl border border-white/6 p-4 transition-colors hover:bg-white/[0.04] sm:mb-0 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:border-b-white/5 ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/10 border-[#E040FB]/20' : 'bg-[#7C4DFF]/10 border-[#7C4DFF]/20') : 'bg-white/[0.02] sm:bg-transparent'}`}
-              onClick={async () => { if (!n.read) { try { await onMarkRead(n.id); } catch {} } onClose(); onNavigate(targetUrl); }}
-              data-testid={`notification-${n.id}`}>
-              <div className="flex items-start gap-3.5">
-                {n.type === 'ai_insight' || n.type === 'smart_insight' ? (
-                  <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#E040FB]">
-                    <Lightning className="w-4 h-4 text-white" weight="fill" />
-                  </div>
-                ) : n.type === 'feature_announcement' ? (
-                  <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: `${n.color || '#7C4DFF'}20`, color: n.color || '#7C4DFF' }}>
-                    <Star className="w-4 h-4" weight="fill" />
-                  </div>
-                ) : (
-                  <div className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${n.read ? 'bg-white/10' : 'bg-[#7C4DFF]'}`} />
-                )}
-                <div className="flex-1 min-w-0">
-                  {(n.type === 'ai_insight' || n.type === 'smart_insight') && (
-                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
-                      {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
-                    </div>
-                  )}
-                  {n.type === 'feature_announcement' && (
-                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: n.color || '#7C4DFF' }}>New Feature</span>
-                      {n.has_access ? (
-                        <span className="text-[10px] font-bold text-[#1DB954] bg-[#1DB954]/10 px-1.5 py-0.5 rounded">Available</span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.min_plan?.charAt(0).toUpperCase() + n.min_plan?.slice(1)} Plan</span>
+        <div className="h-[calc(100%-4.5rem)] overflow-y-auto px-3 pb-3 pt-2 sm:max-h-[23rem] sm:h-auto sm:px-0 sm:pb-0 sm:pt-0">
+          {notifications.length === 0 ? (
+            <div className="p-8 text-center text-sm text-gray-500">No notifications yet</div>
+          ) : (
+            notifications.map(n => {
+              const isAdmin = userRole === 'admin';
+              const targetUrl = n.action_url
+                || (n.type === 'new_submission' ? (isAdmin ? '/admin/submissions' : '/releases') : null)
+                || (n.type === 'new_signup' ? (isAdmin ? '/admin/users' : '/dashboard') : null)
+                || NOTIFICATION_ROUTES[n.type]
+                || '/dashboard';
+              return (
+                <div
+                  key={n.id}
+                  className={`group mb-2 cursor-pointer rounded-2xl border border-white/6 p-4 transition-colors hover:bg-white/[0.04] sm:mb-0 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:border-b-white/5 ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/10 border-[#E040FB]/20' : 'bg-[#7C4DFF]/10 border-[#7C4DFF]/20') : 'bg-white/[0.02] sm:bg-transparent'}`}
+                  onClick={async () => { if (!n.read) { try { await onMarkRead(n.id); } catch {} } onClose(); onNavigate(targetUrl); }}
+                  data-testid={`notification-${n.id}`}>
+                  <div className="flex items-start gap-3.5">
+                    {n.type === 'ai_insight' || n.type === 'smart_insight' ? (
+                      <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#E040FB]">
+                        <Lightning className="w-4 h-4 text-white" weight="fill" />
+                      </div>
+                    ) : n.type === 'feature_announcement' ? (
+                      <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: `${n.color || '#7C4DFF'}20`, color: n.color || '#7C4DFF' }}>
+                        <Star className="w-4 h-4" weight="fill" />
+                      </div>
+                    ) : (
+                      <div className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${n.read ? 'bg-white/10' : 'bg-[#7C4DFF]'}`} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {(n.type === 'ai_insight' || n.type === 'smart_insight') && (
+                        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
+                          {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
+                        </div>
                       )}
+                      {n.type === 'feature_announcement' && (
+                        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: n.color || '#7C4DFF' }}>New Feature</span>
+                          {n.has_access ? (
+                            <span className="text-[10px] font-bold text-[#1DB954] bg-[#1DB954]/10 px-1.5 py-0.5 rounded">Available</span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.min_plan?.charAt(0).toUpperCase() + n.min_plan?.slice(1)} Plan</span>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-sm leading-snug text-white sm:text-[13px]">{n.message}</p>
+                      {n.action_suggestion && (
+                        <p className="mt-2 text-xs leading-snug text-[#B58CFF]">{n.action_suggestion}</p>
+                      )}
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <p className="text-[11px] text-gray-500">
+                          {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                        </p>
+                        <span className="text-[11px] font-semibold text-[#B58CFF] sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">View &rarr;</span>
+                      </div>
                     </div>
-                  )}
-                  <p className="text-sm leading-snug text-white sm:text-[13px]">{n.message}</p>
-                  {n.action_suggestion && (
-                    <p className="mt-2 text-xs leading-snug text-[#B58CFF]">{n.action_suggestion}</p>
-                  )}
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <p className="text-[11px] text-gray-500">
-                      {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-                    </p>
-                    <span className="text-[11px] font-semibold text-[#B58CFF] sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">View &rarr;</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-    </div>
-  </>
-);
+              );
+            })
+          )}
+        </div>
+      </div>
+    </>
+  );
+
+  return createPortal(content, document.body);
+};
 
 const DashboardLayout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -163,6 +172,7 @@ const DashboardLayout = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
+  const notifPanelRef = useRef(null);
 
   // Fetch notifications and unread count
   useEffect(() => {
@@ -174,10 +184,21 @@ const DashboardLayout = ({ children }) => {
   // Close panel on outside click
   useEffect(() => {
     const handleClick = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false);
+      if (
+        notifRef.current
+        && !notifRef.current.contains(e.target)
+        && notifPanelRef.current
+        && !notifPanelRef.current.contains(e.target)
+      ) {
+        setShowNotifications(false);
+      }
     };
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
   }, []);
 
   const fetchUnreadCount = async () => {
@@ -354,7 +375,7 @@ const DashboardLayout = ({ children }) => {
                   )}
                 </button>
                 {showNotifications && (
-                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={user?.user_role || user?.role} />
+                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={user?.user_role || user?.role} panelRef={notifPanelRef} />
                 )}
               </div>
               <Link to="/releases/new" className="sm:hidden">
