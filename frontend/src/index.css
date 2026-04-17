@@ -50,6 +50,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 html {
@@ -381,6 +382,36 @@ html { scroll-behavior: smooth; }
 html, body { overflow-x: hidden; max-width: 100%; }
 #root { overflow-x: hidden; max-width: 100vw; }
 
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-page-shell {
+  width: 100%;
+}
+
+.mobile-card {
+  border-radius: 1rem;
+}
+
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.safe-top-pad {
+  padding-top: max(env(safe-area-inset-top), 0px);
+}
+
+.safe-bottom-pad {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
 /* Safety: long text never blows out narrow viewports */
 @media (max-width: 640px) {
   body, #root {
@@ -389,6 +420,13 @@ html, body { overflow-x: hidden; max-width: 100%; }
   }
   h1, h2, h3, h4, p, span, a {
     max-width: 100%;
+  }
+  .mobile-page-shell {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+  .mobile-card {
+    border-radius: 1.125rem;
   }
 }
 

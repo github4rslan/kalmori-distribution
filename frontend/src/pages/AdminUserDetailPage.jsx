@@ -8,7 +8,7 @@ import { ArrowLeft, User, Disc, ChartLineUp, CurrencyDollar, Globe, Target, User
 import { toast } from 'sonner';
 
 const StatCard = ({ label, value, icon, color, testId }) => (
-  <div className="bg-[#141414] border border-white/10 rounded-xl p-4" data-testid={testId}>
+  <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4" data-testid={testId}>
     <div className="flex items-center gap-3 mb-2">
       <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}15`, color }}>{icon}</div>
     </div>
@@ -93,13 +93,13 @@ const AdminUserDetailPage = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6" data-testid="admin-user-detail">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6" data-testid="admin-user-detail">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/admin/users')} className="p-2 hover:bg-white/5 rounded-lg" data-testid="back-to-users-btn">
+        <div className="flex flex-col gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:p-5 lg:flex-row lg:items-center">
+          <button onClick={() => navigate('/admin/users')} className="touch-target inline-flex items-center justify-center self-start rounded-xl hover:bg-white/5" data-testid="back-to-users-btn">
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
-          <div className="flex items-center gap-4 flex-1">
+          <div className="flex min-w-0 flex-1 items-center gap-4">
             {user.avatar_url ? (
               <img src={`${BACKEND_URL}/api/files/${user.avatar_url}`} alt="" className="w-14 h-14 rounded-full border-2 border-white/10 object-cover" />
             ) : (
@@ -107,24 +107,24 @@ const AdminUserDetailPage = () => {
                 {user.artist_name?.charAt(0).toUpperCase() || 'A'}
               </div>
             )}
-            <div>
-              <h1 className="text-xl font-bold text-white flex items-center gap-3" data-testid="user-detail-name">
+            <div className="min-w-0">
+              <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold text-white" data-testid="user-detail-name">
                 {user.artist_name || user.name}
                 <span className="text-xs px-2 py-0.5 rounded-full capitalize" style={{ backgroundColor: `${planColors[user.plan] || '#666'}20`, color: planColors[user.plan] || '#666' }}>{user.plan}</span>
                 <span className={`text-xs capitalize ${user.role === 'admin' ? 'text-[#E53935]' : 'text-gray-500'}`}>{user.role}</span>
               </h1>
-              <p className="text-sm text-gray-500">{user.email} &middot; Joined {new Date(user.created_at).toLocaleDateString()}</p>
+              <p className="mt-1 break-words text-sm text-gray-500">{user.email} &middot; Joined {new Date(user.created_at).toLocaleDateString()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
             {user.slug && (
               <a href={`/artist/${user.slug}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-400 hover:bg-white/10 transition-all"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-400 transition-all hover:bg-white/10"
                 data-testid="view-public-profile-link">
                 <ArrowSquareOut className="w-3.5 h-3.5" /> Public Profile
               </a>
             )}
-            <Button onClick={() => setEditing(!editing)} className="bg-[#7C4DFF] hover:bg-[#7C4DFF]/80 text-white text-xs" data-testid="edit-profile-btn">
+            <Button onClick={() => setEditing(!editing)} className="min-h-11 bg-[#7C4DFF] text-xs text-white hover:bg-[#7C4DFF]/80" data-testid="edit-profile-btn">
               <PencilSimple className="w-4 h-4 mr-1.5" /> {editing ? 'Cancel' : 'Edit Profile'}
             </Button>
           </div>
@@ -132,7 +132,7 @@ const AdminUserDetailPage = () => {
 
         {/* Edit Form */}
         {editing && (
-          <div className="bg-[#141414] border border-[#7C4DFF]/30 rounded-xl p-6 space-y-5" data-testid="admin-edit-profile-form">
+          <div className="mobile-card rounded-2xl border border-[#7C4DFF]/30 bg-[#141414] p-5 sm:p-6 space-y-5" data-testid="admin-edit-profile-form">
             <h2 className="text-sm font-bold text-[#7C4DFF] uppercase tracking-wider">Edit Profile</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
@@ -190,7 +190,7 @@ const AdminUserDetailPage = () => {
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
               <Button onClick={() => setEditing(false)} variant="outline" className="border-white/10 text-gray-400">Cancel</Button>
               <Button onClick={handleSave} disabled={saving} className="bg-[#E53935] hover:bg-[#d32f2f] text-white" data-testid="save-profile-btn">
                 <FloppyDisk className="w-4 h-4 mr-1.5" /> {saving ? 'Saving...' : 'Save Changes'}
@@ -200,7 +200,7 @@ const AdminUserDetailPage = () => {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <StatCard label="Total Streams" value={fmt(stats.total_streams)} icon={<ChartLineUp className="w-4 h-4" />} color="#7C4DFF" testId="stat-streams" />
           <StatCard label="Revenue" value={`$${stats.total_revenue.toFixed(2)}`} icon={<CurrencyDollar className="w-4 h-4" />} color="#1DB954" testId="stat-revenue" />
           <StatCard label="Releases" value={stats.total_releases} icon={<Disc className="w-4 h-4" />} color="#E040FB" testId="stat-releases" />
@@ -209,9 +209,9 @@ const AdminUserDetailPage = () => {
         </div>
 
         {/* Analytics Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
           {/* Platform Breakdown */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5" data-testid="platform-breakdown">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5" data-testid="platform-breakdown">
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <MusicNotes className="w-4 h-4 text-[#7C4DFF]" /> Platform Breakdown
             </h3>
@@ -223,12 +223,12 @@ const AdminUserDetailPage = () => {
                   const maxStreams = platform_breakdown[0]?.streams || 1;
                   return (
                     <div key={i} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-24 truncate">{p.platform}</span>
+                      <span className="w-20 shrink-0 truncate text-xs text-gray-400 sm:w-24">{p.platform}</span>
                       <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-[#7C4DFF] rounded-full" style={{ width: `${(p.streams / maxStreams) * 100}%` }} />
                       </div>
-                      <span className="text-xs text-white font-mono w-16 text-right">{fmt(p.streams)}</span>
-                      <span className="text-xs text-gray-500 w-16 text-right">${p.revenue.toFixed(2)}</span>
+                      <span className="w-12 shrink-0 text-right text-xs font-mono text-white sm:w-16">{fmt(p.streams)}</span>
+                      <span className="hidden w-16 shrink-0 text-right text-xs text-gray-500 sm:block">${p.revenue.toFixed(2)}</span>
                     </div>
                   );
                 })}
@@ -237,7 +237,7 @@ const AdminUserDetailPage = () => {
           </div>
 
           {/* Country Breakdown */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5" data-testid="country-breakdown">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5" data-testid="country-breakdown">
             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
               <Globe className="w-4 h-4 text-[#E040FB]" /> Top Markets
             </h3>
@@ -249,11 +249,11 @@ const AdminUserDetailPage = () => {
                   const maxStreams = country_breakdown[0]?.streams || 1;
                   return (
                     <div key={i} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-24 truncate">{c.country}</span>
+                      <span className="w-20 shrink-0 truncate text-xs text-gray-400 sm:w-24">{c.country}</span>
                       <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-[#E040FB] rounded-full" style={{ width: `${(c.streams / maxStreams) * 100}%` }} />
                       </div>
-                      <span className="text-xs text-white font-mono w-16 text-right">{fmt(c.streams)}</span>
+                      <span className="w-12 shrink-0 text-right text-xs font-mono text-white sm:w-16">{fmt(c.streams)}</span>
                     </div>
                   );
                 })}
@@ -264,26 +264,28 @@ const AdminUserDetailPage = () => {
 
         {/* Weekly Trend (mini sparkline bars) */}
         {weekly_trends.some(w => w.streams > 0) && (
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5" data-testid="weekly-trends">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5" data-testid="weekly-trends">
             <h3 className="text-sm font-bold text-white mb-4">Weekly Stream Trend</h3>
-            <div className="flex items-end gap-2 h-24">
-              {weekly_trends.map((w, i) => {
-                const maxW = Math.max(...weekly_trends.map(t => t.streams), 1);
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full bg-[#7C4DFF]/20 rounded-t relative" style={{ height: `${Math.max((w.streams / maxW) * 80, 4)}px` }}>
-                      <div className="absolute inset-0 bg-[#7C4DFF] rounded-t" style={{ height: '100%' }} />
+            <div className="overflow-x-auto pb-1">
+              <div className="flex h-24 min-w-[24rem] items-end gap-2">
+                {weekly_trends.map((w, i) => {
+                  const maxW = Math.max(...weekly_trends.map(t => t.streams), 1);
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-1">
+                      <div className="relative w-full rounded-t bg-[#7C4DFF]/20" style={{ height: `${Math.max((w.streams / maxW) * 80, 4)}px` }}>
+                        <div className="absolute inset-0 rounded-t bg-[#7C4DFF]" style={{ height: '100%' }} />
+                      </div>
+                      <span className="text-[9px] text-gray-500">{w.week}</span>
                     </div>
-                    <span className="text-[9px] text-gray-500">{w.week}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
         {/* Releases Table */}
-        <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden" data-testid="releases-table">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]" data-testid="releases-table">
           <div className="p-5 border-b border-white/10">
             <h3 className="text-sm font-bold text-white">Releases ({releases.length})</h3>
           </div>
@@ -324,7 +326,7 @@ const AdminUserDetailPage = () => {
 
         {/* Goals */}
         {goals.length > 0 && (
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5" data-testid="user-goals">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5" data-testid="user-goals">
             <h3 className="text-sm font-bold text-white mb-4">Goals & Milestones</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {goals.map(g => {
@@ -348,14 +350,14 @@ const AdminUserDetailPage = () => {
         )}
         {/* Beats Section */}
         {beats.length > 0 && (
-          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
-            <div className="p-5 border-b border-white/10 flex items-center justify-between">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 p-5">
               <h3 className="text-sm font-bold text-white">Beats ({beats.length})</h3>
               <Link to="/admin/beats" className="text-xs text-[#7C4DFF] hover:underline">View all →</Link>
             </div>
             <div className="divide-y divide-white/5">
               {beats.map(b => (
-                <div key={b.id} className="flex items-center gap-3 p-4 hover:bg-white/5 cursor-pointer" onClick={() => navigate('/admin/beats')}>
+                <div key={b.id} className="flex flex-col gap-3 p-4 hover:bg-white/5 cursor-pointer sm:flex-row sm:items-center" onClick={() => navigate('/admin/beats')}>
                   {b.cover_url
                     ? <img src={b.cover_url} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
                     : <div className="w-10 h-10 rounded bg-[#1a1a1a] flex items-center justify-center flex-shrink-0"><MusicNotes className="w-5 h-5 text-gray-600" /></div>
@@ -364,7 +366,7 @@ const AdminUserDetailPage = () => {
                     <p className="text-sm font-medium text-white truncate">{b.title}</p>
                     <p className="text-xs text-gray-500">{b.genre} · {b.bpm} BPM · {b.key}</p>
                   </div>
-                  <div className="text-right flex-shrink-0">
+                  <div className="text-left sm:text-right flex-shrink-0">
                     <p className="text-xs text-[#FFD700] font-mono">${b.prices?.basic_lease || 0}</p>
                     <p className="text-xs text-gray-500">{b.sales_count || 0} sales</p>
                   </div>
@@ -376,18 +378,18 @@ const AdminUserDetailPage = () => {
 
         {/* Promotion Orders */}
         {promotions.length > 0 && (
-          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]">
             <div className="p-5 border-b border-white/10">
               <h3 className="text-sm font-bold text-white">Promotion Orders ({promotions.length})</h3>
             </div>
             <div className="divide-y divide-white/5">
               {promotions.map(o => (
-                <div key={o.id} className="flex items-center justify-between p-4 hover:bg-white/5">
+                <div key={o.id} className="flex flex-col gap-3 p-4 hover:bg-white/5 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{o.package_name || o.package_id}</p>
                     <p className="text-xs text-gray-500">{o.created_at ? new Date(o.created_at).toLocaleDateString() : ''}</p>
                   </div>
-                  <div className="text-right flex-shrink-0 ml-3">
+                  <div className="ml-0 flex-shrink-0 text-left sm:ml-3 sm:text-right">
                     <p className="text-xs text-[#FFD700] font-mono">${o.amount}</p>
                     <span className={`text-xs capitalize ${o.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-400'}`}>{o.payment_status}</span>
                   </div>

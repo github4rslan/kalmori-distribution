@@ -48,15 +48,15 @@ const DashboardPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8" data-testid="dashboard-page">
+      <div className="space-y-6 sm:space-y-8" data-testid="dashboard-page">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, <span className="gradient-text">{user?.artist_name || user?.name || 'Artist'}</span></h1>
           <p className="text-gray-400 mt-1">Here's how your music is performing</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           {stats.map((stat, i) => (
-            <div key={i} className="card-kalmori p-5 animate-fadeInUp" style={{ animationDelay: `${i * 0.1}s` }}>
+            <div key={i} className="card-kalmori mobile-card p-4 sm:p-5 animate-fadeInUp" style={{ animationDelay: `${i * 0.1}s` }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${stat.color}20`, color: stat.color }}>{stat.icon}</div>
                 {stat.change && <span className="text-xs text-[#4CAF50] font-mono">{stat.change}</span>}
@@ -68,12 +68,12 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 card-kalmori p-6">
+          <div className="lg:col-span-2 card-kalmori mobile-card p-4 sm:p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-medium">Streaming Activity</h2>
               <span className="text-xs text-gray-500">Last 30 days</span>
             </div>
-            <div className="h-64">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={analytics?.daily_streams || []}>
                   <defs><linearGradient id="streamGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#7C4DFF" stopOpacity={0.4}/><stop offset="95%" stopColor="#7C4DFF" stopOpacity={0}/></linearGradient></defs>
@@ -87,7 +87,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="card-kalmori p-6">
+          <div className="card-kalmori mobile-card p-4 sm:p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-medium">Recent Releases</h2>
               <Link to="/releases" className="text-xs text-[#7C4DFF] hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></Link>
@@ -109,7 +109,7 @@ const DashboardPage = () => {
                     draft:          { label: 'Draft',        color: '#A1A1AA' },
                   }[release.status] || { label: release.status, color: '#A1A1AA' };
                   return (
-                    <Link key={release.id} to={`/releases/${release.id}`} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 transition-colors group">
+                    <Link key={release.id} to={`/releases/${release.id}`} className="flex items-center gap-3 rounded-2xl p-3 hover:bg-white/5 transition-colors group">
                       <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex-shrink-0 overflow-hidden border border-white/8">
                         {release.cover_art_url
                           ? <img src={release.cover_art_url} alt="" className="w-full h-full object-cover" />
@@ -133,7 +133,7 @@ const DashboardPage = () => {
 
         {/* Trending This Week */}
         {trending.length > 0 && (
-          <div className="card-kalmori p-6" data-testid="trending-section">
+          <div className="card-kalmori mobile-card p-4 sm:p-6" data-testid="trending-section">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <Fire className="w-5 h-5 text-[#FF4081]" weight="fill" />
@@ -144,7 +144,7 @@ const DashboardPage = () => {
             <div className="space-y-3">
               {trending.slice(0, 5).map((item, i) => (
                 <Link key={item.release_id} to={`/releases/${item.release_id}`}
-                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors" data-testid={`trending-item-${i}`}>
+                  className="flex items-center gap-3 sm:gap-4 rounded-2xl p-3 hover:bg-white/5 transition-colors" data-testid={`trending-item-${i}`}>
                   <span className="text-lg font-bold text-gray-600 w-6 text-center">{i + 1}</span>
                   <div className="w-10 h-10 bg-[#1a1a1a] rounded-lg flex items-center justify-center flex-shrink-0">
                     <Disc className="w-5 h-5 text-gray-500" />
@@ -166,20 +166,20 @@ const DashboardPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/releases/new" className="group card-kalmori p-6 hover:border-[#7C4DFF]/50">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+          <Link to="/releases/new" className="group card-kalmori mobile-card p-5 sm:p-6 hover:border-[#7C4DFF]/50">
             <div className="flex items-center justify-between">
               <div><h3 className="font-medium mb-1">Create New Release</h3><p className="text-sm text-gray-400">Upload and distribute your music</p></div>
               <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-[#7C4DFF] transition-colors" />
             </div>
           </Link>
-          <Link to="/analytics" className="group card-kalmori p-6 hover:border-[#E040FB]/50">
+          <Link to="/analytics" className="group card-kalmori mobile-card p-5 sm:p-6 hover:border-[#E040FB]/50">
             <div className="flex items-center justify-between">
               <div><h3 className="font-medium mb-1">View Analytics</h3><p className="text-sm text-gray-400">Track your streaming stats</p></div>
               <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-[#E040FB] transition-colors" />
             </div>
           </Link>
-          <Link to="/wallet" className="group card-kalmori p-6 hover:border-[#4CAF50]/50">
+          <Link to="/wallet" className="group card-kalmori mobile-card p-5 sm:p-6 hover:border-[#4CAF50]/50">
             <div className="flex items-center justify-between">
               <div><h3 className="font-medium mb-1">Manage Wallet</h3><p className="text-sm text-gray-400">Withdraw your earnings</p></div>
               <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-[#4CAF50] transition-colors" />

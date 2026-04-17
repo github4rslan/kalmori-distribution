@@ -277,11 +277,14 @@ const SettingsPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto" data-testid="settings-page">
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-8">Settings</h1>
+      <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6" data-testid="settings-page">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-sm text-gray-400">Manage your profile, notifications, integrations, and public artist presence.</p>
+        </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="bg-[#141414] border border-white/10">
+          <TabsList className="border border-white/10 bg-[#141414]">
             <TabsTrigger value="profile" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-2" /> Profile
             </TabsTrigger>
@@ -301,14 +304,13 @@ const SettingsPage = () => {
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
-            {/* Avatar */}
-            <div className="bg-[#141414] border border-white/10 rounded-md p-6">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-6 flex items-center gap-2">
                 <User className="w-5 h-5 text-[#FF3B30]" />
                 Avatar
               </h2>
               
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-6">
                 <label className="relative w-24 h-24 cursor-pointer group">
                   <div className="w-full h-full rounded-full bg-[#1E1E1E] overflow-hidden">
                     {user?.avatar_url ? (
@@ -343,7 +345,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Artist Profile */}
-            <div className="bg-[#141414] border border-white/10 rounded-md p-6">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-6 flex items-center gap-2">
                 <MusicNotes className="w-5 h-5 text-[#FF3B30]" />
                 Artist Profile
@@ -398,7 +400,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Social Links */}
-            <div className="bg-[#141414] border border-white/10 rounded-md p-6">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-6 flex items-center gap-2">
                 <Globe className="w-5 h-5 text-[#007AFF]" />
                 Social Links
@@ -454,11 +456,11 @@ const SettingsPage = () => {
             </div>
 
             {/* Save Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-stretch sm:justify-end">
               <Button 
                 onClick={handleSaveProfile}
                 disabled={saving}
-                className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
+                className="w-full bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white sm:w-auto"
                 data-testid="save-profile-btn"
               >
                 {saving ? (
@@ -472,7 +474,7 @@ const SettingsPage = () => {
 
           {/* Subscription Tab */}
           <TabsContent value="subscription" className="space-y-6">
-            <div className="bg-[#141414] border border-white/10 rounded-md p-6">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6">
               <h2 className="text-lg font-medium mb-2">Current Plan</h2>
               <p className="text-[#A1A1AA] text-sm mb-6">
                 You are currently on the <span className="text-[#FFCC00] font-semibold uppercase">{user?.plan || 'Free'}</span> plan
@@ -481,7 +483,7 @@ const SettingsPage = () => {
                 </span>
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {Object.entries(plans).map(([key, plan]) => (
                   <div 
                     key={key}
@@ -542,8 +544,8 @@ const SettingsPage = () => {
               </div>
               <div className="space-y-3">
                 {Object.entries(NOTIF_PREF_LABELS).filter(([k]) => k.startsWith('email_')).map(([key, { label, desc }]) => (
-                  <div key={key} className="flex items-center justify-between p-4 bg-[#141414] border border-white/10 rounded-lg" data-testid={`pref-${key}`}>
-                    <div>
+                  <div key={key} className="mobile-card flex items-start justify-between gap-4 bg-[#141414] border border-white/10 p-4" data-testid={`pref-${key}`}>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-white">{label}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                     </div>
@@ -557,8 +559,8 @@ const SettingsPage = () => {
               </div>
               <div className="space-y-3">
                 {Object.entries(NOTIF_PREF_LABELS).filter(([k]) => k.startsWith('push_')).map(([key, { label, desc }]) => (
-                  <div key={key} className="flex items-center justify-between p-4 bg-[#141414] border border-white/10 rounded-lg" data-testid={`pref-${key}`}>
-                    <div>
+                  <div key={key} className="mobile-card flex items-start justify-between gap-4 bg-[#141414] border border-white/10 p-4" data-testid={`pref-${key}`}>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-white">{label}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                     </div>
@@ -577,13 +579,13 @@ const SettingsPage = () => {
             </div>
 
             {/* Spotify */}
-            <div className="p-5 bg-[#141414] border border-white/10 rounded-lg" data-testid="spotify-integration">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="mobile-card p-5 bg-[#141414] border border-white/10" data-testid="spotify-integration">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4 min-w-0">
                   <div className="w-12 h-12 rounded-xl bg-[#1DB954]/15 flex items-center justify-center">
                     <SpotifyLogo className="w-7 h-7 text-[#1DB954]" weight="fill" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-bold text-white">Spotify for Artists</p>
                     <p className="text-xs text-gray-500">
                       {spotifyStatus?.connected
@@ -652,8 +654,8 @@ const SettingsPage = () => {
             </div>
 
             {/* Apple Music */}
-            <div className="p-5 bg-[#141414] border border-white/10 rounded-lg opacity-60">
-              <div className="flex items-center justify-between">
+            <div className="mobile-card p-5 bg-[#141414] border border-white/10 opacity-60">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-[#FC3C44]/15 flex items-center justify-center">
                     <MusicNote className="w-7 h-7 text-[#FC3C44]" />
@@ -668,8 +670,8 @@ const SettingsPage = () => {
             </div>
 
             {/* YouTube */}
-            <div className="p-5 bg-[#141414] border border-white/10 rounded-lg opacity-60">
-              <div className="flex items-center justify-between">
+            <div className="mobile-card p-5 bg-[#141414] border border-white/10 opacity-60">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-[#FF0000]/15 flex items-center justify-center">
                     <MusicNote className="w-7 h-7 text-[#FF0000]" />
@@ -692,14 +694,14 @@ const SettingsPage = () => {
             </div>
 
             {/* Profile URL */}
-            <div className="bg-[#141414] border border-white/10 rounded-lg p-6" data-testid="public-profile-url-section">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6" data-testid="public-profile-url-section">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-[#7C4DFF]" />
                 Profile URL
               </h3>
 
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex-1 flex items-center bg-[#0A0A0A] border border-white/10 rounded-lg overflow-hidden">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-1 items-center overflow-hidden rounded-lg border border-white/10 bg-[#0A0A0A]">
                   <span className="px-3 py-2.5 text-sm text-white/40 border-r border-white/10 whitespace-nowrap">
                     {window.location.origin}/artist/
                   </span>
@@ -749,7 +751,7 @@ const SettingsPage = () => {
             </div>
 
             {/* What's shown */}
-            <div className="bg-[#141414] border border-white/10 rounded-lg p-6">
+              <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6">
               <h3 className="text-sm font-bold text-white mb-4">What fans will see</h3>
               <ul className="space-y-3">
                 {[
@@ -772,7 +774,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Theme Color Picker */}
-            <div className="bg-[#141414] border border-white/10 rounded-lg p-6" data-testid="theme-color-section">
+            <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6" data-testid="theme-color-section">
               <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                 <Gear className="w-4 h-4 text-[#E040FB]" />
                 Profile Theme Color
@@ -801,7 +803,7 @@ const SettingsPage = () => {
                   />
                 ))}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <label className="text-xs text-white/50">Custom:</label>
                 <input
                   type="color"
@@ -817,13 +819,13 @@ const SettingsPage = () => {
 
             {/* QR Code */}
             {slug && (
-              <div className="bg-[#141414] border border-white/10 rounded-lg p-6" data-testid="qr-code-section">
+              <div className="mobile-card bg-[#141414] border border-white/10 p-5 sm:p-6" data-testid="qr-code-section">
                 <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
                   <ShareNetwork className="w-4 h-4 text-[#7C4DFF]" />
                   QR Code
                 </h3>
                 <p className="text-xs text-gray-400 mb-4">Share your profile with a scannable QR code. Perfect for flyers, merch, and social media.</p>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
                   <div className="bg-[#0A0A0A] rounded-xl p-3 border border-white/5">
                     <img
                       src={`${API}/artist/${slug}/qr`}

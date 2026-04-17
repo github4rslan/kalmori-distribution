@@ -51,19 +51,47 @@ const NOTIFICATION_ROUTES = {
   'new_signup': '/admin/users',
 };
 
+const getMobileTitle = (pathname) => {
+  if (pathname === '/dashboard') return 'Dashboard';
+  if (pathname === '/releases') return 'Releases';
+  if (pathname === '/analytics') return 'Analytics';
+  if (pathname === '/wallet') return 'Wallet';
+  if (pathname === '/purchases') return 'My Purchases';
+  if (pathname === '/collaborations') return 'Collaborations';
+  if (pathname === '/settings') return 'Settings';
+  if (pathname === '/spotify') return 'Spotify Data';
+  if (pathname === '/spotify-canvas') return 'Spotify Canvas';
+  if (pathname === '/content-id') return 'Content ID';
+  if (pathname === '/messages') return 'Messages';
+  if (pathname === '/features') return "What's New";
+  if (pathname.startsWith('/releases/')) return 'Release Details';
+  return 'Dashboard';
+};
+
 const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate, userRole }) => (
-  <div
-    className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 sm:left-auto top-[72px] sm:top-full sm:mt-2 w-auto sm:w-96 bg-[#111] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]"
-    data-testid="notification-panel">
-    <div className="flex items-center justify-between p-4 border-b border-white/10">
-      <h3 className="text-sm font-bold text-white">Notifications</h3>
-      {notifications.some(n => !n.read) && (
-        <button onClick={onMarkAllRead} className="text-xs text-[#7C4DFF] hover:underline" data-testid="mark-all-read-btn">Mark all read</button>
-      )}
-    </div>
-    <div className="max-h-80 overflow-y-auto">
+  <>
+    <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-[2px] sm:hidden" onClick={onClose} />
+    <div
+      className="fixed inset-x-0 bottom-0 z-[100] max-h-[min(78vh,42rem)] rounded-t-[1.5rem] border border-white/10 bg-[#111111]/95 shadow-[0_-24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl safe-bottom-pad sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:bottom-auto sm:mt-3 sm:max-h-[28rem] sm:w-[26rem] sm:rounded-2xl"
+      data-testid="notification-panel">
+      <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-white/10 sm:hidden" />
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-4">
+        <div>
+          <h3 className="text-sm font-bold text-white">Notifications</h3>
+          <p className="mt-0.5 text-xs text-white/45 sm:hidden">Stay on top of releases, payments, and activity.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {notifications.some(n => !n.read) && (
+            <button onClick={onMarkAllRead} className="touch-target rounded-full px-3 text-xs font-semibold text-[#B58CFF] hover:bg-white/5" data-testid="mark-all-read-btn">Mark all read</button>
+          )}
+          <button onClick={onClose} className="touch-target inline-flex items-center justify-center rounded-full text-white/60 hover:bg-white/5 sm:hidden" aria-label="Close notifications">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      <div className="max-h-[calc(min(78vh,42rem)-4.5rem)] overflow-y-auto px-3 pb-3 pt-2 sm:max-h-[23rem] sm:px-0 sm:pb-0 sm:pt-0">
       {notifications.length === 0 ? (
-        <div className="p-6 text-center text-sm text-gray-500">No notifications yet</div>
+        <div className="p-8 text-center text-sm text-gray-500">No notifications yet</div>
       ) : (
         notifications.map(n => {
           const isAdmin = userRole === 'admin';
@@ -73,30 +101,30 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
             || NOTIFICATION_ROUTES[n.type]
             || '/dashboard';
           return (
-            <div key={n.id} className={`group p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/5' : 'bg-[#7C4DFF]/5') : ''}`}
+            <div key={n.id} className={`group mb-2 cursor-pointer rounded-2xl border border-white/6 p-4 transition-colors hover:bg-white/[0.04] sm:mb-0 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:border-b-white/5 ${!n.read ? (n.type === 'ai_insight' ? 'bg-[#E040FB]/10 border-[#E040FB]/20' : 'bg-[#7C4DFF]/10 border-[#7C4DFF]/20') : 'bg-white/[0.02] sm:bg-transparent'}`}
               onClick={async () => { if (!n.read) { try { await onMarkRead(n.id); } catch {} } onClose(); onNavigate(targetUrl); }}
               data-testid={`notification-${n.id}`}>
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3.5">
                 {n.type === 'ai_insight' || n.type === 'smart_insight' ? (
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Lightning className="w-3 h-3 text-white" weight="fill" />
+                  <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#E040FB]">
+                    <Lightning className="w-4 h-4 text-white" weight="fill" />
                   </div>
                 ) : n.type === 'feature_announcement' ? (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: `${n.color || '#7C4DFF'}20`, color: n.color || '#7C4DFF' }}>
-                    <Star className="w-3 h-3" weight="fill" />
+                  <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-2xl" style={{ backgroundColor: `${n.color || '#7C4DFF'}20`, color: n.color || '#7C4DFF' }}>
+                    <Star className="w-4 h-4" weight="fill" />
                   </div>
                 ) : (
-                  !n.read && <div className="w-2 h-2 rounded-full bg-[#7C4DFF] mt-1.5 flex-shrink-0" />
+                  <div className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${n.read ? 'bg-white/10' : 'bg-[#7C4DFF]'}`} />
                 )}
                 <div className="flex-1 min-w-0">
                   {(n.type === 'ai_insight' || n.type === 'smart_insight') && (
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                       <span className="text-[10px] font-bold text-[#E040FB] uppercase tracking-wider">AI Insight</span>
                       {n.metric_value && <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-1.5 py-0.5 rounded">{n.metric_value}</span>}
                     </div>
                   )}
                   {n.type === 'feature_announcement' && (
-                    <div className="flex items-center gap-1.5 mb-1">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
                       <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: n.color || '#7C4DFF' }}>New Feature</span>
                       {n.has_access ? (
                         <span className="text-[10px] font-bold text-[#1DB954] bg-[#1DB954]/10 px-1.5 py-0.5 rounded">Available</span>
@@ -105,15 +133,15 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
                       )}
                     </div>
                   )}
-                  <p className="text-sm text-white leading-snug">{n.message}</p>
+                  <p className="text-sm leading-snug text-white sm:text-[13px]">{n.message}</p>
                   {n.action_suggestion && (
-                    <p className="text-xs text-[#7C4DFF] mt-1 leading-snug">{n.action_suggestion}</p>
+                    <p className="mt-2 text-xs leading-snug text-[#B58CFF]">{n.action_suggestion}</p>
                   )}
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-gray-500">
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <p className="text-[11px] text-gray-500">
                       {n.created_at ? new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                     </p>
-                    <span className="text-[10px] text-[#7C4DFF] opacity-0 group-hover:opacity-100">View &rarr;</span>
+                    <span className="text-[11px] font-semibold text-[#B58CFF] sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">View &rarr;</span>
                   </div>
                 </div>
               </div>
@@ -122,7 +150,8 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
         })
       )}
     </div>
-  </div>
+    </div>
+  </>
 );
 
 const DashboardLayout = ({ children }) => {
@@ -226,12 +255,13 @@ const DashboardLayout = ({ children }) => {
   ];
 
   const handleLogout = async () => { await logout(); navigate('/'); };
+  const mobileTitle = getMobileTitle(location.pathname);
 
   return (
     <div className="min-h-screen bg-black text-white flex">
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/dashboard" className="flex flex-col items-start">
@@ -301,24 +331,21 @@ const DashboardLayout = ({ children }) => {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
-        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-lg border-b border-white/10">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-6 h-6" /></button>
-              <span className="lg:hidden text-white text-[16px] font-bold">
-                {location.pathname === '/dashboard' ? 'Dashboard' : location.pathname === '/releases' ? 'Releases' : location.pathname === '/analytics' ? 'Analytics' : location.pathname === '/wallet' ? 'Wallet' : location.pathname === '/purchases' ? 'My Purchases' : location.pathname === '/collaborations' ? 'Collaborations' : location.pathname === '/settings' ? 'Settings' : location.pathname === '/spotify' ? 'Spotify Data' : location.pathname === '/spotify-canvas' ? 'Spotify Canvas' : location.pathname === '/content-id' ? 'Content ID' : location.pathname === '/features' ? "What's New" : location.pathname.startsWith('/releases/') ? 'Release Details' : 'Dashboard'}
-              </span>
+      <div className="flex-1 flex min-h-screen min-w-0 flex-col overflow-x-hidden">
+        <header className="safe-top-pad sticky top-0 z-30 border-b border-white/10 bg-black/85 backdrop-blur-xl">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2.5 sm:flex sm:justify-between sm:px-5 sm:py-4 lg:px-6">
+            <div className="flex items-center gap-2">
+              <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+              <span className="truncate text-[15px] font-semibold text-white sm:hidden">{mobileTitle}</span>
             </div>
-            <div className="flex-1" />
-            <div className="flex items-center gap-4">
-              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
-              <span className="text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-[0.2em] hidden sm:inline bg-white/5 text-white/70 border border-white/10">
+            <div className="hidden sm:block" />
+            <div className="flex items-center justify-end gap-1.5 sm:gap-3">
+              <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => setSidebarOpen(true)}><List className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+              <span className="hidden rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70 sm:inline">
                 {planStatusLabel}
               </span>
-              {/* Notification Bell */}
               <div className="relative" ref={notifRef}>
-                <button onClick={toggleNotifications} className="relative p-2 hover:bg-white/5 rounded-lg transition-colors" data-testid="notification-bell">
+                <button onClick={toggleNotifications} className="touch-target relative inline-flex items-center justify-center rounded-xl text-gray-300 transition-colors hover:bg-white/5" data-testid="notification-bell">
                   <Bell className="w-5 h-5 text-gray-400" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#E040FB] rounded-full flex items-center justify-center text-[10px] font-bold text-white" data-testid="unread-badge">
@@ -330,15 +357,20 @@ const DashboardLayout = ({ children }) => {
                   <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={user?.user_role || user?.role} />
                 )}
               </div>
-              <Link to="/releases/new">
-                <button className="btn-animated px-4 py-2 rounded-full text-sm font-semibold text-white flex items-center gap-2" data-testid="new-release-btn">
+              <Link to="/releases/new" className="sm:hidden">
+                <button className="touch-target btn-animated inline-flex items-center justify-center rounded-full px-3 text-white" aria-label="Create new release" data-testid="new-release-btn-mobile">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link to="/releases/new" className="hidden sm:inline-flex">
+                <button className="btn-animated rounded-full px-4 py-2 text-sm font-semibold text-white flex items-center gap-2" data-testid="new-release-btn">
                   <Plus className="w-4 h-4" /> New Release
                 </button>
               </Link>
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-x-hidden">{children}</main>
+        <main className="mobile-page-shell flex-1 overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   );

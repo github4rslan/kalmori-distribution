@@ -228,7 +228,7 @@ const AdminSubmissionsPage = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-5" data-testid="admin-submissions">
+      <div className="mx-auto max-w-7xl space-y-5" data-testid="admin-submissions">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -238,7 +238,7 @@ const AdminSubmissionsPage = () => {
             </h1>
             <p className="text-sm text-[#A1A1AA] mt-0.5">Review and approve artist submissions</p>
           </div>
-          <div className="flex items-center gap-1.5 p-1 bg-[#111] border border-white/10 rounded-xl" data-testid="submission-filters">
+          <div className="hide-scrollbar flex w-full items-center gap-1.5 overflow-x-auto rounded-xl border border-white/10 bg-[#111] p-1 sm:w-auto" data-testid="submission-filters">
             {FILTERS.map(f => (
               <button
                 key={f.v}
@@ -257,7 +257,7 @@ const AdminSubmissionsPage = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl overflow-hidden">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-6 h-6 border-2 border-[#E53935] border-t-transparent rounded-full animate-spin" />
@@ -268,7 +268,44 @@ const AdminSubmissionsPage = () => {
               <p className="text-sm">No submissions {filter ? `with status "${filter.replace('_', ' ')}"` : ''}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="space-y-3 p-3 md:hidden">
+                {submissions.map((sub) => {
+                  const cfg = scfg(sub.status);
+                  return (
+                    <button
+                      key={sub.release_id}
+                      type="button"
+                      className="w-full rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-left"
+                      onClick={() => openDetail(sub.release_id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        {sub.cover_art_url
+                          ? <img src={sub.cover_art_url} alt="" className="h-12 w-12 rounded-xl border border-white/10 object-cover" />
+                          : <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1a1a1a]"><MusicNotes className="w-4 h-4 text-[#333]" /></div>
+                        }
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-white">{sub.release_title}</p>
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${cfg.cls}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+                              {cfg.label}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-[#A1A1AA]">{sub.artist_name || sub.artist?.artist_name || '-'}</p>
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[#A1A1AA]">
+                            <span className="capitalize">{sub.release_type}</span>
+                            <span>{sub.track_count} tracks</span>
+                            <span>{new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </div>
+                          <span className="mt-3 inline-flex text-xs font-semibold text-[#7C4DFF]">Review</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <table className="w-full" data-testid="submissions-table">
                 <thead>
                   <tr className="border-b border-white/8 bg-white/3">
@@ -325,11 +362,12 @@ const AdminSubmissionsPage = () => {
                   })}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
 
           {pages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-white/8">
+            <div className="flex flex-col gap-3 border-t border-white/8 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-[#555]">{total} submissions</p>
               <div className="flex items-center gap-2">
                 <button onClick={() => fetchSubmissions(page - 1, filter)} disabled={page <= 1}
@@ -360,7 +398,7 @@ const AdminSubmissionsPage = () => {
             ) : detail ? (
               <>
                 {/* Modal header */}
-                <div className="flex items-center gap-4 px-5 sm:px-6 py-4 border-b border-white/8 flex-shrink-0">
+                <div className="flex items-start gap-3 border-b border-white/8 px-5 py-4 sm:px-6 sm:items-center flex-shrink-0">
                   {detail.release?.cover_art_url ? (
                     <img src={detail.release.cover_art_url} alt="" className="w-12 h-12 rounded-xl object-cover border border-white/10 flex-shrink-0" />
                   ) : (
@@ -385,7 +423,7 @@ const AdminSubmissionsPage = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 px-5 sm:px-6 py-3 border-b border-white/8 overflow-x-auto flex-shrink-0 scrollbar-hide">
+                <div className="hide-scrollbar flex items-center gap-1 overflow-x-auto border-b border-white/8 px-5 py-3 sm:px-6 flex-shrink-0">
                   {TABS.map(tab => {
                     const Icon = tab.icon;
                     return (
@@ -412,7 +450,7 @@ const AdminSubmissionsPage = () => {
                   {activeTab === 'release' && (
                     <div className="space-y-4">
                       <Section icon={MusicNotes} title="Release Details" color="#7C4DFF">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
                           <Field label="Title" value={detail.release?.title} />
                           <Field label="Title Version" value={detail.release?.title_version} />
                           <Field label="Type" value={detail.release?.release_type} />
@@ -438,7 +476,7 @@ const AdminSubmissionsPage = () => {
                         {detail.release?.cover_art_url && (
                           <div className="mt-5 pt-4 border-t border-white/8">
                             <p className="text-[11px] text-[#555] uppercase tracking-wider mb-3">Cover Art</p>
-                            <div className="flex items-start gap-4">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                               <div className="relative group">
                                 <img
                                   src={detail.release.cover_art_url}
@@ -501,7 +539,7 @@ const AdminSubmissionsPage = () => {
                   {/* ─ Artist tab ─ */}
                   {activeTab === 'artist' && (
                     <Section icon={User} title="Artist Profile" color="#E040FB">
-                      <div className="flex items-center gap-4 mb-5 pb-4 border-b border-white/8">
+                      <div className="mb-5 flex flex-col gap-4 border-b border-white/8 pb-4 sm:flex-row sm:items-center">
                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7C4DFF]/40 to-[#E040FB]/40 flex items-center justify-center text-xl font-bold text-white flex-shrink-0">
                           {(detail.artist?.artist_name || detail.artist?.name || 'A').charAt(0).toUpperCase()}
                         </div>
@@ -514,7 +552,7 @@ const AdminSubmissionsPage = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                      <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
                         <Field label="Artist Name" value={detail.artist?.artist_name || detail.artist?.name} />
                         <Field label="Legal Name" value={detail.artist?.legal_name || detail.artist?.name} />
                         <Field label="Phone" value={detail.artist?.phone_number} />
@@ -548,7 +586,7 @@ const AdminSubmissionsPage = () => {
                           </div>
                         );
                       })()}
-                      <div className="mt-4 pt-4 border-t border-white/8 grid grid-cols-3 gap-4">
+                      <div className="mt-4 grid grid-cols-1 gap-4 border-t border-white/8 pt-4 sm:grid-cols-3">
                         <Field label="Tracks" value={String(detail.audio_bank?.length || detail.tracks?.length || 0)} />
                         <Field label="Artist Selected" value={String((detail.submission?.stores || detail.release?.distributed_platforms || []).length)} />
                         <Field label="Platform Coverage" value="150+ Stores" />
@@ -565,7 +603,7 @@ const AdminSubmissionsPage = () => {
                           const streamUrl = audioItem.audio_url ? `${API}/tracks/${audioItem.track_id}/stream` : null;
                           return (
                             <Section key={track.id || index} icon={Waveform} title={`${track.track_number || index + 1}. ${track.title}`} color="#7C4DFF">
-                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+                              <div className="mb-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <Field label="Format" value={audioItem.audio_format ? audioItem.audio_format.toUpperCase() : null} />
                                 <Field label="Language" value={track.audio_language} />
                                 <Field label="Explicit" value={track.explicit ? 'Yes' : 'No'} />
@@ -618,7 +656,7 @@ const AdminSubmissionsPage = () => {
                         data-testid="review-notes-input"
                       />
                       {/* Go Live hours selector */}
-                      <div className="flex items-center gap-2 px-1">
+                      <div className="flex flex-wrap items-center gap-2 px-1">
                         <Rocket className="w-4 h-4 text-[#7C4DFF] shrink-0" />
                         <span className="text-xs text-[#A1A1AA]">Live in stores after</span>
                         <select
@@ -635,7 +673,7 @@ const AdminSubmissionsPage = () => {
                         </select>
                         <span className="text-xs text-[#555]">of approval</span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         {/* Approve = instant live (0h delay) */}
                         <Button
                           onClick={() => handleReview('approve', 0)}
@@ -672,7 +710,7 @@ const AdminSubmissionsPage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                       <div className={`w-2 h-2 rounded-full ${scfg(detail.submission.status).dot}`} />
                       <div className="text-sm text-[#A1A1AA]">
                         <span className="capitalize font-medium text-white">{scfg(detail.submission.status).label}</span>

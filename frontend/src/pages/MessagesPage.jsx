@@ -22,7 +22,7 @@ function AudioPlayer({ src, fileName }) {
   }, []);
   const audioSrc = src.startsWith('http') ? src : `${API}/api/messages/file/${src}`;
   return (
-    <div className="flex items-center gap-3 bg-black/30 rounded-lg p-2.5 min-w-[220px]">
+    <div className="flex max-w-full min-w-0 items-center gap-3 rounded-lg bg-black/30 p-2.5 sm:min-w-[220px]">
       <audio ref={audioRef} src={audioSrc} preload="none" />
       <button onClick={togglePlay} className="w-9 h-9 rounded-full bg-[#7C4DFF] flex items-center justify-center shrink-0 hover:brightness-110" data-testid="audio-play-btn">
         {playing ? <Pause className="w-4 h-4 text-white" weight="fill" /> : <Play className="w-4 h-4 text-white" weight="fill" />}
@@ -47,7 +47,7 @@ function FileAttachment({ msg, isMe }) {
   if (msg.file_type === 'image') {
     return (
       <div className="space-y-1.5">
-        <img src={fileUrl} alt={msg.file_name} className="max-w-[280px] rounded-lg border border-white/10" loading="lazy" />
+        <img src={fileUrl} alt={msg.file_name} className="w-full max-w-[280px] rounded-lg border border-white/10" loading="lazy" />
         <p className="text-[10px] opacity-60">{msg.file_name} &middot; {formatSize(msg.file_size)}</p>
       </div>
     );
@@ -228,7 +228,7 @@ export default function MessagesPage() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-100px)] flex" data-testid="messages-page">
+      <div className="flex min-h-[calc(100dvh-8rem)] overflow-hidden rounded-[1.25rem] border border-white/8 bg-[#050505]" data-testid="messages-page">
         {/* Conversation List */}
         <div className={`${activeConvo ? 'hidden md:flex' : 'flex'} flex-col w-full md:w-80 border-r border-[#222] bg-[#0a0a0a]`}>
           <div className="p-4 border-b border-[#222]">
@@ -271,7 +271,7 @@ export default function MessagesPage() {
         </div>
 
         {/* Chat Area */}
-        <div className={`${!activeConvo ? 'hidden md:flex' : 'flex'} flex-col flex-1 bg-black`}>
+        <div className={`${!activeConvo ? 'hidden md:flex' : 'flex'} min-w-0 flex-col flex-1 bg-black`}>
           {!activeConvo ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
@@ -283,8 +283,8 @@ export default function MessagesPage() {
           ) : (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-[#222] flex items-center gap-3">
-                <button onClick={() => setActiveConvo(null)} className="md:hidden text-gray-400 hover:text-white" data-testid="back-btn">
+              <div className="flex items-center gap-3 border-b border-[#222] px-3 py-3 sm:px-4 sm:py-4">
+                <button onClick={() => setActiveConvo(null)} className="touch-target inline-flex items-center justify-center rounded-xl text-gray-400 hover:bg-white/5 hover:text-white md:hidden" data-testid="back-btn">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="w-9 h-9 rounded-full bg-[#E040FB]/20 flex items-center justify-center">
@@ -303,7 +303,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="messages-list">
+              <div className="flex-1 overflow-y-auto px-3 py-4 space-y-3 sm:px-4" data-testid="messages-list">
                 {messages.map(msg => {
                   const isMe = msg.sender_id === userId;
                   const isSystem = msg.sender_id === 'system';
@@ -318,7 +318,7 @@ export default function MessagesPage() {
                   }
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`} data-testid={`msg-${msg.id}`}>
-                      <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
+                      <div className={`max-w-[88%] sm:max-w-[78%] md:max-w-[70%] rounded-2xl px-3.5 py-3 sm:px-4 ${
                         isMe ? 'bg-[#7C4DFF] text-white rounded-br-md' : 'bg-[#1a1a1a] text-gray-200 border border-[#222] rounded-bl-md'
                       }`}>
                         {msg.file_url ? (
@@ -343,27 +343,27 @@ export default function MessagesPage() {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-[#222]">
+              <div className="border-t border-[#222] px-3 py-3 sm:px-4 sm:py-4 safe-bottom-pad">
                 {uploading && (
                   <div className="mb-2 px-3 py-1.5 bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 rounded-lg text-[#7C4DFF] text-xs flex items-center gap-2">
                     <div className="w-3 h-3 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
                     Uploading file...
                   </div>
                 )}
-                <div className="flex items-center gap-2">
+                <div className="flex items-end gap-2">
                   <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden"
                     accept="audio/*,image/*,.pdf,.zip,.wav,.mp3,.flac,.aif,.aiff,.stem,.txt,.doc,.docx" data-testid="file-input" />
                   <button onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="w-10 h-10 rounded-xl bg-[#1a1a1a] border border-[#333] text-gray-400 flex items-center justify-center hover:text-white hover:border-[#7C4DFF] disabled:opacity-40 transition"
+                    className="touch-target w-11 h-11 rounded-xl bg-[#1a1a1a] border border-[#333] text-gray-400 flex items-center justify-center hover:text-white hover:border-[#7C4DFF] disabled:opacity-40 transition"
                     data-testid="attach-file-btn" title="Share file or audio">
                     <Paperclip className="w-5 h-5" />
                   </button>
                   <input type="text" value={newMsg} onChange={handleInputChange} onKeyDown={handleKeyDown}
                     placeholder="Type a message..."
-                    className="flex-1 bg-[#111] border border-[#333] rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF] placeholder-gray-600"
+                    className="flex-1 min-w-0 bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#7C4DFF] placeholder-gray-600"
                     data-testid="message-input" disabled={sending || uploading} />
                   <button onClick={handleSend} disabled={!newMsg.trim() || sending}
-                    className="w-10 h-10 rounded-xl bg-[#7C4DFF] text-white flex items-center justify-center hover:brightness-110 disabled:opacity-40 transition"
+                    className="touch-target w-11 h-11 rounded-xl bg-[#7C4DFF] text-white flex items-center justify-center hover:brightness-110 disabled:opacity-40 transition"
                     data-testid="send-message-btn">
                     <PaperPlaneTilt className="w-5 h-5" />
                   </button>

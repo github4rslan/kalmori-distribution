@@ -405,7 +405,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <AppRouter />
-          <Toaster position="top-right" />
+          <Toaster position="top-center" offset={16} />
           <CookieConsent />
         </CartProvider>
       </AuthProvider>

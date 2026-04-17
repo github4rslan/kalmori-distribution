@@ -125,7 +125,7 @@ const WalletPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-8" data-testid="wallet-page">
+      <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6" data-testid="wallet-page">
         {/* Header */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Wallet</h1>
@@ -133,8 +133,8 @@ const WalletPage = () => {
         </div>
 
         {/* Balance Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <Wallet className="w-6 h-6 text-[#22C55E]" />
               <span className="text-xs text-[#A1A1AA] uppercase">Available</span>
@@ -144,7 +144,7 @@ const WalletPage = () => {
             </p>
           </div>
 
-          <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <Clock className="w-6 h-6 text-[#FFCC00]" />
               <span className="text-xs text-[#A1A1AA] uppercase">Pending</span>
@@ -154,7 +154,7 @@ const WalletPage = () => {
             </p>
           </div>
 
-          <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+          <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <CurrencyDollar className="w-6 h-6 text-[#007AFF]" />
               <span className="text-xs text-[#A1A1AA] uppercase">Total Earned</span>
@@ -166,12 +166,12 @@ const WalletPage = () => {
         </div>
 
         {/* Withdraw Button */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-gray-500">Minimum payout threshold: <span className="text-white font-medium">$100.00</span></p>
           <Button 
             onClick={() => setShowWithdraw(true)}
             disabled={!wallet?.balance || wallet.balance < 100}
-            className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
+            className="h-11 w-full bg-[#FF3B30] text-white hover:bg-[#FF3B30]/90 sm:w-auto"
             data-testid="withdraw-btn"
           >
             <ArrowDown className="w-4 h-4 mr-2" />
@@ -180,8 +180,8 @@ const WalletPage = () => {
         </div>
 
         {/* Withdrawal History */}
-        <div className="bg-[#141414] border border-white/10 rounded-md">
-          <div className="p-6 border-b border-white/10">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#141414]">
+          <div className="border-b border-white/10 p-5 sm:p-6">
             <h2 className="text-lg font-medium">Withdrawal History</h2>
           </div>
 
@@ -195,7 +195,7 @@ const WalletPage = () => {
               {withdrawals.map((withdrawal) => (
                 <div 
                   key={withdrawal.id}
-                  className="px-6 py-4 flex items-center justify-between"
+                  className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
@@ -213,7 +213,7 @@ const WalletPage = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                     <span className="font-mono font-medium">
                       -${withdrawal.amount.toFixed(2)}
                     </span>
@@ -233,7 +233,7 @@ const WalletPage = () => {
         </div>
 
         {/* Info */}
-        <div className="bg-[#007AFF]/10 border border-[#007AFF]/30 rounded-md p-4 text-sm">
+        <div className="rounded-2xl border border-[#007AFF]/30 bg-[#007AFF]/10 p-4 text-sm">
           <p className="text-[#007AFF] font-medium mb-2">How Payouts Work</p>
           <ul className="text-[#A1A1AA] space-y-1">
             <li>• Minimum withdrawal amount is $10</li>
@@ -245,7 +245,7 @@ const WalletPage = () => {
 
         {/* Withdraw Dialog */}
         <Dialog open={showWithdraw} onOpenChange={setShowWithdraw}>
-          <DialogContent className="bg-[#141414] border-white/10 text-white">
+          <DialogContent className="border-white/10 bg-[#141414] text-white sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Withdraw Funds</DialogTitle>
               <DialogDescription className="text-[#A1A1AA]">
@@ -314,18 +314,18 @@ const WalletPage = () => {
               )}
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col gap-3 sm:flex-row">
               <Button
                 variant="outline"
                 onClick={() => setShowWithdraw(false)}
-                className="border-white/10 hover:bg-white/5 text-white"
+                className="w-full border-white/10 text-white hover:bg-white/5 sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleWithdraw}
                 disabled={withdrawing}
-                className="bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white"
+                className="w-full bg-[#FF3B30] text-white hover:bg-[#FF3B30]/90 sm:w-auto"
                 data-testid="confirm-withdraw-btn"
               >
                 {withdrawing ? (

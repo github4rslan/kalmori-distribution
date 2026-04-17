@@ -119,37 +119,37 @@ const AnalyticsPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8" data-testid="analytics-page">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6" data-testid="analytics-page">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Analytics</h1>
             <p className="text-[#A1A1AA] mt-1">Track your streaming performance</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             {user?.role === 'admin' && (
               <>
                 <input type="file" accept=".csv" ref={importRef} onChange={handleCSVImport} className="hidden" />
-                <Button onClick={() => importRef.current?.click()} disabled={importing} variant="outline" className="rounded-full gap-2 border-white/10 text-white hover:bg-white/5" data-testid="import-csv-btn">
+                <Button onClick={() => importRef.current?.click()} disabled={importing} variant="outline" className="h-11 w-full rounded-full gap-2 border-white/10 text-white hover:bg-white/5 sm:w-auto" data-testid="import-csv-btn">
                   {importing ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
                   Import CSV
                 </Button>
               </>
             )}
-            <Button onClick={() => setShowShareModal(true)} variant="outline" className="rounded-full gap-2 border-[#E040FB]/30 text-[#E040FB] hover:bg-[#E040FB]/10" data-testid="share-stats-btn">
+            <Button onClick={() => setShowShareModal(true)} variant="outline" className="h-11 w-full rounded-full gap-2 border-[#E040FB]/30 text-[#E040FB] hover:bg-[#E040FB]/10 sm:w-auto" data-testid="share-stats-btn">
               <ShareNetwork className="w-4 h-4" /> Share Stats
             </Button>
-            <Button onClick={fetchAIInsights} disabled={insightsLoading} className="bg-[#FFCC00] hover:bg-[#FFCC00]/90 text-black" data-testid="ai-insights-btn">
+            <Button onClick={fetchAIInsights} disabled={insightsLoading} className="h-11 w-full bg-[#FFCC00] text-black hover:bg-[#FFCC00]/90 sm:w-auto" data-testid="ai-insights-btn">
               {insightsLoading ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <><Sparkle className="w-4 h-4 mr-2" />Get AI Insights</>}
             </Button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-[#141414] rounded-lg p-1 border border-white/10">
+        <div className="hide-scrollbar flex gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-[#141414] p-1">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-[#7C4DFF] text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`min-h-11 shrink-0 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${activeTab === tab.id ? 'bg-[#7C4DFF] text-white' : 'text-gray-400 hover:text-white'}`}
               data-testid={`tab-${tab.id}`}>
               {tab.label}
             </button>
@@ -157,14 +157,14 @@ const AnalyticsPage = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">
           {[
             { icon: <Play className="w-5 h-5" />, value: analytics?.total_streams?.toLocaleString() || '0', label: 'Total Streams', color: '#FF3B30' },
             { icon: <CurrencyDollar className="w-5 h-5" />, value: `$${analytics?.total_earnings?.toFixed(2) || '0.00'}`, label: 'Total Earnings', color: '#22C55E' },
             { icon: <TrendUp className="w-5 h-5" />, value: analytics?.total_downloads?.toLocaleString() || '0', label: 'Downloads', color: '#FFCC00' },
             { icon: <Globe className="w-5 h-5" />, value: analytics?.release_count || '0', label: 'Releases', color: '#007AFF' },
           ].map((stat, i) => (
-            <div key={i} className="bg-[#141414] border border-white/10 p-5 rounded-md">
+            <div key={i} className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>{stat.icon}</div>
               </div>
@@ -176,7 +176,7 @@ const AnalyticsPage = () => {
 
         {/* AI Insights */}
         {insights && (
-          <div className="bg-[#FFCC00]/10 border border-[#FFCC00]/30 rounded-md p-6" data-testid="ai-insights-panel">
+          <div className="rounded-2xl border border-[#FFCC00]/30 bg-[#FFCC00]/10 p-5 sm:p-6" data-testid="ai-insights-panel">
             <h2 className="text-lg font-medium mb-4 flex items-center gap-2 text-[#FFCC00]"><Sparkle className="w-5 h-5" />AI Insights</h2>
             <div className="prose prose-invert max-w-none text-sm whitespace-pre-wrap">{insights}</div>
           </div>
@@ -185,7 +185,7 @@ const AnalyticsPage = () => {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-6 flex items-center gap-2"><ChartLineUp className="w-5 h-5 text-[#FF3B30]" />Streams Over Time</h2>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -201,7 +201,7 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-6">Revenue Over Time</h2>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -222,7 +222,7 @@ const AnalyticsPage = () => {
         {/* Live Activity Tab */}
         {activeTab === 'live' && (
           <div className="space-y-6">
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-medium flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
@@ -238,22 +238,22 @@ const AnalyticsPage = () => {
               ) : (
                 <div className="space-y-2">
                   {liveFeed.map((event, i) => (
-                    <div key={event.id || i} className="flex items-center gap-3 p-3 rounded-lg bg-[#0a0a0a] hover:bg-white/5 transition-colors animate-fadeInUp" style={{ animationDelay: `${i * 0.03}s` }} data-testid={`stream-event-${i}`}>
+                    <div key={event.id || i} className="animate-fadeInUp rounded-xl bg-[#0a0a0a] p-3 transition-colors hover:bg-white/5 sm:flex sm:items-center sm:gap-3" style={{ animationDelay: `${i * 0.03}s` }} data-testid={`stream-event-${i}`}>
                       <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${PLATFORM_COLORS[event.platform] || '#888'}20` }}>
                         <MusicNote className="w-4 h-4" style={{ color: PLATFORM_COLORS[event.platform] || '#888' }} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                      <div className="mt-3 min-w-0 sm:mt-0 sm:flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm font-medium text-white truncate">{event.release_title || 'Track'}</span>
                           <span className="text-xs text-gray-500">on</span>
                           <span className="text-xs font-medium" style={{ color: PLATFORM_COLORS[event.platform] || '#888' }}>{event.platform}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
                           <span>{COUNTRY_FLAGS[event.country] || ''} {event.country}</span>
                           <span>{event.timestamp ? new Date(event.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                         </div>
                       </div>
-                      <span className="text-xs font-mono text-[#4CAF50]">+${(event.revenue || 0).toFixed(4)}</span>
+                      <span className="mt-3 inline-flex text-xs font-mono text-[#4CAF50] sm:mt-0">+${(event.revenue || 0).toFixed(4)}</span>
                     </div>
                   ))}
                 </div>
@@ -263,7 +263,7 @@ const AnalyticsPage = () => {
             {/* Platform stats summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {(platformData.length ? platformData.slice(0, 4) : []).map(p => (
-                <div key={p.name} className="bg-[#141414] border border-white/10 p-4 rounded-md text-center">
+                <div key={p.name} className="rounded-2xl border border-white/10 bg-[#141414] p-4 text-center">
                   <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: `${p.color || '#888'}20` }}>
                     <MusicNote className="w-5 h-5" style={{ color: p.color || '#888' }} />
                   </div>
@@ -278,11 +278,11 @@ const AnalyticsPage = () => {
         {/* Audience Map Tab */}
         {activeTab === 'audience' && (
           <div className="space-y-6">
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-6 flex items-center gap-2"><MapPin className="w-5 h-5 text-[#007AFF]" />Audience Map</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* World Map Visualization */}
-                <div className="relative bg-[#0a0a0a] rounded-lg p-6 h-[400px] flex items-center justify-center overflow-hidden">
+                <div className="relative flex h-[320px] items-center justify-center overflow-hidden rounded-2xl bg-[#0a0a0a] p-4 sm:h-[400px] sm:p-6">
                   <svg viewBox="0 0 800 400" className="w-full h-full opacity-30">
                     <ellipse cx="400" cy="200" rx="380" ry="180" fill="none" stroke="#333" strokeWidth="1"/>
                     <ellipse cx="400" cy="200" rx="250" ry="120" fill="none" stroke="#333" strokeWidth="0.5"/>
@@ -339,20 +339,20 @@ const AnalyticsPage = () => {
         {/* TikTok UGC Tab */}
         {activeTab === 'tiktok' && (
           <div className="space-y-6">
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-2 flex items-center gap-2"><TiktokLogo className="w-5 h-5" />TikTok UGC Trends</h2>
               <p className="text-sm text-[#A1A1AA] mb-6">Track how your music is being used in TikTok videos</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                <div className="bg-[#0a0a0a] rounded-lg p-5 text-center">
+                <div className="rounded-2xl bg-[#0a0a0a] p-5 text-center">
                   <p className="text-3xl font-bold font-mono">0</p>
                   <p className="text-sm text-[#A1A1AA] mt-1">Total UGC Videos</p>
                 </div>
-                <div className="bg-[#0a0a0a] rounded-lg p-5 text-center">
+                <div className="rounded-2xl bg-[#0a0a0a] p-5 text-center">
                   <p className="text-3xl font-bold font-mono">0</p>
                   <p className="text-sm text-[#A1A1AA] mt-1">Total Views</p>
                 </div>
-                <div className="bg-[#0a0a0a] rounded-lg p-5 text-center">
+                <div className="rounded-2xl bg-[#0a0a0a] p-5 text-center">
                   <p className="text-3xl font-bold font-mono text-[#22C55E]">--</p>
                   <p className="text-sm text-[#A1A1AA] mt-1">Trend Direction</p>
                 </div>
@@ -361,7 +361,7 @@ const AnalyticsPage = () => {
               {/* Trending Sounds */}
               <h3 className="text-sm font-medium text-[#A1A1AA] uppercase tracking-wider mb-4">Your Sounds</h3>
               {TIKTOK_TRENDS.map(trend => (
-                <div key={trend.id} className="bg-[#0a0a0a] rounded-lg p-4 flex items-center gap-4">
+                <div key={trend.id} className="flex flex-col gap-3 rounded-2xl bg-[#0a0a0a] p-4 sm:flex-row sm:items-center">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#E040FB] to-[#FF4081] flex items-center justify-center">
                     <MusicNote className="w-6 h-6 text-white" />
                   </div>
@@ -385,7 +385,7 @@ const AnalyticsPage = () => {
         {/* Platforms Tab */}
         {activeTab === 'platforms' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-6">Platform Distribution</h2>
               <div className="h-64 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
@@ -409,18 +409,18 @@ const AnalyticsPage = () => {
               </div>
             </div>
 
-            <div className="bg-[#141414] border border-white/10 p-6 rounded-md">
+            <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6">
               <h2 className="text-lg font-medium mb-6">Platform Details</h2>
               <div className="space-y-4">
                 {(platformData.length ? platformData : []).map(platform => (
-                  <div key={platform.name} className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg">
+                  <div key={platform.name} className="flex flex-col gap-3 rounded-xl bg-[#0a0a0a] p-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${platform.color || '#888'}20`, color: platform.color || '#888' }}>
                         <MusicNote className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-medium">{platform.name}</span>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <p className="text-sm font-mono">{(platform.streams || platform.percentage || 0).toLocaleString()}</p>
                       <p className="text-xs text-[#A1A1AA]">${(platform.revenue || 0).toFixed(2)}</p>
                     </div>
@@ -430,7 +430,7 @@ const AnalyticsPage = () => {
             </div>
 
             {countryData.length > 0 && (
-              <div className="bg-[#141414] border border-white/10 p-6 rounded-md lg:col-span-2">
+              <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-6 lg:col-span-2">
                 <h2 className="text-lg font-medium mb-6">Streams by Country</h2>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">

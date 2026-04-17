@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { API, useAuth } from '../App';
+import { API } from '../App';
 import AdminLayout from '../components/AdminLayout';
 import { Users, Disc, ClipboardText, CurrencyDollar, TrendUp, Clock, CheckCircle, XCircle, ChartLineUp, Globe, MusicNotes, Lightning } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,6 @@ const fmt = (n) => {
 };
 
 const AdminDashboardPage = () => {
-  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [recentSubs, setRecentSubs] = useState([]);
@@ -55,29 +54,29 @@ const AdminDashboardPage = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-8" data-testid="admin-dashboard">
+      <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6" data-testid="admin-dashboard">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Admin <span className="text-[#E53935]">Dashboard</span></h1>
-          <p className="text-gray-400 mt-1">Platform overview, analytics, and management</p>
+          <h1 className="text-2xl font-bold sm:text-3xl">Admin <span className="text-[#E53935]">Dashboard</span></h1>
+          <p className="mt-1 max-w-2xl text-sm text-gray-400 sm:text-base">Platform overview, analytics, and management across Kalmori.</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 xl:grid-cols-3 sm:gap-4">
           {cards.map((card, i) => (
-            <div key={i} className="card-kalmori p-5 animate-fadeInUp" style={{ animationDelay: `${i * 0.05}s` }} data-testid={`admin-stat-${card.label.toLowerCase().replace(/\s/g, '-')}`}>
+            <div key={i} className="card-kalmori mobile-card animate-fadeInUp p-4 sm:p-5" style={{ animationDelay: `${i * 0.05}s` }} data-testid={`admin-stat-${card.label.toLowerCase().replace(/\s/g, '-')}`}>
               <div className="flex items-center justify-between mb-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${card.color}20`, color: card.color }}>{card.icon}</div>
               </div>
-              <p className="text-2xl font-bold font-mono">{card.value}</p>
-              <p className="text-sm text-gray-400 mt-1">{card.label}</p>
+              <p className="text-xl font-bold font-mono sm:text-2xl">{card.value}</p>
+              <p className="mt-1 text-sm text-gray-400">{card.label}</p>
             </div>
           ))}
         </div>
 
         {/* Platform Analytics Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
           {/* Platform Breakdown */}
-          <div className="card-kalmori p-6" data-testid="admin-platform-breakdown">
+          <div className="card-kalmori mobile-card p-4 sm:p-6" data-testid="admin-platform-breakdown">
             <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
               <MusicNotes className="w-4 h-4 text-[#7C4DFF]" /> Platform Streams
             </h2>
@@ -87,11 +86,11 @@ const AdminDashboardPage = () => {
                   const max = analytics.platform_breakdown[0]?.streams || 1;
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-20 truncate">{p.platform}</span>
+                      <span className="w-16 shrink-0 truncate text-xs text-gray-400 sm:w-20">{p.platform}</span>
                       <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] rounded-full" style={{ width: `${(p.streams / max) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] text-white font-mono w-12 text-right">{fmt(p.streams)}</span>
+                      <span className="w-10 shrink-0 text-right font-mono text-[10px] text-white sm:w-12">{fmt(p.streams)}</span>
                     </div>
                   );
                 })}
@@ -100,7 +99,7 @@ const AdminDashboardPage = () => {
           </div>
 
           {/* Country Breakdown */}
-          <div className="card-kalmori p-6" data-testid="admin-country-breakdown">
+          <div className="card-kalmori mobile-card p-4 sm:p-6" data-testid="admin-country-breakdown">
             <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
               <Globe className="w-4 h-4 text-[#E040FB]" /> Top Markets
             </h2>
@@ -110,11 +109,11 @@ const AdminDashboardPage = () => {
                   const max = analytics.country_breakdown[0]?.streams || 1;
                   return (
                     <div key={i} className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 w-20 truncate">{c.country}</span>
+                      <span className="w-16 shrink-0 truncate text-xs text-gray-400 sm:w-20">{c.country}</span>
                       <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#E040FB] to-[#FF4081] rounded-full" style={{ width: `${(c.streams / max) * 100}%` }} />
                       </div>
-                      <span className="text-[10px] text-white font-mono w-12 text-right">{fmt(c.streams)}</span>
+                      <span className="w-10 shrink-0 text-right font-mono text-[10px] text-white sm:w-12">{fmt(c.streams)}</span>
                     </div>
                   );
                 })}
@@ -123,14 +122,14 @@ const AdminDashboardPage = () => {
           </div>
 
           {/* Top Artists */}
-          <div className="card-kalmori p-6" data-testid="admin-top-artists">
+          <div className="card-kalmori mobile-card p-4 sm:p-6" data-testid="admin-top-artists">
             <h2 className="text-sm font-bold mb-4 flex items-center gap-2">
               <TrendUp className="w-4 h-4 text-[#FFD700]" /> Top Artists
             </h2>
             {analytics?.top_artists?.length > 0 ? (
               <div className="space-y-3">
                 {analytics.top_artists.slice(0, 8).map((a, i) => (
-                  <Link key={i} to={`/admin/users/${a.id}`} className="flex items-center gap-3 p-2 -mx-2 rounded-lg hover:bg-white/5 transition-colors" data-testid={`top-artist-${i}`}>
+                  <Link key={i} to={`/admin/users/${a.id}`} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-white/5" data-testid={`top-artist-${i}`}>
                     <span className="text-xs text-gray-500 w-4 font-mono">{i + 1}</span>
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
                       {a.artist_name?.charAt(0).toUpperCase() || 'A'}
@@ -147,16 +146,16 @@ const AdminDashboardPage = () => {
         </div>
 
         {/* Users & Activity Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
           {/* Plan Distribution */}
-          <div className="card-kalmori p-6">
+          <div className="card-kalmori mobile-card p-4 sm:p-6">
             <h2 className="text-lg font-medium mb-4">Users by Plan</h2>
             <div className="space-y-3">
               {Object.entries(stats?.users_by_plan || {}).map(([plan, count]) => (
-                <div key={plan} className="flex items-center justify-between">
+                <div key={plan} className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                   <span className="text-sm capitalize text-gray-300">{plan}</span>
-                  <div className="flex items-center gap-3">
-                    <div className="w-32 h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div className="flex items-center gap-3 min-[420px]:w-auto">
+                    <div className="h-2 flex-1 rounded-full bg-[#1a1a1a] overflow-hidden min-[420px]:w-32 min-[420px]:flex-none">
                       <div className="h-full rounded-full" style={{ width: `${(count / (stats?.total_users || 1)) * 100}%`, backgroundColor: plan === 'pro' ? '#E040FB' : plan === 'rise' ? '#FFD700' : '#666' }} />
                     </div>
                     <span className="text-sm font-mono text-white">{count}</span>
@@ -167,10 +166,10 @@ const AdminDashboardPage = () => {
           </div>
 
           {/* Activity */}
-          <div className="card-kalmori p-6">
+          <div className="card-kalmori mobile-card p-4 sm:p-6">
             <h2 className="text-lg font-medium mb-4">This Week</h2>
             <div className="space-y-4">
-              <div className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+              <div className="flex items-center gap-4 rounded-xl bg-white/5 p-3">
                 <TrendUp className="w-8 h-8 text-[#7C4DFF]" />
                 <div>
                   <p className="text-2xl font-bold font-mono">{stats?.new_users_week || 0}</p>
@@ -197,57 +196,78 @@ const AdminDashboardPage = () => {
 
         {/* Monthly Stream Trend */}
         {analytics?.monthly_trend?.some(m => m.streams > 0) && (
-          <div className="card-kalmori p-6" data-testid="admin-monthly-trend">
+          <div className="card-kalmori mobile-card p-4 sm:p-6" data-testid="admin-monthly-trend">
             <h2 className="text-lg font-medium mb-4">Monthly Streams (Platform-wide)</h2>
-            <div className="flex items-end gap-3 h-32">
-              {analytics.monthly_trend.map((m, i) => {
-                const maxM = Math.max(...analytics.monthly_trend.map(t => t.streams), 1);
-                const h = Math.max((m.streams / maxM) * 100, 8);
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-[9px] text-white font-mono">{fmt(m.streams)}</span>
-                    <div className="w-full rounded-t-lg bg-gradient-to-t from-[#7C4DFF] to-[#E040FB]" style={{ height: `${h}%` }} />
-                    <span className="text-[9px] text-gray-500">{m.month}</span>
-                  </div>
-                );
-              })}
+            <div className="overflow-x-auto pb-1">
+              <div className="flex h-36 min-w-[32rem] items-end gap-3">
+                {analytics.monthly_trend.map((m, i) => {
+                  const maxM = Math.max(...analytics.monthly_trend.map(t => t.streams), 1);
+                  const h = Math.max((m.streams / maxM) * 100, 8);
+                  return (
+                    <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                      <span className="text-[9px] text-white font-mono">{fmt(m.streams)}</span>
+                      <div className="w-full rounded-t-lg bg-gradient-to-t from-[#7C4DFF] to-[#E040FB]" style={{ height: `${h}%` }} />
+                      <span className="text-[9px] text-gray-500">{m.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
         {/* Recent Submissions */}
-        <div className="card-kalmori p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="card-kalmori mobile-card p-4 sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-lg font-medium">Recent Submissions</h2>
             <Link to="/admin/submissions" className="text-xs text-[#E53935] hover:underline">View all</Link>
           </div>
           {recentSubs.length === 0 ? (
             <p className="text-gray-500 text-sm py-4 text-center">No submissions yet</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Release</th>
-                    <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Artist</th>
-                    <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Type</th>
-                    <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Status</th>
-                    <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentSubs.map((sub) => (
-                    <tr key={sub.release_id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="py-3 px-2 text-sm">{sub.release_title}</td>
-                      <td className="py-3 px-2 text-sm text-gray-400">{sub.artist_name}</td>
-                      <td className="py-3 px-2 text-sm text-gray-400 capitalize">{sub.release_type}</td>
-                      <td className="py-3 px-2"><span className={`text-xs px-2 py-1 rounded-full ${statusColor(sub.status)}`}>{sub.status.replace('_', ' ')}</span></td>
-                      <td className="py-3 px-2 text-xs text-gray-500">{new Date(sub.submitted_at).toLocaleDateString()}</td>
+            <>
+              <div className="space-y-3 md:hidden">
+                {recentSubs.map((sub) => (
+                  <div key={sub.release_id} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">{sub.release_title}</p>
+                        <p className="mt-1 text-xs text-gray-400">{sub.artist_name}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-[11px] ${statusColor(sub.status)}`}>{sub.status.replace('_', ' ')}</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
+                      <span className="capitalize">{sub.release_type}</span>
+                      <span>{new Date(sub.submitted_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Release</th>
+                      <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Artist</th>
+                      <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Type</th>
+                      <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Status</th>
+                      <th className="text-left py-3 px-2 text-xs text-gray-500 font-medium">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentSubs.map((sub) => (
+                      <tr key={sub.release_id} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-3 px-2 text-sm">{sub.release_title}</td>
+                        <td className="py-3 px-2 text-sm text-gray-400">{sub.artist_name}</td>
+                        <td className="py-3 px-2 text-sm text-gray-400 capitalize">{sub.release_type}</td>
+                        <td className="py-3 px-2"><span className={`text-xs px-2 py-1 rounded-full ${statusColor(sub.status)}`}>{sub.status.replace('_', ' ')}</span></td>
+                        <td className="py-3 px-2 text-xs text-gray-500">{new Date(sub.submitted_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

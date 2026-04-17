@@ -5,6 +5,15 @@ import { Button } from './ui/button';
 import { House, Users, ClipboardText, ChartBar, Gear, SignOut, List, X, ArrowLeft, ShieldCheck, Bell, MusicNote, FileArrowUp, PaperPlaneTilt, Megaphone, Envelope, Tag, Gift, ChartLineUp, FileText, Wallet, PaintBrush, ClockCounterClockwise, Crown } from '@phosphor-icons/react';
 import axios from 'axios';
 
+const getAdminTitle = (pathname) => {
+  if (pathname === '/admin') return 'Overview';
+  if (pathname === '/admin/submissions') return 'Submissions';
+  if (pathname === '/admin/users') return 'Users';
+  if (pathname === '/admin/beats') return 'Beat Manager';
+  if (pathname === '/admin/notifications') return 'Notification Bank';
+  return 'Admin';
+};
+
 const AdminLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -50,12 +59,13 @@ const AdminLayout = ({ children }) => {
   };
 
   const handleLogout = async () => { await logout(); navigate('/'); };
+  const mobileTitle = getAdminTitle(location.pathname);
 
   return (
     <div className="min-h-screen bg-black text-white flex">
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-2">
@@ -99,29 +109,27 @@ const AdminLayout = ({ children }) => {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-lg border-b border-white/10">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => navigate(-1)} data-testid="admin-back-btn"><ArrowLeft className="w-6 h-6" /></button>
-              <span className="lg:hidden text-white text-[16px] font-bold">
-                {location.pathname === '/admin' ? 'Overview' : location.pathname === '/admin/submissions' ? 'Submissions' : location.pathname === '/admin/users' ? 'Users' : location.pathname === '/admin/beats' ? 'Beat Manager' : 'Admin'}
-              </span>
+      <div className="flex-1 flex min-h-screen flex-col overflow-x-hidden">
+        <header className="safe-top-pad sticky top-0 z-30 border-b border-white/10 bg-black/85 backdrop-blur-xl">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2.5 sm:flex sm:justify-between sm:px-5 sm:py-4 lg:px-6">
+            <div className="flex items-center gap-2">
+              <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => navigate(-1)} data-testid="admin-back-btn"><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+              <span className="truncate text-[15px] font-semibold text-white sm:hidden">{mobileTitle}</span>
             </div>
-            <div className="flex-1" />
-            <div className="flex items-center gap-3">
-              <button className="lg:hidden p-2 hover:bg-white/5 rounded-lg" onClick={() => setSidebarOpen(true)}><List className="w-6 h-6" /></button>
-              <Link to="/admin/submissions" className="relative p-2 hover:bg-white/5 rounded-lg transition-colors" data-testid="admin-notification-bell">
+            <div className="hidden sm:block" />
+            <div className="flex items-center justify-end gap-1.5 sm:gap-3">
+              <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => setSidebarOpen(true)}><List className="w-5 h-5 sm:w-6 sm:h-6" /></button>
+              <Link to="/admin/submissions" className="touch-target relative inline-flex items-center justify-center rounded-xl transition-colors hover:bg-white/5" data-testid="admin-notification-bell">
                 <Bell className="w-5 h-5 text-gray-400" />
                 {pendingCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#E53935] rounded-full flex items-center justify-center text-[10px] font-bold text-white animate-pulse" data-testid="pending-count">{pendingCount}</span>
                 )}
               </Link>
-              <span className="text-xs px-3 py-1 bg-[#E53935]/10 text-[#E53935] rounded-full font-semibold uppercase tracking-wider hidden sm:inline">Admin Panel</span>
+              <span className="hidden rounded-full bg-[#E53935]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#E53935] sm:inline">Admin Panel</span>
             </div>
           </div>
         </header>
-        <main className="flex-1 p-6 md:p-8">{children}</main>
+        <main className="mobile-page-shell flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   );

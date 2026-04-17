@@ -145,10 +145,10 @@ export default function AdminNotificationsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-5" data-testid="admin-notifications-bank">
+      <div className="mx-auto max-w-5xl space-y-5" data-testid="admin-notifications-bank">
 
         {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               Notification Bank
@@ -169,7 +169,7 @@ export default function AdminNotificationsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2" data-testid="notification-filters">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center" data-testid="notification-filters">
           <div className="relative flex-1">
             <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1AA]" />
             <Input
@@ -180,11 +180,11 @@ export default function AdminNotificationsPage() {
               data-testid="notification-search"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:w-auto">
             <select
               value={typeFilter}
               onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
-              className="flex-1 sm:flex-none h-9 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm"
+              className="h-10 rounded-md border border-white/10 bg-[#141414] px-3 text-sm text-white"
               data-testid="notification-type-filter"
             >
               {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -192,7 +192,7 @@ export default function AdminNotificationsPage() {
             <select
               value={readFilter}
               onChange={e => { setReadFilter(e.target.value); setPage(1); }}
-              className="flex-1 sm:flex-none h-9 px-3 rounded-md bg-[#141414] border border-white/10 text-white text-sm"
+              className="h-10 rounded-md border border-white/10 bg-[#141414] px-3 text-sm text-white"
               data-testid="notification-read-filter"
             >
               <option value="">All</option>
@@ -224,8 +224,7 @@ export default function AdminNotificationsPage() {
                   key={n.id}
                   onClick={() => handleClick(n)}
                   className={`
-                    group relative bg-[#141414] border rounded-xl p-4
-                    flex items-center gap-3 transition-all select-none
+                    group relative flex flex-col gap-3 rounded-2xl border bg-[#141414] p-4 transition-all select-none sm:flex-row sm:items-center
                     ${isClickable ? 'cursor-pointer hover:bg-white/5 active:scale-[0.99]' : ''}
                     ${!n.read ? 'border-[#7C4DFF]/30' : 'border-white/10'}
                   `}
@@ -257,7 +256,7 @@ export default function AdminNotificationsPage() {
                         <span className="text-[10px] font-bold text-[#FFD700]">NEW</span>
                       )}
                     </div>
-                    <p className={`text-sm leading-snug truncate sm:whitespace-normal ${!n.read ? 'text-white font-medium' : 'text-[#ccc]'}`}>
+                    <p className={`text-sm leading-snug whitespace-normal break-words ${!n.read ? 'text-white font-medium' : 'text-[#ccc]'}`}>
                       {n.message}
                     </p>
                     <p className="text-[11px] text-[#555] mt-1">
@@ -271,11 +270,11 @@ export default function AdminNotificationsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-1 sm:flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 sm:transition-opacity">
                     {!n.read && (
                       <button
                         onClick={(e) => handleMarkRead(e, n.id)}
-                        className="p-2 text-[#A1A1AA] hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/10 rounded-lg transition-all"
+                        className="touch-target p-2 text-[#A1A1AA] hover:text-[#7C4DFF] hover:bg-[#7C4DFF]/10 rounded-lg transition-all"
                         title="Mark as read"
                         data-testid={`mark-read-${n.id}`}
                       >
@@ -284,7 +283,7 @@ export default function AdminNotificationsPage() {
                     )}
                     <button
                       onClick={(e) => handleDelete(e, n.id)}
-                      className="p-2 text-[#A1A1AA] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                      className="touch-target p-2 text-[#A1A1AA] hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
                       title="Delete"
                       data-testid={`delete-notif-${n.id}`}
                     >
@@ -306,7 +305,7 @@ export default function AdminNotificationsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[#A1A1AA]">Page {page} of {totalPages} &middot; {total} total</p>
             <div className="flex items-center gap-2">
               <Button

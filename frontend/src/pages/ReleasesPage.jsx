@@ -75,7 +75,7 @@ const ReleasesPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-5" data-testid="releases-page">
+      <div className="mx-auto max-w-5xl space-y-5" data-testid="releases-page">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -85,8 +85,8 @@ const ReleasesPage = () => {
               {releases.length} release{releases.length !== 1 ? 's' : ''} · {releases.filter(r => r.status === 'distributed').length} live
             </p>
           </div>
-          <Link to="/releases/new">
-            <Button className="bg-[#7C4DFF] hover:bg-[#7C4DFF]/90 text-white h-9 text-sm" data-testid="create-release-btn">
+          <Link to="/releases/new" className="w-full sm:w-auto">
+            <Button className="h-10 w-full bg-[#7C4DFF] text-sm text-white hover:bg-[#7C4DFF]/90 sm:w-auto" data-testid="create-release-btn">
               <Plus className="w-4 h-4 mr-1.5" /> New Release
             </Button>
           </Link>
@@ -106,7 +106,7 @@ const ReleasesPage = () => {
           </div>
 
           {/* Filter chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="hide-scrollbar flex items-center gap-1.5 overflow-x-auto pb-1">
             {FILTERS.filter(f => counts[f.value] > 0 || f.value === 'all').map(f => (
               <button
                 key={f.value}
@@ -150,14 +150,14 @@ const ReleasesPage = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filtered.map(release => {
               const cfg = STATUS_CFG[release.status] || STATUS_CFG.draft;
               return (
                 <Link
                   key={release.id}
                   to={`/releases/${release.id}`}
-                  className="group flex items-center gap-4 bg-[#111] border border-white/8 rounded-2xl p-3 sm:p-4 hover:border-[#7C4DFF]/40 hover:bg-[#7C4DFF]/3 transition-all"
+                  className="group flex flex-col gap-3 rounded-2xl border border-white/8 bg-[#111] p-3 transition-all hover:border-[#7C4DFF]/40 hover:bg-[#7C4DFF]/3 sm:flex-row sm:items-center sm:gap-4 sm:p-4"
                   data-testid={`release-row-${release.id}`}
                 >
                   {/* Cover */}
@@ -169,10 +169,10 @@ const ReleasesPage = () => {
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-sm font-semibold text-white truncate">{release.title}</p>
-                      <span className="text-[10px] text-[#555] capitalize hidden sm:inline">{release.release_type}</span>
+                      <span className="text-[10px] text-[#555] capitalize">{release.release_type}</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                       <StatusBadge status={release.status} />
@@ -189,11 +189,11 @@ const ReleasesPage = () => {
                   </div>
 
                   {/* Right side */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:flex-shrink-0 sm:justify-end">
                     {release.upc && (
                       <span className="text-[10px] font-mono text-[#444] hidden lg:block">{release.upc}</span>
                     )}
-                    <span className="text-[11px] text-[#555] hidden sm:block">
+                    <span className="text-[11px] text-[#555]">
                       {release.release_date || (release.created_at ? new Date(release.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '')}
                     </span>
                     <ArrowRight className="w-4 h-4 text-[#333] group-hover:text-[#7C4DFF] transition-colors" />
