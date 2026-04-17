@@ -65,8 +65,8 @@ const AdminLayout = ({ children }) => {
     <div className="min-h-screen bg-black text-white flex">
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-        <div className="h-full flex flex-col">
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} h-screen`}>
+        <div className="h-full flex flex-col overflow-hidden">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-[#E53935]" />
@@ -78,7 +78,7 @@ const AdminLayout = ({ children }) => {
             <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => (
               <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all ${isActive(item) ? 'bg-[#E53935]/10 text-[#E53935] border border-[#E53935]/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
