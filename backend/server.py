@@ -18,6 +18,7 @@ import os
 import logging
 import uuid
 import random
+from urllib.parse import urlparse
 
 # Import shared core (db, models, helpers)
 from core import (
@@ -2199,13 +2200,40 @@ app.include_router(analytics_router)
 app.include_router(subscription_router)
 
 # CORS
-_FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-_allowed_origins = [
-    _FRONTEND_URL,
+def _normalize_origin(origin: str) -> str:
+    return origin.rstrip("/")
+
+
+def _paired_frontend_origins(origin: str) -> List[str]:
+    if not origin:
+        return []
+    parsed = urlparse(origin)
+    scheme = parsed.scheme or "https"
+    host = parsed.netloc
+    if not host:
+        return []
+    origins = {_normalize_origin(f"{scheme}://{host}")}
+    if host.startswith("www."):
+        origins.add(_normalize_origin(f"{scheme}://{host[4:]}"))
+    else:
+        origins.add(_normalize_origin(f"{scheme}://www.{host}"))
+    return list(origins)
+
+
+_FRONTEND_URL = _normalize_origin(os.environ.get("FRONTEND_URL", "http://localhost:3000"))
+_EXTRA_FRONTEND_ORIGINS = [
+    _normalize_origin(origin.strip())
+    for origin in os.environ.get("ADDITIONAL_FRONTEND_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+_allowed_origins = list({
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://kalmori-distribution.vercel.app",
-]
+    *_paired_frontend_origins(_FRONTEND_URL),
+    *[paired for origin in _EXTRA_FRONTEND_ORIGINS for paired in _paired_frontend_origins(origin)],
+})
 app.add_middleware(CORSMiddleware, allow_origins=_allowed_origins, allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"], expose_headers=["*"])
 
