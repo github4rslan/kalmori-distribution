@@ -31,7 +31,7 @@ const PublicLayout = ({ children }) => {
   const pageTitles = {
     '/pricing': 'Pricing',
     '/faq': 'FAQ',
-    '/leasing': 'Leasing',
+    '/leasing': 'Beat Store',
     '/promoting': 'Promotion',
     '/publishing': 'Publishing',
     '/services': 'Our Services',
@@ -51,7 +51,7 @@ const PublicLayout = ({ children }) => {
     '/settings': 'Settings',
     '/spotify-canvas': 'Spotify Canvas',
     '/content-id': 'Content ID',
-    '/instrumentals': 'Instrumentals',
+    '/instrumentals': 'Beat Store',
   };
 
   const getPageTitle = () => {
@@ -68,7 +68,7 @@ const PublicLayout = ({ children }) => {
     { path: '/releases', icon: <Disc className="w-6 h-6" weight="fill" />, label: 'My Releases', color: '#4CAF50' },
     { path: '/pricing', icon: <Tag className="w-6 h-6" weight="fill" />, label: 'Pricing', color: '#E040FB' },
     { path: '/faq', icon: <Info className="w-6 h-6" weight="fill" />, label: 'FAQ', color: '#0095FF' },
-    { path: '/leasing', icon: <MusicNote className="w-6 h-6" weight="fill" />, label: 'Leasing', color: '#FF4081' },
+    { path: '/leasing', icon: <MusicNote className="w-6 h-6" weight="fill" />, label: 'Beat Store', color: '#FF4081' },
     { path: '/promoting', icon: <Megaphone className="w-6 h-6" weight="fill" />, label: 'Promoting', color: '#E040FB' },
     { path: '/publishing', icon: <FileText className="w-6 h-6" weight="fill" />, label: 'Publishing', color: '#FFD700' },
     { path: '/services', icon: <Briefcase className="w-6 h-6" weight="fill" />, label: 'Our Services', color: '#E040FB' },

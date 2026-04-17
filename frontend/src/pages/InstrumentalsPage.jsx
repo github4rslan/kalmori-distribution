@@ -200,18 +200,22 @@ export default function InstrumentalsPage() {
       <div className="max-w-2xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
         style={{ paddingBottom: currentBeat ? '88px' : '0' }}>
 
-        {/* ── COMPACT HEADER ── */}
-        <div className="px-4 pt-5 pb-2">
-          <h1 className="text-2xl font-extrabold text-white">Beat Catalog</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Browse · Preview · Buy — all genres available</p>
+        {/* ── PAGE HEADER ── */}
+        <div className="px-4 pt-6 pb-3">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
+              <MusicNote className="w-4 h-4 text-white" weight="fill" />
+            </div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">Beat Store</h1>
+          </div>
+          <p className="text-sm text-gray-500 ml-11">Preview & license beats from top producers</p>
         </div>
 
         {/* ══════════════════════════════════════════
             BEAT CATALOG — Airbit-style list
         ══════════════════════════════════════════ */}
         <div className="px-4 pb-2" data-reveal data-reveal-variant="rise" ref={beatListRef}>
-          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-1">BEAT CATALOG</h2>
-          <p className="text-sm text-gray-400 text-center mb-5">Tap a beat to preview · Buy to download</p>
+          <p className="text-xs text-gray-600 mb-4">{beats.length} beat{beats.length !== 1 ? 's' : ''} available</p>
 
           {/* Search bar */}
           <div className="flex gap-2 mb-3">
