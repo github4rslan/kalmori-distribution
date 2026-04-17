@@ -328,83 +328,79 @@ export default function InstrumentalsPage() {
                 return (
                   <div
                     key={beat.id}
-                    className={`relative flex items-center gap-3 px-4 py-3.5 transition-all border-b border-white/[0.04] last:border-b-0 ${isPlaying ? 'bg-gradient-to-r from-[#7C4DFF]/15 to-[#E040FB]/8' : 'bg-[#111] active:bg-[#181818]'}`}
+                    className={`relative flex items-center gap-3 px-3 py-3 transition-all border-b border-white/[0.04] last:border-b-0 ${isPlaying ? 'bg-gradient-to-r from-[#7C4DFF]/15 to-[#E040FB]/8' : 'bg-[#111] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
-                    {/* Active bar */}
-                    {isPlaying && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-r" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
+                    {/* Active left bar */}
+                    {isPlaying && <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-full" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
 
-                    {/* Row number / playing indicator */}
-                    <div className="w-5 flex-shrink-0 text-center">
+                    {/* Row number / equalizer */}
+                    <div className="w-4 flex-shrink-0 flex items-center justify-center">
                       {isPlaying
-                        ? <div className="flex items-end justify-center gap-0.5 h-4">
+                        ? <div className="flex items-end justify-center gap-px h-3.5">
                             {[1,2,3].map(i => (
-                              <div key={i} className="w-0.5 rounded-full animate-pulse"
-                                style={{ height: `${8 + i * 4}px`, background: 'linear-gradient(180deg,#7C4DFF,#E040FB)', animationDelay: `${i * 0.15}s` }} />
+                              <div key={i} className="w-[3px] rounded-full animate-pulse"
+                                style={{ height: `${6 + i * 3}px`, background: 'linear-gradient(180deg,#7C4DFF,#E040FB)', animationDelay: `${i * 0.15}s` }} />
                             ))}
                           </div>
-                        : <span className="text-[11px] text-gray-600 font-mono">{idx + 1}</span>
+                        : <span className="text-[10px] text-gray-600 font-mono">{idx + 1}</span>
                       }
                     </div>
 
-                    {/* Cover art */}
+                    {/* Cover art — smaller to give title room */}
                     <button onClick={() => toggleBeat(beat)}
-                      className="relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden group"
+                      className="relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group"
                       style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
                       data-testid={`play-beat-${beat.id}`}>
                       {beat.cover_url
                         ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center">
-                            <MusicNote className="w-6 h-6 text-white/20" weight="fill" />
+                            <MusicNote className="w-5 h-5 text-white/20" weight="fill" />
                           </div>
                       }
-                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ${isPlaying ? 'opacity-100 bg-black/50' : 'opacity-0 group-active:opacity-100 bg-black/60'}`}>
+                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl ${isPlaying ? 'opacity-100 bg-black/50' : 'opacity-0 group-active:opacity-100 bg-black/60'}`}>
                         {isPlaying
-                          ? <Pause className="w-5 h-5 text-white drop-shadow" weight="fill" />
-                          : <Play className="w-5 h-5 text-white drop-shadow" weight="fill" />
+                          ? <Pause className="w-4 h-4 text-white drop-shadow" weight="fill" />
+                          : <Play className="w-4 h-4 text-white drop-shadow" weight="fill" />
                         }
                       </div>
                     </button>
 
-                    {/* Info */}
+                    {/* Info — flex-1 with tight layout */}
                     <div className="flex-1 min-w-0" onClick={() => toggleBeat(beat)}>
-                      <p className={`text-[14px] font-semibold truncate leading-tight ${isPlaying ? 'text-white' : 'text-gray-100'}`}>
+                      <p className={`text-[13px] font-semibold truncate leading-tight ${isPlaying ? 'text-white' : 'text-gray-100'}`}>
                         {beat.title}
                       </p>
                       <p className="text-[11px] text-gray-500 truncate mt-0.5">
                         {beat.producer_name || 'Kalmori'}
                       </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-md">{beat.bpm} BPM</span>
-                        <span className="text-[10px] text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-md">{beat.key}</span>
-                        {beat.genre && <span className="text-[10px] text-gray-600 truncate">{beat.genre.split('/')[0]}</span>}
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-[9px] text-gray-500 bg-white/5 px-1.5 py-0.5 rounded-md whitespace-nowrap">{beat.bpm} BPM</span>
+                        <span className="text-[9px] text-gray-500 bg-white/5 px-1.5 py-0.5 rounded-md">{beat.key}</span>
                       </div>
                     </div>
 
-                    {/* Price tag */}
-                    <div className="flex-shrink-0 text-right mr-1">
-                      <p className="text-sm font-bold text-white">${beat.prices?.basic_lease || '29.99'}</p>
-                      <p className="text-[10px] text-gray-600">lease</p>
+                    {/* Price + cart stacked */}
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <span className="text-[11px] font-bold text-white">${beat.prices?.basic_lease || '29.99'}</span>
+                      <button
+                        onClick={() => openPurchaseModal(beat)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                        data-testid={`buy-beat-${beat.id}`}>
+                        <ShoppingCart className="w-3.5 h-3.5 text-white" />
+                      </button>
                     </div>
-
-                    {/* Cart button */}
-                    <button
-                      onClick={() => openPurchaseModal(beat)}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
-                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
-                      data-testid={`buy-beat-${beat.id}`}>
-                      <ShoppingCart className="w-4 h-4 text-white" />
-                    </button>
 
                     {/* 3-dot menu */}
                     <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all">
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 active:text-white transition-all">
                         <DotsThreeVertical className="w-4 h-4" weight="bold" />
                       </button>
                       {openMenuId === beat.id && (
-                        <div className="absolute right-0 bottom-12 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
+                        <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
                           <button
                             onClick={() => { openPurchaseModal(beat); setOpenMenuId(null); }}
                             className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
