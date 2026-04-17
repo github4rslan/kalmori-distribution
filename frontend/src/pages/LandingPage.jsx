@@ -246,7 +246,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== FREE PLAN — Distribution Banner ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="distribution-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="distribution-section" data-reveal data-reveal-variant="rise">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left — Description */}
@@ -327,7 +327,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== WHAT IS KALMORI — Large Text Block ===== */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="what-is-section" data-reveal>
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="what-is-section" data-reveal data-reveal-variant="fade">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-4xl">
             <p className="text-xs font-bold text-[#E040FB] tracking-[4px] mb-4">ABOUT US</p>
@@ -352,7 +352,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== WHY CHOOSE KALMORI — Two Column ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="why-choose-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="why-choose-section" data-reveal data-reveal-variant="zoom">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
@@ -405,7 +405,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== KALMORI ARTIST FEATURES ===== */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="artist-features-section" data-reveal>
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="artist-features-section" data-reveal data-reveal-variant="left">
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
             <p className="text-xs font-bold text-[#E040FB] tracking-[4px] mb-4">FOR ARTISTS</p>
@@ -447,7 +447,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== KALMORI PRODUCER FEATURES ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="producer-features-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="producer-features-section" data-reveal data-reveal-variant="right">
         <div className="max-w-7xl mx-auto">
           <div className="mb-16">
             <p className="text-xs font-bold text-[#FFD700] tracking-[4px] mb-4">FOR PRODUCERS</p>
@@ -489,7 +489,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== POWERFUL FEATURES ===== */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="features-section" data-reveal>
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="features-section" data-reveal data-reveal-variant="flip">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-[#7C4DFF] tracking-[4px] mb-4">ALL-IN-ONE PLATFORM</p>
@@ -530,7 +530,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== PLATFORM HIGHLIGHTS — Detailed Feature Showcase ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="highlights-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="highlights-section" data-reveal data-reveal-variant="scale">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-[#E040FB] tracking-[4px] mb-4">WHAT SETS US APART</p>
@@ -690,7 +690,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== PROMOTION SERVICES ===== */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="promotion-section" data-reveal>
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="promotion-section" data-reveal data-reveal-variant="tilt">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
@@ -727,7 +727,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== NEED BEATS / INSTRUMENTALS ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="need-beats-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="need-beats-section" data-reveal data-reveal-variant="rise">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-3xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #9C27B0 0%, #E040FB 50%, #7C4DFF 100%)' }}>
             <div className="absolute inset-0 bg-black/10" />
@@ -767,7 +767,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== KALMORI LABEL FEATURES BANNER ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="label-features-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="label-features-section" data-reveal data-reveal-variant="left">
         <div className="max-w-7xl mx-auto">
           <div className="rounded-3xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #7C4DFF 0%, #E040FB 50%, #FF4081 100%)' }}>
             <div className="absolute inset-0 bg-black/20" />
@@ -807,7 +807,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== ACCELERATOR — Reach More Fans ===== */}
-      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="accelerator-section" data-reveal>
+      <section className="py-24 px-6 bg-[#0a0a0a]" data-testid="accelerator-section" data-reveal data-reveal-variant="zoom">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1">
@@ -837,7 +837,7 @@ const LandingPage = () => {
       </section>
 
       {/* ===== BUILT FOR YOUNG ARTISTS — with stats ===== */}
-      <section className="py-24 px-6 bg-black" data-testid="young-artists-section" data-reveal>
+      <section className="py-24 px-6 bg-black" data-testid="young-artists-section" data-reveal data-reveal-variant="right">
         <div className="max-w-7xl mx-auto">
           {/* Stats row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-20">
@@ -871,7 +871,7 @@ const LandingPage = () => {
 
       {/* ===== FEATURED BEATS ===== */}
       {featuredBeats.length > 0 && (
-        <section className="py-20 px-6 bg-black" data-testid="featured-beats-section" data-reveal>
+        <section className="py-20 px-6 bg-black" data-testid="featured-beats-section" data-reveal data-reveal-variant="flip">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <p className="text-xs font-bold text-[#E040FB] tracking-[4px] mb-4">FROM OUR CATALOG</p>
@@ -918,7 +918,7 @@ const LandingPage = () => {
       )}
 
       {/* ===== READY TO START JOURNEY — Gradient CTA ===== */}
-      <section className="py-32 px-6 text-center relative overflow-hidden" data-testid="journey-section" data-reveal>
+      <section className="py-32 px-6 text-center relative overflow-hidden" data-testid="journey-section" data-reveal data-reveal-variant="zoom">
         <div className="absolute inset-0 bg-gradient-to-br from-[#7C4DFF]/30 via-[#E040FB]/20 to-[#FF4081]/30" />
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 max-w-3xl mx-auto">

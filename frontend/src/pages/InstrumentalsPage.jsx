@@ -237,7 +237,7 @@ export default function InstrumentalsPage() {
         </div>
 
         {/* Why Choose Us */}
-        <div className="p-6 mt-4" data-reveal>
+        <div className="p-6 mt-4" data-reveal data-reveal-variant="zoom">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-6">WHY CHOOSE US</h2>
           <div className="grid grid-cols-2 gap-4">
             {whyItems.map((item, i) => (
@@ -251,7 +251,7 @@ export default function InstrumentalsPage() {
         </div>
 
         {/* License Tiers */}
-        <div className="p-6" data-reveal>
+        <div className="p-6" data-reveal data-reveal-variant="flip">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">LICENSING OPTIONS</h2>
           <p className="text-sm text-gray-400 text-center mb-6">Choose the right license for your project</p>
           <div className="space-y-4">
@@ -289,7 +289,7 @@ export default function InstrumentalsPage() {
         </div>
 
         {/* Beat Catalog - Real Data */}
-        <div className="p-6" data-reveal>
+        <div className="p-6" data-reveal data-reveal-variant="rise">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">BEAT CATALOG</h2>
           <p className="text-sm text-gray-400 text-center mb-6">Preview our latest beats — tap to play</p>
 

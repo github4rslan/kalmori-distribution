@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <p className="text-[15px] text-[#aaa] leading-relaxed mb-6">At Kalmori, we take your privacy seriously. This Privacy Policy describes how we collect, use, and protect your personal information when you use our music distribution platform.</p>
           <div className="space-y-6">
             {sections.map((s, i) => (
-              <div key={i} data-reveal>
+              <div key={i} data-reveal data-reveal-variant={i % 2 === 0 ? 'left' : 'right'}>
                 <h2 className="text-xl font-bold text-white mb-2.5">{`${i + 1}. ${s.title}`}</h2>
                 <p className="text-[15px] text-[#aaa] leading-relaxed">{s.content}</p>
               </div>

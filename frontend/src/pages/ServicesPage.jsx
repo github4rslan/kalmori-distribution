@@ -26,7 +26,7 @@ export default function ServicesPage() {
         {/* Service Cards */}
         <div className="px-4 space-y-4 pb-8">
           {services.map((s, i) => (
-            <div key={i} className="bg-[#0a0a0a] border-b border-[#222] p-6 text-center" data-testid={`service-${i}`} data-reveal data-reveal-delay={String((i % 4) + 1)}>
+            <div key={i} className="bg-[#0a0a0a] border-b border-[#222] p-6 text-center" data-testid={`service-${i}`} data-reveal data-reveal-variant={['zoom','flip','rise','tilt'][i % 4]} data-reveal-delay={String((i % 4) + 1)}>
               <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
                 {s.icon}
               </div>

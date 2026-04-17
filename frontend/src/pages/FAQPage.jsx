@@ -234,7 +234,7 @@ export default function FAQPage() {
               { name: 'Rise', price: '$24.99', note: 'per release \u2022 5% revenue', icon: <Rocket className="w-5 h-5" weight="fill" />, color: '#7C4DFF', desc: 'Singles, advanced tools, priority support' },
               { name: 'Pro', price: '$49.99', note: '/month \u2022 0% revenue', icon: <Crown className="w-5 h-5" weight="fill" />, color: '#FFD700', desc: 'Albums + singles, AI tools, keep 100%' },
             ].map((p, i) => (
-              <div key={i} className="bg-[#141414] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all cursor-pointer" onClick={() => navigate('/pricing')} data-testid={`faq-plan-${p.name.toLowerCase()}`} data-reveal data-reveal-delay={String(i + 1)}>
+              <div key={i} className="bg-[#141414] border border-white/10 rounded-xl p-5 hover:border-white/20 transition-all cursor-pointer" onClick={() => navigate('/pricing')} data-testid={`faq-plan-${p.name.toLowerCase()}`} data-reveal data-reveal-variant={i === 0 ? 'left' : i === 1 ? 'zoom' : 'right'} data-reveal-delay={String(i + 1)}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${p.color}15`, color: p.color }}>{p.icon}</div>
                   <div>
@@ -264,7 +264,7 @@ export default function FAQPage() {
           </div>
 
           {/* Active Section */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden" data-testid="faq-content" data-reveal>
+          <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden" data-testid="faq-content" data-reveal data-reveal-variant="flip">
             <div className="px-6 py-4 border-b border-white/10 flex items-center gap-3">
               <span style={{ color: faqSections[activeSection].color }}>{faqSections[activeSection].icon}</span>
               <h2 className="text-lg font-bold text-white">{faqSections[activeSection].title}</h2>

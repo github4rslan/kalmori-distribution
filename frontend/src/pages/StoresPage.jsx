@@ -27,7 +27,7 @@ export default function StoresPage() {
         <div className="pt-4">
           {stores.map((store, i) => (
             <div key={store.id}>
-              <div className="py-10 px-6 text-center" data-testid={`store-${store.id}`} data-reveal>
+              <div className="py-10 px-6 text-center" data-testid={`store-${store.id}`} data-reveal data-reveal-variant={i % 2 === 0 ? 'left' : 'right'}>
                 <div className="w-[220px] h-[100px] mx-auto mb-6 flex items-center justify-center">
                   <span className="text-[42px] font-extrabold tracking-[2px] text-center" style={{ color: store.textColor }}>{store.textLogo}</span>
                 </div>

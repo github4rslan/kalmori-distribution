@@ -31,7 +31,7 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Info */}
-        <div className="p-6 bg-[#0a0a0a] space-y-5" data-reveal>
+        <div className="p-6 bg-[#0a0a0a] space-y-5" data-reveal data-reveal-variant="left">
           {contactItems.map((item, i) => (
             <div key={i} className="flex items-center gap-4" data-testid={`contact-info-${item.label.toLowerCase()}`}>
               <div className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${item.color}20`, color: item.color }}>
@@ -46,7 +46,7 @@ export default function ContactPage() {
         </div>
 
         {/* Form */}
-        <div className="p-6 bg-[#111]" data-reveal>
+        <div className="p-6 bg-[#111]" data-reveal data-reveal-variant="right">
           <h2 className="text-xl font-bold text-white mb-5">Send us a Message</h2>
           {sent && <div className="p-4 rounded-xl bg-[#4CAF50]/10 border border-[#4CAF50]/30 text-[#4CAF50] text-sm mb-4" data-testid="contact-success">Thank you! We'll get back to you soon.</div>}
           <form onSubmit={handleSubmit} className="space-y-4">
