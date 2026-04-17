@@ -603,14 +603,10 @@ export default function InstrumentalsPage() {
                     <div className="absolute inset-0 rounded-xl border-2 animate-pulse" style={{ borderColor: '#7C4DFF40' }} />
                   </div>
 
-                  {/* Title + producer + genre tags */}
+                  {/* Title + producer */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-bold text-white truncate leading-tight">{currentBeat.title}</p>
-                    <p className="text-[11px] text-gray-500 truncate mt-0.5">{currentBeat.producer_name || 'Kalmori'}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[9px] text-[#7C4DFF] bg-[#7C4DFF]/10 px-1.5 py-0.5 rounded-md font-semibold">{currentBeat.bpm} BPM</span>
-                      <span className="text-[9px] text-[#E040FB] bg-[#E040FB]/10 px-1.5 py-0.5 rounded-md font-semibold">{currentBeat.key}</span>
-                    </div>
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">{currentBeat.producer_name || 'Kalmori'} · {currentBeat.bpm} BPM · {currentBeat.key}</p>
                   </div>
 
                   {/* Controls */}
