@@ -200,75 +200,10 @@ export default function InstrumentalsPage() {
       <div className="max-w-2xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
         style={{ paddingBottom: currentBeat ? '88px' : '0' }}>
 
-        {/* ── HERO ── */}
-        <div className="mx-4 mt-4 rounded-3xl p-7 text-center bg-gradient-to-br from-[#7C4DFF] via-[#E040FB] to-[#FF4081]">
-          <div className="w-[70px] h-[70px] rounded-full bg-white/20 mx-auto mb-5 flex items-center justify-center">
-            <MusicNote className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-[28px] font-extrabold text-white mb-3">Need Beats or Instrumentals?</h1>
-          <p className="text-[15px] text-white/85 leading-relaxed mb-6">Can't make your own beats? No problem! Get professional instrumentals with full rights or lease options.</p>
-          <div className="space-y-3">
-            {['Exclusive Rights Available', 'Affordable Lease Options', 'All Genres: Hip-Hop, R&B, Afrobeats, Dancehall', 'Custom Beats on Request'].map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-[#7C4DFF]" weight="bold" />
-                </div>
-                <span className="text-[15px] font-semibold text-white text-left">{f}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── WHY CHOOSE US ── */}
-        <div className="p-6 mt-4" data-reveal data-reveal-variant="zoom">
-          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-6">WHY CHOOSE US</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {whyItems.map((item, i) => (
-              <div key={i} className="bg-[#1a1a1a] rounded-2xl p-5 text-center">
-                <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${item.color}20`, color: item.color }}>{item.icon}</div>
-                <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── LICENSING OPTIONS ── */}
-        <div className="p-6" data-reveal data-reveal-variant="flip">
-          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">LICENSING OPTIONS</h2>
-          <p className="text-sm text-gray-400 text-center mb-6">Choose the right license for your project</p>
-          <div className="space-y-4">
-            {licenseTiers.map((tier) => (
-              <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border-2 relative overflow-hidden transition-all ${selectedLicense === tier.id ? 'border-opacity-100' : 'border-opacity-30'}`}
-                style={{ borderColor: tier.color }}
-                data-testid={`tier-${tier.id}`}>
-                {tier.popular && (
-                  <span className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-[10px] font-bold text-white tracking-wider" style={{ backgroundColor: tier.color }}>MOST POPULAR</span>
-                )}
-                {selectedLicense === tier.id && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white mb-3" style={{ backgroundColor: tier.color }}>
-                    <Check className="w-3 h-3" weight="bold" /> SELECTED
-                  </span>
-                )}
-                <h3 className="text-lg font-bold mb-2" style={{ color: tier.color }}>{tier.name}</h3>
-                <div className="flex items-start mb-2">
-                  <span className="text-xl font-bold text-white mt-1">$</span>
-                  <span className="text-5xl font-extrabold text-white leading-none">{Math.floor(tier.price)}</span>
-                  <span className="text-xl font-bold text-white mt-1">.{String(Math.round((tier.price % 1) * 100)).padStart(2, '0')}</span>
-                </div>
-                <p className="text-sm text-gray-400 mb-4">{tier.desc}</p>
-                <div className="space-y-2.5">
-                  {tier.features.map((f, j) => (
-                    <div key={j} className="flex items-center gap-2.5">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: tier.color }} weight="bold" />
-                      <span className="text-sm text-gray-300">{f}</span>
-                    </div>
-                  ))}
-                </div>
-              </button>
-            ))}
-          </div>
+        {/* ── COMPACT HEADER ── */}
+        <div className="px-4 pt-5 pb-2">
+          <h1 className="text-2xl font-extrabold text-white">Beat Catalog</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Browse · Preview · Buy — all genres available</p>
         </div>
 
         {/* ══════════════════════════════════════════
@@ -467,6 +402,58 @@ export default function InstrumentalsPage() {
           <div className="mt-4 p-3 bg-[#111] rounded-xl flex items-center gap-3">
             <SpeakerHigh className="w-5 h-5 text-[#7C4DFF] flex-shrink-0" />
             <p className="text-xs text-gray-500">Previews play tagged samples. Full untagged files delivered after purchase.</p>
+          </div>
+        </div>
+
+        {/* ── LICENSING OPTIONS ── */}
+        <div className="p-6 mt-2" data-reveal data-reveal-variant="flip">
+          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">LICENSING OPTIONS</h2>
+          <p className="text-sm text-gray-400 text-center mb-6">Choose the right license for your project</p>
+          <div className="space-y-4">
+            {licenseTiers.map((tier) => (
+              <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
+                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border-2 relative overflow-hidden transition-all ${selectedLicense === tier.id ? 'border-opacity-100' : 'border-opacity-30'}`}
+                style={{ borderColor: tier.color }}
+                data-testid={`tier-${tier.id}`}>
+                {tier.popular && (
+                  <span className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-[10px] font-bold text-white tracking-wider" style={{ backgroundColor: tier.color }}>MOST POPULAR</span>
+                )}
+                {selectedLicense === tier.id && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white mb-3" style={{ backgroundColor: tier.color }}>
+                    <Check className="w-3 h-3" weight="bold" /> SELECTED
+                  </span>
+                )}
+                <h3 className="text-lg font-bold mb-2" style={{ color: tier.color }}>{tier.name}</h3>
+                <div className="flex items-start mb-2">
+                  <span className="text-xl font-bold text-white mt-1">$</span>
+                  <span className="text-5xl font-extrabold text-white leading-none">{Math.floor(tier.price)}</span>
+                  <span className="text-xl font-bold text-white mt-1">.{String(Math.round((tier.price % 1) * 100)).padStart(2, '0')}</span>
+                </div>
+                <p className="text-sm text-gray-400 mb-4">{tier.desc}</p>
+                <div className="space-y-2.5">
+                  {tier.features.map((f, j) => (
+                    <div key={j} className="flex items-center gap-2.5">
+                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: tier.color }} weight="bold" />
+                      <span className="text-sm text-gray-300">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── WHY CHOOSE US ── */}
+        <div className="p-6" data-reveal data-reveal-variant="zoom">
+          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-6">WHY CHOOSE US</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {whyItems.map((item, i) => (
+              <div key={i} className="bg-[#1a1a1a] rounded-2xl p-5 text-center">
+                <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${item.color}20`, color: item.color }}>{item.icon}</div>
+                <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
 
