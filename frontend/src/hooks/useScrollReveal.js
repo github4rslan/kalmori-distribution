@@ -32,7 +32,7 @@ export default function useScrollReveal() {
             }
           });
         },
-        { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+        { threshold: 0.08, rootMargin: '0px 0px -12% 0px' }
       );
       nodes.forEach((n) => io.observe(n));
       return io;
