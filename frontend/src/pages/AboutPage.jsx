@@ -53,17 +53,17 @@ export default function AboutPage() {
         </div>
 
         {/* Mission */}
-        <div className="p-6 bg-[#0a0a0a]">
+        <div className="p-6 bg-[#0a0a0a]" data-reveal>
           <h2 className="text-xl font-bold text-white mb-4 tracking-wider">OUR MISSION</h2>
           <p className="text-[15px] text-gray-300 leading-relaxed">To democratize music distribution and empower artists to reach their full potential without giving up their rights or royalties. We provide the platform, you keep the ownership.</p>
         </div>
 
         {/* Values */}
-        <div className="p-6">
+        <div className="p-6" data-reveal>
           <h2 className="text-xl font-bold text-white mb-5 tracking-wider text-center">OUR VALUES</h2>
           <div className="grid grid-cols-2 gap-4">
             {values.map((v, i) => (
-              <div key={i} className="bg-[#111] rounded-xl p-4 text-center" data-testid={`value-${i}`}>
+              <div key={i} className="bg-[#111] rounded-xl p-4 text-center" data-testid={`value-${i}`} data-reveal data-reveal-delay={String((i % 4) + 1)}>
                 <div className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${v.color}20`, color: v.color }}>
                   {v.icon}
                 </div>
@@ -75,7 +75,7 @@ export default function AboutPage() {
         </div>
 
         {/* CTA */}
-        <div className="p-10 bg-[#111] text-center">
+        <div className="p-10 bg-[#111] text-center" data-reveal data-reveal-variant="scale">
           <h2 className="text-2xl font-extrabold text-white">Ready to Join?</h2>
           <p className="text-sm text-gray-400 mt-2">Start distributing your music worldwide today</p>
           <button onClick={() => navigate('/register')} className="mt-6 px-10 py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="about-join-cta">

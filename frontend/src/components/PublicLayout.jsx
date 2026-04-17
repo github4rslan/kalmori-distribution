@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
+import useScrollReveal from '../hooks/useScrollReveal';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
   Megaphone, FileText, ChartLine, Speedometer, ChartBar, CurrencyDollar, Wallet as WalletIcon,
@@ -15,6 +16,8 @@ const PublicLayout = ({ children }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState(null);
+
+  useScrollReveal();
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);

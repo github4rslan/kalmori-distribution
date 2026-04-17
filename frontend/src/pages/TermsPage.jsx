@@ -27,7 +27,7 @@ export default function TermsPage() {
           <div className="h-px bg-[#333] mb-6" />
           <div className="space-y-6">
             {sections.map((s, i) => (
-              <div key={i}>
+              <div key={i} data-reveal>
                 <h2 className="text-xl font-bold text-white mb-2.5">{`${i + 1}. ${s.title}`}</h2>
                 <p className="text-[15px] text-[#aaa] leading-relaxed">{s.content}</p>
               </div>

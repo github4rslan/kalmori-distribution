@@ -32,7 +32,7 @@ export default function PublishingPage() {
         </div>
 
         {/* Stats */}
-        <div className="mx-4 mt-4 bg-[#111] rounded-2xl flex justify-around py-6">
+        <div className="mx-4 mt-4 bg-[#111] rounded-2xl flex justify-around py-6" data-reveal>
           {stats.map((s, i) => (
             <div key={i} className="text-center">
               <p className="text-3xl font-extrabold text-[#FFD700]">{s.value}</p>
@@ -45,7 +45,7 @@ export default function PublishingPage() {
         <div className="p-4 space-y-4 mt-4">
           <h2 className="text-xl font-bold text-white text-center mb-4">Publishing Services</h2>
           {services.map((s, i) => (
-            <div key={i} className="bg-[#111] rounded-2xl p-5 text-center" data-testid={`pub-service-${i}`}>
+            <div key={i} className="bg-[#111] rounded-2xl p-5 text-center" data-testid={`pub-service-${i}`} data-reveal data-reveal-delay={String((i % 4) + 1)}>
               <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${s.color}20`, color: s.color }}>{s.icon}</div>
               <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
               <p className="text-sm text-gray-300 leading-relaxed mb-3">{s.desc}</p>
@@ -62,7 +62,7 @@ export default function PublishingPage() {
         </div>
 
         {/* CTA */}
-        <div className="mx-4 my-6 p-6 bg-[#1a1a1a] rounded-2xl text-center">
+        <div className="mx-4 my-6 p-6 bg-[#1a1a1a] rounded-2xl text-center" data-reveal data-reveal-variant="scale">
           <h2 className="text-[22px] font-extrabold text-white mb-2">Start Collecting Today</h2>
           <p className="text-sm text-gray-300 mb-5">Get lifetime access to publishing administration for just $75</p>
           <button onClick={() => setShowPopup(true)}

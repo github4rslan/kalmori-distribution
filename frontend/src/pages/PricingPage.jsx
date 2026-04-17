@@ -249,7 +249,7 @@ export default function PricingPage() {
         </div>
 
         {/* Revenue Share Comparison Bar */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 mb-10" data-testid="revenue-comparison">
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-6 mb-10" data-testid="revenue-comparison" data-reveal>
           <h3 className="text-sm font-bold text-white text-center mb-5 flex items-center justify-center gap-2">
             <CurrencyDollar className="w-4 h-4 text-[#1DB954]" /> Revenue Share Comparison
           </h3>
@@ -327,6 +327,8 @@ export default function PricingPage() {
                   'border border-white/10'
                 }`}
                 data-testid={`plan-${plan.id}`}
+                data-reveal
+                data-reveal-delay={plan.id === 'free' ? '1' : plan.id === 'rise' ? '2' : '3'}
               >
                 {/* Badge */}
                 <div className={`py-2.5 px-4 text-center ${isCurrent ? 'bg-[#E040FB]' : plan.badgeStyle}`}>
@@ -424,7 +426,7 @@ export default function PricingPage() {
         </div>
 
         {/* Promo Code Section */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-5 mb-10" data-testid="promo-section">
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-5 mb-10" data-testid="promo-section" data-reveal>
           <div className="flex items-center gap-4 max-w-lg mx-auto">
             <Tag className="w-5 h-5 text-[#E040FB] shrink-0" />
             <input
@@ -466,7 +468,7 @@ export default function PricingPage() {
         </div>
 
         {/* Why Upgrade Section */}
-        <div className="bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/10 rounded-2xl p-8 mb-10">
+        <div className="bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/10 rounded-2xl p-8 mb-10" data-reveal>
           <h3 className="text-lg font-black text-center text-white mb-6 tracking-[2px]">WHY GO PRO?</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <WhyCard
@@ -499,7 +501,7 @@ export default function PricingPage() {
 
         {/* Bottom CTA */}
         {!user && (
-          <div className="py-12 text-center">
+          <div className="py-12 text-center" data-reveal data-reveal-variant="scale">
             <h2 className="text-2xl font-bold text-white mb-2">Ready to distribute your music?</h2>
             <p className="text-sm text-gray-400 mb-8">Join thousands of artists who trust Kalmori Distribution</p>
             <button onClick={() => navigate('/register')}

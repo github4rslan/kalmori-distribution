@@ -27,7 +27,7 @@ export default function StoresPage() {
         <div className="pt-4">
           {stores.map((store, i) => (
             <div key={store.id}>
-              <div className="py-10 px-6 text-center" data-testid={`store-${store.id}`}>
+              <div className="py-10 px-6 text-center" data-testid={`store-${store.id}`} data-reveal>
                 <div className="w-[220px] h-[100px] mx-auto mb-6 flex items-center justify-center">
                   <span className="text-[42px] font-extrabold tracking-[2px] text-center" style={{ color: store.textColor }}>{store.textLogo}</span>
                 </div>
@@ -44,7 +44,7 @@ export default function StoresPage() {
         </div>
 
         {/* CTA */}
-        <div className="mx-5 my-10 p-10 bg-[#111] rounded-2xl text-center max-w-xl self-center">
+        <div className="mx-5 my-10 p-10 bg-[#111] rounded-2xl text-center max-w-xl self-center" data-reveal data-reveal-variant="scale">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to distribute your music?</h2>
           <p className="text-[15px] text-gray-400 leading-relaxed mb-6">Kalmori helps independent artists get their music on all major platforms. Start reaching millions of listeners today.</p>
           <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-[#E040FB] text-white text-sm font-bold tracking-[2px] hover:brightness-110 transition-all" data-testid="stores-get-started">
