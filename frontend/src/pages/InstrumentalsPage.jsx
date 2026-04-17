@@ -239,319 +239,14 @@ export default function InstrumentalsPage() {
 
   const currentBeat = beats.find(b => b.id === currentBeatId) || null;
   const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
-  const spotlightBeat = currentBeat || beats[0] || null;
-  const activeFilterCount = [
-    searchQuery,
-    selectedGenre,
-    selectedMood,
-    filterKey,
-    sortBy !== 'newest' ? sortBy : '',
-    bpmRange[0] > 60 || bpmRange[1] < 200 ? 'bpm' : '',
-  ].filter(Boolean).length;
-  const startingPrice = beats.length
-    ? Math.min(...beats.map((beat) => Number(beat.prices?.basic_lease || 29.99)))
-    : 29.99;
-
-  const renderSearchInput = (className = '') => (
-    <div className={`relative ${className}`}>
-      <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={e => handleSearchChange(e.target.value)}
-        placeholder="Search beats, genres, moods..."
-        className="w-full rounded-2xl border border-white/10 bg-[#111] pl-10 pr-10 py-3.5 text-sm text-white placeholder-gray-600 focus:border-[#7C4DFF]/60 focus:outline-none"
-        data-testid="beat-search-input"
-      />
-      {searchQuery && (
-        <button
-          onClick={() => handleSearchChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-white"
-          aria-label="Clear search"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-  );
-
-  const renderFiltersPanel = (className = '') => (
-    <div className={`rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,#16112a,transparent_32%),#101010] p-4 sm:p-5 space-y-5 ${className}`} data-testid="filters-panel">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#E040FB]">Filter Stack</p>
-          <p className="mt-1 text-sm text-gray-400">Dial in the exact vibe before you press play.</p>
-        </div>
-        {activeFilterCount > 0 && (
-          <span className="rounded-full border border-[#7C4DFF]/30 bg-[#7C4DFF]/10 px-2.5 py-1 text-[11px] font-semibold text-[#cbb8ff]">
-            {activeFilterCount} active
-          </span>
-        )}
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-[0.22em] text-gray-500">Genre</label>
-          <select
-            value={selectedGenre}
-            onChange={e => setSelectedGenre(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white"
-            data-testid="filter-genre"
-          >
-            <option value="">All genres</option>
-            {genres.map(g => <option key={g} value={g}>{g}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-[0.22em] text-gray-500">Mood</label>
-          <select
-            value={selectedMood}
-            onChange={e => setSelectedMood(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white"
-            data-testid="filter-mood"
-          >
-            <option value="">All moods</option>
-            {moods.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-[0.22em] text-gray-500">Key</label>
-          <select
-            value={filterKey}
-            onChange={e => setFilterKey(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white"
-            data-testid="filter-key"
-          >
-            <option value="">All keys</option>
-            {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[10px] uppercase tracking-[0.22em] text-gray-500">Sort</label>
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white"
-            data-testid="filter-sort"
-          >
-            <option value="newest">Newest</option>
-            <option value="price_low">Price low to high</option>
-            <option value="price_high">Price high to low</option>
-            <option value="bpm_low">BPM low to high</option>
-            <option value="bpm_high">BPM high to low</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <label className="block text-[10px] uppercase tracking-[0.22em] text-gray-500">BPM Range</label>
-          <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] font-medium text-gray-300">
-            {bpmRange[0]} - {bpmRange[1]}
-          </span>
-        </div>
-        <div className="rounded-2xl border border-white/6 bg-black/30 p-3">
-          <div className="flex items-center gap-3">
-            <input
-              type="range"
-              min="60"
-              max="200"
-              value={bpmRange[0]}
-              onChange={e => setBpmRange([parseInt(e.target.value, 10), bpmRange[1]])}
-              className="flex-1 accent-[#7C4DFF]"
-              data-testid="bpm-min-slider"
-            />
-            <input
-              type="range"
-              min="60"
-              max="200"
-              value={bpmRange[1]}
-              onChange={e => setBpmRange([bpmRange[0], parseInt(e.target.value, 10)])}
-              className="flex-1 accent-[#E040FB]"
-              data-testid="bpm-max-slider"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {selectedGenre && (
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">{selectedGenre}</span>
-        )}
-        {selectedMood && (
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">{selectedMood}</span>
-        )}
-        {filterKey && (
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">Key {filterKey}</span>
-        )}
-        {(bpmRange[0] > 60 || bpmRange[1] < 200) && (
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">
-            {bpmRange[0]}-{bpmRange[1]} BPM
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row xl:flex-col 2xl:flex-row">
-        <button
-          onClick={applyFilters}
-          className="flex-1 rounded-2xl py-3 text-sm font-bold text-white transition-all active:scale-95"
-          style={{ background: 'linear-gradient(90deg, #7C4DFF, #E040FB)' }}
-          data-testid="apply-filters-btn"
-        >
-          Apply Filters
-        </button>
-        <button
-          onClick={clearFilters}
-          className="rounded-2xl border border-white/10 bg-[#1a1a1a] px-5 py-3 text-sm font-medium text-gray-300 transition-colors hover:text-white"
-          data-testid="clear-filters-btn"
-        >
-          Clear All
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <PublicLayout>
-      <div
-        className="bg-[#050505]"
-        data-testid="instrumentals-page"
-        style={{ paddingBottom: currentBeat ? '130px' : '0' }}
-      >
-        <section className="relative overflow-hidden border-b border-white/6">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,77,255,0.22),transparent_34%),radial-gradient(circle_at_80%_18%,rgba(224,64,251,0.14),transparent_24%),linear-gradient(180deg,#0a0a0a_0%,#050505_72%)]" />
-          <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-7 sm:px-6 lg:px-8 lg:pb-12 lg:pt-12">
-            <div className="grid gap-7 lg:grid-cols-[minmax(0,1.2fr)_360px] lg:items-start xl:grid-cols-[minmax(0,1.25fr)_400px]">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#cbb8ff]">
-                  <Star className="h-3.5 w-3.5 text-[#FFD700]" weight="fill" />
-                  Kalmori Beat Store
-                </div>
-                <div className="mt-5 max-w-3xl">
-                  <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-                    Find your next beat in a cleaner, studio-grade storefront.
-                  </h1>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-gray-400 sm:text-base">
-                    Browse instrumentals, preview tagged snippets, and lock in the license that fits your release.
-                    The mobile flow stays quick, while desktop now has more room to search, compare, and buy with confidence.
-                  </p>
-                </div>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => beatListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold text-white transition-all hover:brightness-110"
-                    style={{ background: 'linear-gradient(90deg,#7C4DFF,#E040FB)' }}
-                  >
-                    <Play className="h-4 w-4" weight="fill" />
-                    Start Listening
-                  </button>
-                  <button
-                    onClick={() => document.querySelector('[data-testid=\"beat-request-form\"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/5 px-5 py-3 text-sm font-semibold text-gray-100 transition-colors hover:bg-white/10"
-                  >
-                    <PaperPlaneTilt className="h-4 w-4 text-[#E040FB]" />
-                    Request Custom Production
-                  </button>
-                </div>
-
-                <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {[
-                    { label: 'Available Beats', value: `${beats.length || 0}+` },
-                    { label: 'Starting Lease', value: `$${startingPrice.toFixed(2)}` },
-                    { label: 'Checkout Flow', value: '3 Steps' },
-                    { label: 'Delivery', value: 'Instant' },
-                  ].map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 backdrop-blur-sm">
-                      <p className="text-lg font-black text-white sm:text-xl">{item.value}</p>
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-gray-500">{item.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(19,18,24,0.98),rgba(10,10,10,0.98))] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#E040FB]">Now Spotlighting</p>
-                    <h2 className="mt-2 text-xl font-bold text-white">Desktop listening station</h2>
-                  </div>
-                  <div className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
-                    Live previews
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[28px] border border-white/8 bg-[#0f0f11] p-4">
-                  <div className="flex items-start gap-4">
-                    <div
-                      className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl"
-                      style={{ background: spotlightBeat?.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
-                    >
-                      {spotlightBeat?.cover_url ? (
-                        <img src={spotlightBeat.cover_url} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <MusicNote className="h-8 w-8 text-white/20" weight="fill" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-[#E040FB]">Featured preview</p>
-                      <h3 className="mt-1 truncate text-lg font-bold text-white">
-                        {spotlightBeat?.title || 'Browse curated instrumentals'}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-400">
-                        {spotlightBeat?.producer_name || 'Kalmori'} {spotlightBeat ? `· ${spotlightBeat.bpm} BPM · ${spotlightBeat.key}` : '· Ready for artists, creators, and vocalists'}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-gray-300">
-                          {spotlightBeat?.genre || 'Multi-genre'}
-                        </span>
-                        <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs text-gray-300">
-                          From ${spotlightBeat?.prices?.basic_lease || startingPrice.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 space-y-3">
-                    {[
-                      'Play previews directly from the catalog without leaving the page.',
-                      'Compare BPM, key, producer, and license pricing in one glance.',
-                      'Jump from preview to contract checkout with a cleaner desktop flow.',
-                    ].map((text) => (
-                      <div key={text} className="flex items-start gap-2.5 text-sm text-gray-300">
-                        <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#7C4DFF]" weight="bold" />
-                        <span>{text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <button
-                      onClick={() => spotlightBeat && toggleBeat(spotlightBeat)}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold text-white transition-all hover:brightness-110"
-                      style={{ background: 'linear-gradient(90deg,#7C4DFF,#E040FB)' }}
-                    >
-                      {currentBeatId === spotlightBeat?.id && isPlaying ? <Pause className="h-4 w-4" weight="fill" /> : <Play className="h-4 w-4" weight="fill" />}
-                      {currentBeatId === spotlightBeat?.id && isPlaying ? 'Pause Preview' : 'Play Spotlight'}
-                    </button>
-                    <button
-                      onClick={() => spotlightBeat && openPurchaseModal(spotlightBeat)}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-                    >
-                      <ShoppingCart className="h-4 w-4 text-[#E040FB]" />
-                      License This Beat
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div className="max-w-2xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
+        style={{ paddingBottom: currentBeat ? '130px' : '0' }}>
 
         {/* ── PAGE HEADER ── */}
-        <div className="hidden px-4 pt-6 pb-3">
+        <div className="px-4 pt-6 pb-3">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
               <MusicNote className="w-4 h-4 text-white" weight="fill" />
@@ -564,54 +259,11 @@ export default function InstrumentalsPage() {
         {/* ══════════════════════════════════════════
             BEAT CATALOG — Airbit-style list
         ══════════════════════════════════════════ */}
-        <section className="mx-auto max-w-7xl px-4 pb-2 pt-6 sm:px-6 lg:px-8 lg:pb-6 lg:pt-10" data-reveal data-reveal-variant="rise" ref={beatListRef}>
-          <div className="grid gap-6 xl:grid-cols-[310px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)]">
-            <aside className="hidden xl:block">
-              <div className="sticky top-24 space-y-5">
-                {renderSearchInput()}
-                {renderFiltersPanel()}
-                <div className="rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(17,17,17,0.95),rgba(9,9,9,0.95))] p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#E040FB]">Store Notes</p>
-                  <div className="mt-4 space-y-3">
-                    {[
-                      'Tagged previews protect the production before purchase.',
-                      'Basic, premium, unlimited, and exclusive licensing are available.',
-                      'Use the custom beat form below if you need something fully tailored.',
-                    ].map((text) => (
-                      <div key={text} className="flex gap-2.5 text-sm text-gray-300">
-                        <SpeakerHigh className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#7C4DFF]" />
-                        <span>{text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            <div className="min-w-0 rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(18,18,18,0.96),rgba(9,9,9,0.96))] p-4 sm:p-5 lg:p-6">
-              <div className="mb-4 border-b border-white/6 pb-4 lg:mb-5 lg:flex lg:items-end lg:justify-between">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#E040FB]">Catalog</p>
-                  <h2 className="mt-2 text-2xl font-bold text-white">Browse instrumentals</h2>
-                  <p className="mt-2 text-sm text-gray-400">
-                    {beats.length} beat{beats.length !== 1 ? 's' : ''} available with a wider desktop layout and faster comparison.
-                  </p>
-                </div>
-                <div className="mt-3 hidden flex-wrap items-center gap-2 lg:flex">
-                  {[
-                    selectedGenre || 'Any genre',
-                    selectedMood || 'Any mood',
-                    filterKey ? `Key ${filterKey}` : 'Any key',
-                  ].map((pill) => (
-                    <span key={pill} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">
-                      {pill}
-                    </span>
-                  ))}
-                </div>
-              </div>
+        <div className="px-4 pb-2" data-reveal data-reveal-variant="rise" ref={beatListRef}>
+          <p className="text-xs text-gray-600 mb-4">{beats.length} beat{beats.length !== 1 ? 's' : ''} available</p>
 
           {/* Search bar */}
-          <div className="flex gap-2 mb-3 xl:hidden">
+          <div className="flex gap-2 mb-3">
             <div className="flex-1 relative">
               <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
@@ -638,7 +290,7 @@ export default function InstrumentalsPage() {
 
           {/* Filters panel */}
           {showFilters && (
-            <div className="xl:hidden bg-[#111] border border-[#222] rounded-2xl p-4 mb-4 space-y-4" data-testid="filters-panel">
+            <div className="bg-[#111] border border-[#222] rounded-2xl p-4 mb-4 space-y-4" data-testid="filters-panel">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-gray-500 mb-1 block uppercase tracking-wider">Genre</label>
@@ -701,14 +353,6 @@ export default function InstrumentalsPage() {
             </div>
           )}
 
-          <div className="hidden lg:grid grid-cols-[32px_72px_minmax(0,1fr)_110px_44px] items-center gap-4 px-4 pb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-500">
-            <span>#</span>
-            <span>Preview</span>
-            <span>Beat Details</span>
-            <span className="text-right">Lease</span>
-            <span className="text-right">More</span>
-          </div>
-
           {/* Beat list */}
           {loadingBeats ? (
             <div className="flex justify-center py-16">
@@ -723,21 +367,21 @@ export default function InstrumentalsPage() {
               <p className="text-xs text-gray-600 mt-1">Check back soon!</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[28px] border border-white/[0.06] bg-[#0d0d0d]">
+            <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
               {beats.map((beat, idx) => {
                 const isCurrent = currentBeatId === beat.id;
                 const isThisPlaying = isCurrent && isPlaying;
                 return (
                   <div
                     key={beat.id}
-                    className={`relative flex items-center gap-3 border-b border-white/[0.04] px-3 py-3 transition-all last:border-b-0 sm:gap-4 sm:px-4 lg:px-5 lg:py-4 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#151515] active:bg-[#181818]'}`}
+                    className={`relative flex items-center gap-3 px-3 py-3 transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
                     {/* Active left bar */}
                     {isCurrent && <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
 
                     {/* Row number / equalizer */}
-                    <div className="flex w-5 flex-shrink-0 items-center justify-center">
+                    <div className="w-5 flex-shrink-0 flex items-center justify-center">
                       {isThisPlaying
                         ? <div className="flex items-end justify-center gap-px h-3.5">
                             {[1,2,3].map(i => (
@@ -751,62 +395,46 @@ export default function InstrumentalsPage() {
 
                     {/* Cover art */}
                     <button onClick={() => toggleBeat(beat)}
-                      className={`group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl transition-all sm:h-14 sm:w-14 lg:h-16 lg:w-16 ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
+                      className={`relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
                       style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
                       data-testid={`play-beat-${beat.id}`}>
                       {beat.cover_url
                         ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center">
-                            <MusicNote className="h-5 w-5 text-white/20 lg:h-6 lg:w-6" weight="fill" />
+                            <MusicNote className="w-5 h-5 text-white/20" weight="fill" />
                           </div>
                       }
                       <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl ${isThisPlaying ? 'opacity-100 bg-black/55' : 'opacity-0 group-hover:opacity-100 group-active:opacity-100 bg-black/60'}`}>
                         {isThisPlaying
-                          ? <Pause className="h-4 w-4 text-white drop-shadow lg:h-5 lg:w-5" weight="fill" />
-                          : <Play className="h-4 w-4 text-white drop-shadow lg:h-5 lg:w-5" weight="fill" />
+                          ? <Pause className="w-4 h-4 text-white drop-shadow" weight="fill" />
+                          : <Play className="w-4 h-4 text-white drop-shadow" weight="fill" />
                         }
                       </div>
                     </button>
 
                     {/* Info */}
-                    <div className="min-w-0 flex-1 cursor-pointer" onClick={() => toggleBeat(beat)}>
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className={`truncate text-[13px] font-semibold leading-tight sm:text-sm lg:text-base ${isCurrent ? 'text-white' : 'text-gray-100'}`}>
-                            {beat.title}
-                          </p>
-                          <p className="mt-0.5 truncate text-[11px] text-gray-500 sm:text-xs">
-                            {beat.producer_name || 'Kalmori'}
-                          </p>
-                        </div>
-                        <div className="hidden lg:flex items-center gap-2">
-                          {beat.genre && (
-                            <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-gray-300">{beat.genre}</span>
-                          )}
-                          {beat.mood && (
-                            <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-gray-300">{beat.mood}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <span className="whitespace-nowrap rounded-md bg-white/5 px-1.5 py-0.5 text-[9px] font-medium text-gray-400 sm:px-2 sm:text-[10px]">{beat.bpm} BPM</span>
-                        <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[9px] font-medium text-gray-400 sm:px-2 sm:text-[10px]">{beat.key}</span>
-                        <span className="rounded-md bg-white/5 px-1.5 py-0.5 text-[9px] font-medium text-gray-400 sm:px-2 sm:text-[10px]">Instant license</span>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
+                      <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>
+                        {beat.title}
+                      </p>
+                      <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                        {beat.producer_name || 'Kalmori'}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <span className="text-[9px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded-md whitespace-nowrap font-medium">{beat.bpm} BPM</span>
+                        <span className="text-[9px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded-md font-medium">{beat.key}</span>
                       </div>
                     </div>
 
                     {/* Price + cart stacked */}
-                    <div className="flex flex-shrink-0 flex-col items-end gap-2 lg:min-w-[110px]">
-                      <div className="text-right">
-                        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-600">From</p>
-                        <span className="text-sm font-bold text-white lg:text-base">${beat.prices?.basic_lease || '29.99'}</span>
-                      </div>
+                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <span className="text-[11px] font-bold text-white">${beat.prices?.basic_lease || '29.99'}</span>
                       <button
                         onClick={() => openPurchaseModal(beat)}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl shadow-md transition-all active:scale-95 lg:h-10 lg:w-10"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-md"
                         style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
                         data-testid={`buy-beat-${beat.id}`}>
-                        <ShoppingCart className="h-3.5 w-3.5 text-white" />
+                        <ShoppingCart className="w-3.5 h-3.5 text-white" />
                       </button>
                     </div>
 
@@ -814,8 +442,8 @@ export default function InstrumentalsPage() {
                     <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-600 transition-all active:text-white lg:h-9 lg:w-9">
-                        <DotsThreeVertical className="h-4 w-4" weight="bold" />
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 active:text-white transition-all">
+                        <DotsThreeVertical className="w-4 h-4" weight="bold" />
                       </button>
                       {openMenuId === beat.id && (
                         <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
@@ -840,27 +468,20 @@ export default function InstrumentalsPage() {
             </div>
           )}
 
-          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-white/6 bg-[#111] p-4">
-            <SpeakerHigh className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#7C4DFF]" />
-            <div>
-              <p className="text-sm font-semibold text-white">Preview policy</p>
-              <p className="mt-1 text-xs leading-6 text-gray-500">
-                Previews play tagged samples. Full untagged files, stems, and license paperwork are delivered after checkout.
-              </p>
-            </div>
+          <div className="mt-4 p-3 bg-[#111] rounded-xl flex items-center gap-3">
+            <SpeakerHigh className="w-5 h-5 text-[#7C4DFF] flex-shrink-0" />
+            <p className="text-xs text-gray-500">Previews play tagged samples. Full untagged files delivered after purchase.</p>
           </div>
-            </div>
-          </div>
-        </section>
+        </div>
 
         {/* ── LICENSING OPTIONS ── */}
-        <div className="mx-auto mt-2 max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-reveal data-reveal-variant="flip">
+        <div className="p-6 mt-2" data-reveal data-reveal-variant="flip">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">LICENSING OPTIONS</h2>
           <p className="text-sm text-gray-400 text-center mb-6">Choose the right license for your project</p>
-          <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
+          <div className="space-y-4">
             {licenseTiers.map((tier) => (
               <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border-2 relative overflow-hidden transition-all h-full ${selectedLicense === tier.id ? 'border-opacity-100' : 'border-opacity-30'}`}
+                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border-2 relative overflow-hidden transition-all ${selectedLicense === tier.id ? 'border-opacity-100' : 'border-opacity-30'}`}
                 style={{ borderColor: tier.color }}
                 data-testid={`tier-${tier.id}`}>
                 {tier.popular && (
@@ -892,11 +513,11 @@ export default function InstrumentalsPage() {
         </div>
 
         {/* ── WHY CHOOSE US ── */}
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-reveal data-reveal-variant="zoom">
+        <div className="p-6" data-reveal data-reveal-variant="zoom">
           <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-6">WHY CHOOSE US</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4">
             {whyItems.map((item, i) => (
-              <div key={i} className="bg-[#1a1a1a] rounded-2xl p-5 text-center h-full">
+              <div key={i} className="bg-[#1a1a1a] rounded-2xl p-5 text-center">
                 <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${item.color}20`, color: item.color }}>{item.icon}</div>
                 <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
                 <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
@@ -906,12 +527,11 @@ export default function InstrumentalsPage() {
         </div>
 
         {/* ── CUSTOM BEAT REQUEST ── */}
-        <div className="mx-auto mb-8 mt-6 max-w-7xl px-4 sm:px-6 lg:px-8" data-reveal data-reveal-variant="scale">
-          <div className="rounded-3xl border border-[#333] bg-[#0a0a0a] p-6 lg:p-8" data-testid="beat-request-form">
-          <div className="text-center mb-2 lg:mb-6">
+        <div className="mx-4 mt-6 mb-8 rounded-3xl p-6 border border-[#333] bg-[#0a0a0a]" data-testid="beat-request-form" data-reveal data-reveal-variant="scale">
+          <div className="text-center mb-2">
             <h2 className="text-xl font-extrabold text-white tracking-[2px]">REQUEST A CUSTOM BEAT</h2>
           </div>
-          <p className="text-sm text-gray-400 text-center mb-6 max-w-2xl mx-auto">Fill out the form and we'll get back to you within 24-48 hours</p>
+          <p className="text-sm text-gray-400 text-center mb-6">Fill out the form and we'll get back to you within 24-48 hours</p>
 
           {submitted ? (
             <div className="text-center py-8" data-testid="request-success">
@@ -926,7 +546,7 @@ export default function InstrumentalsPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6 lg:grid lg:grid-cols-[0.95fr,1.05fr] lg:gap-8 lg:space-y-0">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <h3 className="text-base font-bold text-[#E040FB] mb-4">Your Information</h3>
                 <div className="space-y-4">
@@ -993,13 +613,12 @@ export default function InstrumentalsPage() {
                 </div>
               </div>
               <button type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] py-4 font-bold tracking-[2px] text-white transition-all hover:brightness-110 lg:col-span-2 lg:max-w-sm"
+                className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all"
                 data-testid="submit-beat-request">
                 <PaperPlaneTilt className="w-5 h-5" /> SUBMIT REQUEST
               </button>
             </form>
           )}
-        </div>
         </div>
 
         <GlobalFooter />
@@ -1026,7 +645,7 @@ export default function InstrumentalsPage() {
                 <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" style={{ left: `calc(${progressPct}% - 6px)` }} />
               </div>
 
-              <div className="mx-auto max-w-7xl px-3 py-2.5 sm:px-4 lg:px-6">
+              <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
 
                   {/* Cover art */}
