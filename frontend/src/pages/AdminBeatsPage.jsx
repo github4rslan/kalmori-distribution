@@ -5,7 +5,7 @@ import { useAuth, API } from '../App';
 import {
   MusicNote, Plus, Trash, PencilSimple, Upload, Play, Pause,
   X, Check, CurrencyDollar, User, Percent, ChartBar, ShoppingBag,
-  Waveform, ArrowClockwise, Funnel, Archive
+  Waveform, ArrowClockwise, Funnel, Archive, DotsThreeVertical
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -24,25 +24,19 @@ const selectCls = `${inputCls} cursor-pointer`;
 const StatCard = ({ label, value, icon, color, onClick, hint }) => (
   <div
     onClick={onClick}
-    className={`bg-[#111] border border-white/5 rounded-2xl p-5 transition-all duration-200 group relative overflow-hidden
-      ${onClick ? 'cursor-pointer hover:border-white/20 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]' : ''}`}
-    style={onClick ? { '--hover-color': color } : {}}
+    className={`bg-[#111] border border-white/5 rounded-2xl p-4 transition-all duration-200 group relative overflow-hidden
+      ${onClick ? 'cursor-pointer hover:border-white/20 active:scale-[0.97]' : ''}`}
   >
     {onClick && (
       <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-200 rounded-2xl"
         style={{ background: `linear-gradient(135deg, ${color}, transparent)` }} />
     )}
-    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-110"
+    <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
       style={{ backgroundColor: `${color}20`, color }}>
       {icon}
     </div>
-    <p className="text-2xl font-bold text-white font-mono">{value}</p>
-    <p className="text-xs text-white/40 mt-1 uppercase tracking-wider">{label}</p>
-    {onClick && hint && (
-      <p className="text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 font-medium" style={{ color }}>
-        {hint} →
-      </p>
-    )}
+    <p className="text-xl sm:text-2xl font-bold text-white font-mono leading-none">{value}</p>
+    <p className="text-[10px] text-white/40 mt-1.5 uppercase tracking-wider">{label}</p>
   </div>
 );
 
@@ -61,6 +55,7 @@ export default function AdminBeatsPage() {
   const [savingFee, setSavingFee] = useState(false);
   const [newFee, setNewFee] = useState(15);
   const [filterProducer, setFilterProducer] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null);
   const audioRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -71,6 +66,13 @@ export default function AdminBeatsPage() {
   useEffect(() => {
     fetchAll();
     return () => { if (audioRef.current) audioRef.current.pause(); };
+  }, []);
+
+  // close action menu on outside tap
+  useEffect(() => {
+    const close = () => setOpenMenuId(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
   }, []);
 
   const fetchAll = async () => {
@@ -95,7 +97,6 @@ export default function AdminBeatsPage() {
   const totalRevenue = sales.reduce((a, s) => a + (s.amount || 0), 0);
   const platformRevenue = sales.reduce((a, s) => a + (s.platform_fee_amount || 0), 0);
 
-  // Unique producers — fallback chain for name
   const producers = [...new Map(beats.map(b => [b.created_by, {
     id: b.created_by,
     name: b.producer_name || b.producer_email?.split('@')[0] || `Producer ${b.created_by?.slice(-4)}`,
@@ -103,9 +104,7 @@ export default function AdminBeatsPage() {
     role: b.producer_role,
   }])).values()];
 
-  const filteredBeats = filterProducer
-    ? beats.filter(b => b.created_by === filterProducer)
-    : beats;
+  const filteredBeats = filterProducer ? beats.filter(b => b.created_by === filterProducer) : beats;
 
   const resetForm = () => {
     setForm({ title: '', genre: 'Hip-Hop/Rap', bpm: 120, key: 'Cm', mood: 'Energetic', description: '',
@@ -229,7 +228,7 @@ export default function AdminBeatsPage() {
   };
 
   const tabs = [
-    { id: 'beats', label: 'All Beats', count: beats.length },
+    { id: 'beats', label: 'Beats', count: beats.length },
     { id: 'sales', label: 'Sales', count: sales.length },
     { id: 'producers', label: 'Producers', count: producers.length },
     { id: 'settings', label: 'Settings' },
@@ -238,67 +237,72 @@ export default function AdminBeatsPage() {
   return (
     <AdminLayout>
       <div className="max-w-5xl mx-auto" data-testid="admin-beats-page">
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-2xl font-bold text-white">Beat Bank Manager</h1>
-            <p className="text-sm text-white/40 mt-1">Manage all producer beats · Platform fee: {platformFee}%</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">Beat Bank</h1>
+            <p className="text-xs text-white/40 mt-0.5">Platform fee: {platformFee}%</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={fetchAll} className="p-2.5 rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all" title="Refresh">
+          <div className="flex items-center gap-2">
+            <button onClick={fetchAll}
+              className="w-9 h-9 rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
+              title="Refresh">
               <ArrowClockwise className="w-4 h-4" />
             </button>
             <button onClick={() => { resetForm(); setShowForm(true); }}
-              className="flex items-center gap-2 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all active:scale-95"
+              className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 rounded-full transition-all active:scale-95"
               style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
               data-testid="add-beat-btn">
-              <Plus className="w-4 h-4" weight="bold" /> Add Beat
+              <Plus className="w-4 h-4" weight="bold" />
+              <span>Add Beat</span>
             </button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Total Beats" value={beats.length} icon={<MusicNote className="w-5 h-5" weight="fill" />} color={PRIMARY}
-            onClick={() => setActiveTab('beats')} hint="View all beats" />
-          <StatCard label="Producers" value={producers.length} icon={<User className="w-5 h-5" weight="fill" />} color={SECONDARY}
-            onClick={() => setActiveTab('producers')} hint="View producers" />
-          <StatCard label="Total Sales" value={sales.length} icon={<ShoppingBag className="w-5 h-5" weight="fill" />} color="#FF4081"
-            onClick={() => setActiveTab('sales')} hint="View sales" />
-          <StatCard label="Platform Revenue" value={`$${platformRevenue.toFixed(2)}`} icon={<CurrencyDollar className="w-5 h-5" weight="fill" />} color={HIGHLIGHT}
-            onClick={() => setActiveTab('settings')} hint="Manage fee" />
+        {/* Stats — 2×2 on mobile, 4 cols on sm+ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+          <StatCard label="Total Beats" value={beats.length} icon={<MusicNote className="w-4 h-4" weight="fill" />} color={PRIMARY}
+            onClick={() => setActiveTab('beats')} />
+          <StatCard label="Producers" value={producers.length} icon={<User className="w-4 h-4" weight="fill" />} color={SECONDARY}
+            onClick={() => setActiveTab('producers')} />
+          <StatCard label="Total Sales" value={sales.length} icon={<ShoppingBag className="w-4 h-4" weight="fill" />} color="#FF4081"
+            onClick={() => setActiveTab('sales')} />
+          <StatCard label="Platform Rev." value={`$${platformRevenue.toFixed(2)}`} icon={<CurrencyDollar className="w-4 h-4" weight="fill" />} color={HIGHLIGHT}
+            onClick={() => setActiveTab('settings')} />
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-[#111] border border-white/5 rounded-xl p-1 w-fit">
+        {/* Tabs — scrollable row on mobile */}
+        <div className="flex gap-1 mb-5 bg-[#111] border border-white/5 rounded-xl p-1 overflow-x-auto scrollbar-none">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
                 activeTab === tab.id ? 'text-white' : 'text-white/40 hover:text-white/70'
               }`}
               style={activeTab === tab.id ? { background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` } : {}}
               data-testid={`admin-tab-${tab.id}`}>
-              {tab.label}{tab.count !== undefined && tab.count > 0 && <span className="ml-1.5 text-xs opacity-70">({tab.count})</span>}
+              {tab.label}
+              {tab.count !== undefined && tab.count > 0 &&
+                <span className="ml-1 text-[10px] opacity-70">({tab.count})</span>}
             </button>
           ))}
         </div>
 
-        {/* Beats Tab */}
+        {/* ── BEATS TAB ── */}
         {activeTab === 'beats' && (
           <div>
-            {/* Filter by producer */}
             {producers.length > 1 && (
               <div className="flex items-center gap-2 mb-4">
-                <Funnel className="w-4 h-4 text-white/40" />
+                <Funnel className="w-4 h-4 text-white/40 flex-shrink-0" />
                 <select value={filterProducer} onChange={(e) => setFilterProducer(e.target.value)}
-                  className="bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF]">
+                  className="flex-1 bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF]">
                   <option value="">All Producers</option>
                   {producers.map(p => (
                     <option key={p.id} value={p.id}>{p.name || p.email}</option>
                   ))}
                 </select>
                 {filterProducer && (
-                  <button onClick={() => setFilterProducer('')} className="text-xs text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => setFilterProducer('')} className="text-xs text-white/40 hover:text-white transition-colors flex-shrink-0">
                     Clear
                   </button>
                 )}
@@ -315,95 +319,108 @@ export default function AdminBeatsPage() {
                 <p>No beats found</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {filteredBeats.map((beat) => (
-                  <div key={beat.id} className="bg-[#111] border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all group"
+                  <div key={beat.id}
+                    className="bg-[#111] border border-white/5 rounded-2xl p-3 sm:p-4 hover:border-white/10 transition-all"
                     data-testid={`admin-beat-${beat.id}`}>
-                    <div className="flex items-center gap-4">
-                      {/* Play */}
+
+                    {/* Top row: play + info + menu */}
+                    <div className="flex items-center gap-3">
+                      {/* Cover / Play button */}
                       <button onClick={() => togglePlay(beat)}
-                        className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                          playingId === beat.id ? 'opacity-100' : beat.audio_url ? 'opacity-60 hover:opacity-100' : 'opacity-20'
-                        }`}
-                        style={{ background: playingId === beat.id ? `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` : '#333' }}
+                        className="relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden transition-all active:scale-95"
+                        style={{ background: beat.cover_url ? undefined : playingId === beat.id ? `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` : '#1a1a1a' }}
                         data-testid={`admin-play-${beat.id}`}>
-                        {playingId === beat.id ? <Pause className="w-5 h-5 text-white" weight="fill" /> : <Play className="w-5 h-5 text-white" weight="fill" />}
+                        {beat.cover_url && (
+                          <img src={beat.cover_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                        )}
+                        <div className={`absolute inset-0 flex items-center justify-center rounded-xl transition-opacity ${beat.cover_url ? 'bg-black/40' : ''}`}>
+                          {playingId === beat.id
+                            ? <Pause className="w-5 h-5 text-white" weight="fill" />
+                            : <Play className={`w-5 h-5 text-white ${!beat.audio_url ? 'opacity-30' : ''}`} weight="fill" />}
+                        </div>
                       </button>
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-white truncate">{beat.title}</h3>
-                        <p className="text-xs text-white/40">{beat.genre} · {beat.bpm} BPM · {beat.key} · {beat.mood}</p>
-                        {/* Producer badge */}
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: `${PRIMARY}30` }}>
-                            <User className="w-2.5 h-2.5" style={{ color: PRIMARY }} />
-                          </div>
-                          <span className="text-xs" style={{ color: PRIMARY }}>{beat.producer_name || beat.producer_email || 'Unknown'}</span>
-                          <span className="text-xs text-white/20">·</span>
-                          <span className="text-xs text-white/30 capitalize">{beat.producer_role}</span>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold text-white truncate">{beat.title}</h3>
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${beat.audio_url ? 'bg-green-400' : 'bg-yellow-400'}`} />
+                          {beat.has_stems && (
+                            <span className="hidden sm:inline text-[9px] px-1.5 py-0.5 rounded-full border border-[#7C4DFF]/40 text-[#7C4DFF] flex-shrink-0">STEMS</span>
+                          )}
                         </div>
+                        <p className="text-xs text-white/40 truncate">{beat.genre} · {beat.bpm} BPM · {beat.key}</p>
+                        <p className="text-xs truncate mt-0.5" style={{ color: PRIMARY }}>
+                          {beat.producer_name || beat.producer_email || 'Unknown'}
+                        </p>
                       </div>
 
-                      {/* Stats */}
-                      <div className="hidden sm:flex items-center gap-4 text-xs text-white/40">
-                        <div className="text-center">
-                          <p className="text-white font-bold text-sm">{beat.plays || 0}</p>
-                          <p>plays</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-white font-bold text-sm">{beat.sales_count || 0}</p>
-                          <p>sales</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="font-bold text-sm" style={{ color: HIGHLIGHT }}>${beat.prices?.basic_lease}</p>
-                          <p>basic</p>
-                        </div>
-                        <div className={`w-2 h-2 rounded-full ${beat.audio_url ? 'bg-green-400' : 'bg-yellow-400'}`}
-                          title={beat.audio_url ? 'Audio ready' : 'No audio'} />
-                        {beat.has_stems && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-[#7C4DFF]/40 text-[#7C4DFF]">STEMS</span>
+                      {/* Price — visible on all sizes */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold" style={{ color: HIGHLIGHT }}>${beat.prices?.basic_lease || 0}</p>
+                        <p className="text-[10px] text-white/30">basic</p>
+                      </div>
+
+                      {/* 3-dot menu — mobile */}
+                      <div className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                          onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}>
+                          <DotsThreeVertical className="w-5 h-5" weight="bold" />
+                        </button>
+                        {openMenuId === beat.id && (
+                          <div className="absolute right-0 top-9 z-30 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden w-44">
+                            <label className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white cursor-pointer transition-colors">
+                              <Upload className="w-4 h-4 flex-shrink-0" />
+                              <span>Upload Audio</span>
+                              <input type="file" accept="audio/*" className="hidden"
+                                onChange={(e) => { e.target.files[0] && handleAudioUpload(beat.id, e.target.files[0]); setOpenMenuId(null); }}
+                                data-testid={`upload-audio-${beat.id}`} />
+                            </label>
+                            <label className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white cursor-pointer transition-colors">
+                              <Archive className="w-4 h-4 flex-shrink-0" style={{ color: beat.has_stems ? PRIMARY : undefined }} />
+                              <span>{beat.has_stems ? 'Replace Stems' : 'Upload Stems'}</span>
+                              <input type="file" accept=".zip,.wav,.mp3,.flac,audio/*,application/zip" className="hidden"
+                                onChange={(e) => { e.target.files[0] && handleStemsUpload(beat.id, e.target.files[0]); setOpenMenuId(null); }}
+                                data-testid={`upload-stems-${beat.id}`} />
+                            </label>
+                            <label className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white cursor-pointer transition-colors">
+                              <Waveform className="w-4 h-4 flex-shrink-0" />
+                              <span>Upload Cover</span>
+                              <input type="file" accept="image/*" className="hidden"
+                                onChange={(e) => { e.target.files[0] && handleCoverUpload(beat.id, e.target.files[0]); setOpenMenuId(null); }} />
+                            </label>
+                            <div className="border-t border-white/5" />
+                            <button
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
+                              onClick={() => { startEdit(beat); setOpenMenuId(null); }}
+                              data-testid={`edit-beat-${beat.id}`}>
+                              <PencilSimple className="w-4 h-4 flex-shrink-0" />
+                              <span>Edit Details</span>
+                            </button>
+                            <button
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 transition-colors"
+                              onClick={() => { handleDelete(beat.id); setOpenMenuId(null); }}
+                              data-testid={`delete-beat-${beat.id}`}>
+                              <Trash className="w-4 h-4 flex-shrink-0" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
                         )}
                       </div>
+                    </div>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-1">
-                        <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors" title="Upload Audio">
-                          <input type="file" accept="audio/*" className="hidden"
-                            onChange={(e) => e.target.files[0] && handleAudioUpload(beat.id, e.target.files[0])}
-                            data-testid={`upload-audio-${beat.id}`} />
-                          {uploading[beat.id]
-                            ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${SECONDARY} transparent` }} />
-                            : <Upload className="w-4 h-4" />}
-                        </label>
-                        <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 transition-colors"
-                          style={{ color: beat.has_stems ? '#7C4DFF' : 'rgba(255,255,255,0.4)' }}
-                          title={beat.has_stems ? 'Replace Stems' : 'Upload Stems (ZIP/WAV)'}>
-                          <input type="file" accept=".zip,.wav,.mp3,.flac,audio/*,application/zip" className="hidden"
-                            onChange={(e) => e.target.files[0] && handleStemsUpload(beat.id, e.target.files[0])}
-                            data-testid={`upload-stems-${beat.id}`} />
-                          {uploading[`stems_${beat.id}`]
-                            ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${PRIMARY} transparent` }} />
-                            : <Archive className="w-4 h-4" />}
-                        </label>
-                        <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors" title="Upload Cover">
-                          <input type="file" accept="image/*" className="hidden"
-                            onChange={(e) => e.target.files[0] && handleCoverUpload(beat.id, e.target.files[0])} />
-                          {uploading[`cover_${beat.id}`]
-                            ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${SECONDARY} transparent` }} />
-                            : <Waveform className="w-4 h-4" />}
-                        </label>
-                        <button onClick={() => startEdit(beat)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors"
-                          data-testid={`edit-beat-${beat.id}`}>
-                          <PencilSimple className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(beat.id)}
-                          className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-red-400 transition-colors"
-                          data-testid={`delete-beat-${beat.id}`}>
-                          <Trash className="w-4 h-4" />
-                        </button>
-                      </div>
+                    {/* Bottom stats row — only on sm+ */}
+                    <div className="hidden sm:flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-white/40">
+                      <span>{beat.plays || 0} plays</span>
+                      <span>{beat.sales_count || 0} sales</span>
+                      <span className="capitalize">{beat.mood}</span>
+                      {beat.has_stems && <span className="text-[#7C4DFF]">Stems included</span>}
+                      {uploading[beat.id] && <span className="text-yellow-400">Uploading audio…</span>}
+                      {uploading[`stems_${beat.id}`] && <span className="text-yellow-400">Uploading stems…</span>}
+                      {uploading[`cover_${beat.id}`] && <span className="text-yellow-400">Uploading cover…</span>}
                     </div>
                   </div>
                 ))}
@@ -412,17 +429,17 @@ export default function AdminBeatsPage() {
           </div>
         )}
 
-        {/* Sales Tab */}
+        {/* ── SALES TAB ── */}
         {activeTab === 'sales' && (
           <div>
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 mb-5">
               <div className="bg-[#111] border border-white/5 rounded-2xl p-4">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Sales Revenue</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: HIGHLIGHT }}>${totalRevenue.toFixed(2)}</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Total Revenue</p>
+                <p className="text-xl font-bold font-mono" style={{ color: HIGHLIGHT }}>${totalRevenue.toFixed(2)}</p>
               </div>
               <div className="bg-[#111] border border-white/5 rounded-2xl p-4">
-                <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Platform Earnings ({platformFee}%)</p>
-                <p className="text-2xl font-bold font-mono" style={{ color: SECONDARY }}>${platformRevenue.toFixed(2)}</p>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider mb-1">Platform ({platformFee}%)</p>
+                <p className="text-xl font-bold font-mono" style={{ color: SECONDARY }}>${platformRevenue.toFixed(2)}</p>
               </div>
             </div>
             {sales.length === 0 ? (
@@ -435,20 +452,19 @@ export default function AdminBeatsPage() {
                 {sales.map((sale) => (
                   <div key={sale.id} className="bg-[#111] border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all"
                     data-testid={`sale-${sale.id}`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="text-sm font-bold text-white">{sale.beat_title}</h4>
-                        <p className="text-xs text-white/40 mt-0.5">
-                          By <span style={{ color: PRIMARY }}>{sale.producer_name}</span> · {sale.license_type?.replace(/_/g, ' ')} · {new Date(sale.created_at).toLocaleDateString()}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-white truncate">{sale.beat_title}</h4>
+                        <p className="text-xs text-white/40 mt-0.5 truncate">
+                          <span style={{ color: PRIMARY }}>{sale.producer_name}</span>
+                          {' · '}{sale.license_type?.replace(/_/g, ' ')}
                         </p>
+                        <p className="text-[11px] text-white/30 mt-0.5">{new Date(sale.created_at).toLocaleDateString()}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex-shrink-0">
                         <p className="text-sm font-bold text-white">${sale.amount?.toFixed(2)}</p>
-                        <p className="text-xs mt-0.5">
-                          <span style={{ color: SECONDARY }}>Platform: ${sale.platform_fee_amount?.toFixed(2)}</span>
-                          <span className="text-white/30"> · </span>
-                          <span className="text-green-400">Producer: ${sale.producer_amount?.toFixed(2)}</span>
-                        </p>
+                        <p className="text-[10px] mt-0.5" style={{ color: SECONDARY }}>+${sale.platform_fee_amount?.toFixed(2)}</p>
+                        <p className="text-[10px] text-green-400">${sale.producer_amount?.toFixed(2)} to producer</p>
                       </div>
                     </div>
                   </div>
@@ -458,9 +474,9 @@ export default function AdminBeatsPage() {
           </div>
         )}
 
-        {/* Producers Tab */}
+        {/* ── PRODUCERS TAB ── */}
         {activeTab === 'producers' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {producers.length === 0 ? (
               <div className="text-center py-16 text-white/30">
                 <User className="w-12 h-12 mx-auto mb-3" />
@@ -473,37 +489,27 @@ export default function AdminBeatsPage() {
               return (
                 <div key={p.id}
                   onClick={() => navigate(`/admin/users/${p.id}`)}
-                  className="bg-[#111] border border-white/5 rounded-2xl p-5 hover:border-white/20 transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden">
+                  className="bg-[#111] border border-white/5 rounded-2xl p-4 hover:border-white/20 transition-all cursor-pointer group active:scale-[0.98] relative overflow-hidden">
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-200 rounded-2xl"
                     style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }} />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-transform duration-200 group-hover:scale-110"
-                        style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }}>
-                        {(p.name || p.email || '?')[0].toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">{p.name}</p>
-                        <p className="text-xs text-white/40">{p.email || 'No email'}</p>
-                        {p.role && <span className="text-xs px-2 py-0.5 rounded-full capitalize mt-1 inline-block"
-                          style={{ backgroundColor: `${PRIMARY}20`, color: PRIMARY }}>{p.role.replace(/_/g, ' ')}</span>}
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-white text-sm"
+                      style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${SECONDARY})` }}>
+                      {(p.name || p.email || '?')[0].toUpperCase()}
                     </div>
-                    <div className="flex items-center gap-6 text-xs text-white/40">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{p.name}</p>
+                      <p className="text-xs text-white/40 truncate">{p.email || 'No email'}</p>
+                    </div>
+                    {/* Stats — stacked on mobile */}
+                    <div className="flex items-center gap-3 sm:gap-6 text-xs text-white/40 flex-shrink-0">
                       <div className="text-center">
-                        <p className="text-white font-bold text-sm">{producerBeats.length}</p>
-                        <p>beats</p>
+                        <p className="text-white font-bold text-sm leading-none">{producerBeats.length}</p>
+                        <p className="mt-0.5">beats</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-white font-bold text-sm">{producerSales.length}</p>
-                        <p>sales</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-bold text-sm" style={{ color: HIGHLIGHT }}>${producerRevenue.toFixed(2)}</p>
-                        <p>earned</p>
-                      </div>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium" style={{ color: PRIMARY }}>
-                        View profile →
+                        <p className="font-bold text-sm leading-none" style={{ color: HIGHLIGHT }}>${producerRevenue.toFixed(0)}</p>
+                        <p className="mt-0.5">earned</p>
                       </div>
                     </div>
                   </div>
@@ -513,12 +519,12 @@ export default function AdminBeatsPage() {
           </div>
         )}
 
-        {/* Settings Tab */}
+        {/* ── SETTINGS TAB ── */}
         {activeTab === 'settings' && (
           <div className="max-w-md">
-            <div className="bg-[#111] border border-white/5 rounded-2xl p-6">
+            <div className="bg-[#111] border border-white/5 rounded-2xl p-5">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${HIGHLIGHT}20`, color: HIGHLIGHT }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${HIGHLIGHT}20`, color: HIGHLIGHT }}>
                   <Percent className="w-5 h-5" weight="bold" />
                 </div>
                 <div>
@@ -538,7 +544,7 @@ export default function AdminBeatsPage() {
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-lg font-bold">%</span>
                 </div>
                 <button onClick={handleSaveFee} disabled={savingFee}
-                  className="px-5 py-3 rounded-xl text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-3 rounded-xl text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 flex-shrink-0"
                   style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
                   data-testid="save-fee-btn">
                   {savingFee ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Check className="w-4 h-4" weight="bold" />}
@@ -556,12 +562,14 @@ export default function AdminBeatsPage() {
           </div>
         )}
 
-        {/* Create/Edit Modal */}
+        {/* ── CREATE / EDIT MODAL ── */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={() => { setShowForm(false); resetForm(); }}>
-            <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+            <div className="bg-[#141414] border border-white/10 rounded-t-3xl sm:rounded-2xl p-5 w-full sm:max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl"
               onClick={(e) => e.stopPropagation()}>
+              {/* drag handle on mobile */}
+              <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-lg font-bold text-white">{editing ? 'Edit Beat' : 'New Beat'}</h2>
                 <button onClick={() => { setShowForm(false); resetForm(); }}
@@ -630,11 +638,11 @@ export default function AdminBeatsPage() {
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => { setShowForm(false); resetForm(); }}
-                    className="flex-1 border border-white/10 text-white/50 hover:text-white py-2.5 rounded-full text-sm font-medium transition-all hover:bg-white/5">
+                    className="flex-1 border border-white/10 text-white/50 hover:text-white py-3 rounded-full text-sm font-medium transition-all hover:bg-white/5">
                     Cancel
                   </button>
                   <button type="submit"
-                    className="flex-1 text-white py-2.5 rounded-full text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="flex-1 text-white py-3 rounded-full text-sm font-bold transition-all active:scale-95 flex items-center justify-center gap-2"
                     style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
                     data-testid="beat-form-submit">
                     <Check className="w-4 h-4" weight="bold" /> {editing ? 'Update' : 'Create'}
