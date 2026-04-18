@@ -152,7 +152,7 @@ export default function RequestBeatPage() {
                       { label: 'Artist/Producer Name *', key: 'artist_name', type: 'text', placeholder: 'Your artist or producer name', testid: 'req-artist-name' },
                       { label: 'Email Address *', key: 'email', type: 'email', placeholder: 'you@example.com', testid: 'req-email' },
                       { label: 'Phone Number (Optional)', key: 'phone', type: 'tel', placeholder: '+1 234 567 890', className: 'md:col-span-2' },
-                    ].map(({ label, key, type, testid, className = '' }) => (
+                    ].map(({ label, key, type, placeholder, testid, className = '' }) => (
                       <div key={key} className={className}>
                         <label className="block text-sm font-semibold text-gray-300 mb-2">{label}</label>
                         <input
