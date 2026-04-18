@@ -142,6 +142,8 @@ async def list_beats(
         sort_field = "bpm"; sort_dir = 1
     elif sort_by == "bpm_high":
         sort_field = "bpm"; sort_dir = -1
+    elif sort_by == "plays":
+        sort_field = "plays"; sort_dir = -1
 
     beats = await db.beats.find(query, {"_id": 0}).sort(sort_field, sort_dir).limit(limit).to_list(limit)
     total = await db.beats.count_documents(query)

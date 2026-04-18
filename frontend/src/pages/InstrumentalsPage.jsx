@@ -54,7 +54,7 @@ const BeatMenu = ({ isFav, onFav, onShare, onDownload, onReport }) => (
 );
 
 // Waveform visualizer — bars colored progressively based on playhead
-const Waveform = ({ seed, progressPct, isPlaying, onSeek, bars = 48, barColor = '#7C4DFF', dimColor = '#3a2a5c' }) => {
+const Waveform = ({ seed, progressPct, isPlaying, onSeek, bars = 48, barColor = '#7C4DFF', dimColor = '#3a2a5c', heightClass = 'h-10' }) => {
   const heights = React.useMemo(() => {
     const rand = seededRandom(seed || 'beat');
     return Array.from({ length: bars }, (_, i) => {
@@ -67,7 +67,7 @@ const Waveform = ({ seed, progressPct, isPlaying, onSeek, bars = 48, barColor = 
 
   return (
     <div
-      className="relative w-full h-10 flex items-center gap-[2px] cursor-pointer select-none"
+      className={`relative w-full ${heightClass} flex items-center gap-[2px] cursor-pointer select-none`}
       onClick={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         onSeek?.((e.clientX - rect.left) / rect.width);
@@ -408,22 +408,39 @@ export default function InstrumentalsPage() {
         <div className="px-4 pb-2" data-reveal data-reveal-variant="rise" ref={beatListRef}>
           <p className="text-xs text-gray-600 mb-4">{visibleBeats.length} beat{visibleBeats.length !== 1 ? 's' : ''} available</p>
 
-          {/* Quick filter pills — horizontal scroll on mobile, inline on desktop */}
-          <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar -mx-4 px-4 pr-8 md:mx-0 md:px-0 md:pr-0 md:flex-wrap">
-            {quickFilterPills.map(p => {
-              const active = quickFilter === p.id;
-              const Icon = p.icon;
-              return (
-                <button key={p.id}
-                  onClick={() => setQuickFilter(p.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-[12px] font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95 ${active ? 'text-white shadow-lg' : 'text-gray-400 bg-[#111] border border-[#222] hover:text-white hover:border-white/20'}`}
-                  style={active ? { background: `linear-gradient(135deg, ${p.color}, #E040FB)`, boxShadow: `0 4px 16px ${p.color}40` } : undefined}
-                  data-testid={`quick-filter-${p.id}`}>
-                  <Icon className="w-3.5 h-3.5" weight={active ? 'fill' : 'regular'} />
-                  {p.label}
-                </button>
-              );
-            })}
+          {/* Quick filter pills + inline sort */}
+          <div className="flex items-center gap-3 mb-3 md:justify-between">
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 pr-8 md:mx-0 md:px-0 md:pr-0 md:flex-wrap flex-1 md:flex-initial">
+              {quickFilterPills.map(p => {
+                const active = quickFilter === p.id;
+                const Icon = p.icon;
+                return (
+                  <button key={p.id}
+                    onClick={() => setQuickFilter(p.id)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-[12px] font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95 ${active ? 'text-white shadow-lg' : 'text-gray-400 bg-[#111] border border-[#222] hover:text-white hover:border-white/20'}`}
+                    style={active ? { background: `linear-gradient(135deg, ${p.color}, #E040FB)`, boxShadow: `0 4px 16px ${p.color}40` } : undefined}
+                    data-testid={`quick-filter-${p.id}`}>
+                    <Icon className="w-3.5 h-3.5" weight={active ? 'fill' : 'regular'} />
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="relative flex-shrink-0">
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                className="appearance-none bg-[#111] border border-[#222] hover:border-white/20 rounded-full pl-4 pr-9 py-2.5 text-[12px] font-semibold text-gray-300 cursor-pointer focus:outline-none focus:border-[#7C4DFF]/60 transition-colors"
+                data-testid="inline-sort">
+                <option value="newest">Newest</option>
+                <option value="plays">Most Played</option>
+                <option value="price_low">Price ↑</option>
+                <option value="price_high">Price ↓</option>
+                <option value="bpm_low">BPM ↑</option>
+                <option value="bpm_high">BPM ↓</option>
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" viewBox="0 0 12 12" fill="none">
+                <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
           </div>
 
           {/* Search bar */}
@@ -532,12 +549,13 @@ export default function InstrumentalsPage() {
                     <div className="w-20 h-9 rounded-xl bg-white/[0.06] animate-pulse" />
                   </div>
                   {/* Desktop skeleton */}
-                  <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3.5">
+                  <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3.5">
                     <div className="w-14 h-14 rounded-xl bg-white/[0.06] animate-pulse" />
                     <div className="space-y-2">
                       <div className="h-3 w-1/2 rounded bg-white/[0.06] animate-pulse" />
                       <div className="h-2.5 w-1/3 rounded bg-white/[0.04] animate-pulse" />
                     </div>
+                    <div className="h-6 w-full rounded bg-white/[0.04] animate-pulse" />
                     <div className="h-3 w-10 mx-auto rounded bg-white/[0.06] animate-pulse" />
                     <div className="h-3 w-8 mx-auto rounded bg-white/[0.06] animate-pulse" />
                     <div className="h-5 w-20 mx-auto rounded-full bg-white/[0.06] animate-pulse" />
@@ -558,9 +576,10 @@ export default function InstrumentalsPage() {
           ) : (
             <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
               {/* Desktop column header */}
-              <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
+              <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
                 <span />
                 <span>Track</span>
+                <span className="text-center">Preview</span>
                 <span className="text-center">BPM</span>
                 <span className="text-center">Key</span>
                 <span className="text-center">Tags</span>
@@ -623,7 +642,12 @@ export default function InstrumentalsPage() {
                               style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
                           )}
                         </div>
-                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}</p>
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                          {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
+                          {typeof beat.plays === 'number' && beat.plays > 0 && (
+                            <span className="ml-1 text-gray-600">· {beat.plays >= 1000 ? `${(beat.plays / 1000).toFixed(1)}k` : beat.plays} plays</span>
+                          )}
+                        </p>
                         {beatTags(beat).length > 0 && (
                           <div className="flex items-center gap-1 mt-1 overflow-hidden">
                             {beatTags(beat).slice(0, 2).map((t, i) => (
@@ -656,7 +680,7 @@ export default function InstrumentalsPage() {
                     </div>
 
                     {/* Desktop layout (grid columns) */}
-                    <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3.5 group">
+                    <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3.5 group">
                       {/* Cover */}
                       <button onClick={() => toggleBeat(beat)}
                         className={`relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_16px_rgba(124,77,255,0.4)]' : ''}`}
@@ -698,7 +722,23 @@ export default function InstrumentalsPage() {
                               style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
                           )}
                         </div>
-                        <p className="text-[12px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'}</p>
+                        <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                          {beat.producer_name || 'Kalmori'}
+                          {typeof beat.plays === 'number' && beat.plays > 0 && (
+                            <span className="ml-1.5 text-gray-600">· {beat.plays >= 1000 ? `${(beat.plays / 1000).toFixed(1)}k` : beat.plays} plays</span>
+                          )}
+                        </p>
+                      </div>
+                      {/* Waveform preview */}
+                      <div className="px-1">
+                        <Waveform
+                          seed={beat.id || beat.title || 'beat'}
+                          progressPct={isCurrent ? progressPct : 0}
+                          isPlaying={isThisPlaying}
+                          bars={36}
+                          heightClass="h-7"
+                          onSeek={(pct) => { if (isCurrent) seekTo(pct); else toggleBeat(beat); }}
+                        />
                       </div>
                       {/* BPM */}
                       <span className="text-center text-[13px] text-gray-300 font-mono tabular-nums">{beat.bpm}</span>
