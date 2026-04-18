@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
-import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy } from '@phosphor-icons/react';
+import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord } from '@phosphor-icons/react';
 import axios from 'axios';
-import { API } from '../App';
+import { API, useAuth } from '../App';
 
 // Hero images
 const heroSlideImages = [
@@ -132,6 +132,19 @@ const promoChannels = [
 // Platform data
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const role = user?.user_role || user?.role;
+  const isProducer = ['producer', 'label', 'label_producer'].includes(role);
+  const isAdmin = role === 'admin';
+
+  const handleSellBeats = () => {
+    if (!user) return navigate('/register?role=producer');
+    if (isAdmin) return navigate('/admin/beats');
+    if (isProducer) return navigate('/producer-beat-bank');
+    // Artists → role selection lets them add producer capability
+    return navigate('/select-role');
+  };
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [zoomScale, setZoomScale] = useState(1);
   const [featuredBeats, setFeaturedBeats] = useState([]);
@@ -241,6 +254,79 @@ const LandingPage = () => {
                   className={`h-1 rounded-full transition-all ${currentSlide === i ? 'bg-[#E53935] w-12' : 'bg-white/30 w-6'}`} />
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== DUAL CTA — Explore Beats / Sell Your Beats ===== */}
+      <section className="relative py-16 sm:py-20 px-4 sm:px-6 bg-black overflow-hidden" data-testid="dual-cta-section" data-reveal data-reveal-variant="rise">
+        {/* Ambient glow */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-20 blur-[120px]" style={{ background: '#7C4DFF' }} />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[400px] h-[400px] rounded-full opacity-20 blur-[120px]" style={{ background: '#E040FB' }} />
+
+        <div className="relative max-w-5xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <p className="text-[10px] sm:text-xs font-bold text-[#E040FB] tracking-[4px] mb-3">BEAT MARKETPLACE</p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+              Find Your Sound. <span className="bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] bg-clip-text text-transparent">Sell Your Beats.</span>
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-gray-400 max-w-xl mx-auto">
+              Whether you're searching for the perfect instrumental or looking to monetize your production skills — Kalmori has you covered.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            {/* Explore Beats */}
+            <button
+              onClick={() => navigate('/instrumentals')}
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              style={{ background: 'linear-gradient(135deg, #7C4DFF 0%, #5E35B1 100%)', boxShadow: '0 12px 40px rgba(124,77,255,0.35)' }}
+              data-testid="landing-explore-beats-btn">
+              {/* Decorative icon background */}
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <div className="absolute -right-2 -top-2 w-24 h-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
+
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Headphones className="w-7 h-7 sm:w-8 sm:h-8 text-white" weight="fill" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">For Artists</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Explore Beats</h3>
+                  <p className="text-xs sm:text-sm text-white/80 leading-snug">Browse thousands of high-quality instrumentals</p>
+                </div>
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
+              </div>
+            </button>
+
+            {/* Sell Your Beats */}
+            <button
+              onClick={handleSellBeats}
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              style={{ background: 'linear-gradient(135deg, #E040FB 0%, #C2185B 100%)', boxShadow: '0 12px 40px rgba(224,64,251,0.35)' }}
+              data-testid="landing-sell-beats-btn">
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <div className="absolute -right-2 -top-2 w-24 h-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
+
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Sliders className="w-7 h-7 sm:w-8 sm:h-8 text-white" weight="fill" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">For Producers</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Sell Your Beats</h3>
+                  <p className="text-xs sm:text-sm text-white/80 leading-snug">Upload, license & earn from every sale</p>
+                </div>
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
+              </div>
+            </button>
+          </div>
+
+          {/* Secondary trust line */}
+          <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] sm:text-xs text-gray-500">
+            <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#7C4DFF]" weight="bold" /> Secure licensing</span>
+            <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#E040FB]" weight="bold" /> Instant delivery</span>
+            <span className="inline-flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-[#FFD700]" weight="bold" /> Keep your rights</span>
           </div>
         </div>
       </section>

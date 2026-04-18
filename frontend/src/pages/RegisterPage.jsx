@@ -34,6 +34,10 @@ const RegisterPage = () => {
   const [step, setStep] = useState(1);
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get('ref') || '';
+  const preselectedRole = (() => {
+    const r = searchParams.get('role');
+    return ['artist', 'producer', 'label'].includes(r) ? r : 'artist';
+  })();
 
   // Step 1 fields
   const [email, setEmail] = useState('');
@@ -98,7 +102,7 @@ const RegisterPage = () => {
         artist_name: `${firstName} ${lastName}`,
         email,
         password,
-        user_role: 'artist',
+        user_role: preselectedRole,
         legal_name: `${firstName} ${lastName}`,
         company_name: companyName,
         country,
@@ -122,7 +126,12 @@ const RegisterPage = () => {
         } catch (e) { /* Referral completion is best-effort */ }
       }
       toast.success('Account created!');
-      navigate('/select-role');
+      // If role was preselected via ?role= param, skip role selection
+      if (searchParams.get('role') && ['artist', 'producer', 'label'].includes(searchParams.get('role'))) {
+        navigate('/dashboard');
+      } else {
+        navigate('/select-role');
+      }
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Registration failed';
       const errorMsg = typeof msg === 'string' ? msg : 'Registration failed';
