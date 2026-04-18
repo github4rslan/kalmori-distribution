@@ -7,9 +7,13 @@
 # Emergent AI (old system, not needed)
 .emergent/
 
-# AI agent docs (local only)
+# AI agent docs (local only — not visible in public repo)
 .ai/
+.claude/
 CLAUDE.md
+AGENTS.md
+KALMORI_INVARIANTS.md
+BUG_HUNTER_PROMPT.md
 
 # Dependencies
 node_modules/
