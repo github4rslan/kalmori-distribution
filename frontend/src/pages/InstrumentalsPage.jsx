@@ -420,21 +420,21 @@ export default function InstrumentalsPage() {
                   style={{ background: 'radial-gradient(circle,#7C4DFF,transparent 70%)' }} />
                 <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-25 blur-3xl pointer-events-none"
                   style={{ background: 'radial-gradient(circle,#E040FB,transparent 70%)' }} />
-                <div className="relative flex flex-row sm:flex-row items-stretch gap-3 sm:gap-6 p-3 sm:p-6">
-                  {/* Cover — compact on mobile, square on desktop */}
+                <div className="relative flex flex-col sm:flex-row items-stretch gap-4 sm:gap-6 p-4 sm:p-6">
+                  {/* Cover */}
                   <button onClick={() => toggleBeat(featured)}
-                    className="relative w-24 h-24 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-2xl overflow-hidden flex-shrink-0 group"
+                    className="relative w-full sm:w-48 md:w-56 aspect-square rounded-2xl overflow-hidden flex-shrink-0 group"
                     style={{ background: featured.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
                     aria-label={isFeaturedPlaying ? 'Pause' : 'Play'}>
                     {featured.cover_url
                       ? <img src={featured.cover_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       : <div className="w-full h-full flex items-center justify-center"><MusicNote className="w-14 h-14 text-white/20" weight="fill" /></div>
                     }
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${isFeaturedPlaying ? 'bg-black/40 opacity-100' : 'bg-black/50 opacity-0 group-hover:opacity-100 sm:opacity-0'}`}>
-                      <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${isFeaturedPlaying ? 'bg-black/40 opacity-100' : 'bg-black/50 opacity-0 group-hover:opacity-100'}`}>
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
                         {isFeaturedPlaying
-                          ? <Pause className="w-4 h-4 sm:w-7 sm:h-7 text-white" weight="fill" />
-                          : <Play className="w-4 h-4 sm:w-7 sm:h-7 text-white ml-0.5" weight="fill" />
+                          ? <Pause className="w-7 h-7 text-white" weight="fill" />
+                          : <Play className="w-7 h-7 text-white ml-0.5" weight="fill" />
                         }
                       </div>
                     </div>
@@ -442,42 +442,40 @@ export default function InstrumentalsPage() {
                   {/* Info */}
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                        <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black tracking-[1.5px] sm:tracking-[2px] text-white"
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2.5 py-1 rounded-full text-[9px] font-black tracking-[2px] text-white"
                           style={{ background: 'linear-gradient(135deg,#FFD700,#E040FB)' }}>★ FEATURED</span>
                         {isNewBeat(featured) && (
-                          <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[9px] font-black tracking-wider text-white"
+                          <span className="px-2 py-1 rounded-full text-[9px] font-black tracking-wider text-white"
                             style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
                         )}
                       </div>
-                      <h3 className="text-lg sm:text-3xl font-extrabold text-white truncate leading-tight">{featured.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1 truncate">
+                      <h3 className="text-2xl sm:text-3xl font-extrabold text-white truncate">{featured.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1 truncate">
                         by {featured.producer_name || 'Kalmori'}
                         {typeof featured.plays === 'number' && featured.plays > 0 && (
-                          <span className="ml-1.5 sm:ml-2 text-gray-500">· {featured.plays >= 1000 ? `${(featured.plays / 1000).toFixed(1)}k` : featured.plays} plays</span>
+                          <span className="ml-2 text-gray-500">· {featured.plays >= 1000 ? `${(featured.plays / 1000).toFixed(1)}k` : featured.plays} plays</span>
                         )}
                       </p>
-                      <div className="flex items-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 flex-wrap">
-                        <span className="text-[10px] sm:text-[11px] font-mono text-gray-300 bg-white/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">{featured.bpm} BPM</span>
-                        <span className="text-[10px] sm:text-[11px] text-gray-300 bg-white/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">{featured.key}</span>
-                        {beatTags(featured).slice(0, 2).map((t, i) => (
-                          <span key={i} className="hidden sm:inline px-2 py-1 rounded text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20">{t}</span>
+                      <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        <span className="text-[11px] font-mono text-gray-300 bg-white/5 px-2 py-1 rounded">{featured.bpm} BPM</span>
+                        <span className="text-[11px] text-gray-300 bg-white/5 px-2 py-1 rounded">{featured.key}</span>
+                        {beatTags(featured).slice(0, 3).map((t, i) => (
+                          <span key={i} className="px-2 py-1 rounded text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20">{t}</span>
                         ))}
                       </div>
                     </div>
-                    <div className="mt-3 sm:mt-4 flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <div className="mt-4 flex items-center gap-3 flex-wrap">
                       <button onClick={() => openPurchaseModal(featured)}
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-white text-xs sm:text-sm font-bold transition-all active:scale-95 shadow-lg hover:brightness-110"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-bold transition-all active:scale-95 shadow-lg hover:brightness-110"
                         style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
-                        <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" weight="fill" />
-                        <span className="sm:hidden">${Number(featured.prices?.basic_lease || 29.99) % 1 === 0 ? Number(featured.prices?.basic_lease || 29.99).toFixed(0) : Number(featured.prices?.basic_lease || 29.99).toFixed(2)}</span>
-                        <span className="hidden sm:inline">Buy from ${Number(featured.prices?.basic_lease || 29.99) % 1 === 0 ? Number(featured.prices?.basic_lease || 29.99).toFixed(0) : Number(featured.prices?.basic_lease || 29.99).toFixed(2)}</span>
+                        <ShoppingCart className="w-4 h-4" weight="fill" />
+                        Buy from ${Number(featured.prices?.basic_lease || 29.99) % 1 === 0 ? Number(featured.prices?.basic_lease || 29.99).toFixed(0) : Number(featured.prices?.basic_lease || 29.99).toFixed(2)}
                       </button>
                       <button onClick={() => toggleBeat(featured)}
-                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-white text-xs sm:text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
-                        {isFeaturedPlaying ? <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" weight="fill" /> : <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" weight="fill" />}
-                        <span className="sm:hidden">{isFeaturedPlaying ? 'Pause' : 'Play'}</span>
-                        <span className="hidden sm:inline">{isFeaturedPlaying ? 'Pause preview' : 'Play preview'}</span>
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                        {isFeaturedPlaying ? <Pause className="w-4 h-4" weight="fill" /> : <Play className="w-4 h-4" weight="fill" />}
+                        {isFeaturedPlaying ? 'Pause preview' : 'Play preview'}
                       </button>
                     </div>
                   </div>
