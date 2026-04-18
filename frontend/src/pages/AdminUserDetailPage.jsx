@@ -91,6 +91,10 @@ const AdminUserDetailPage = () => {
   const statusColor = (s) => s === 'distributed' ? 'text-[#22C55E]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#EF4444]' : s === 'processing' ? 'text-[#7C4DFF]' : 'text-gray-400';
   const planColors = { pro: '#E040FB', rise: '#FFD700', free: '#666', single: '#7C4DFF', album: '#FF6B6B' };
 
+  const avatarSrc = user.avatar_url
+    ? (user.avatar_url.startsWith('https://') ? user.avatar_url : `${BACKEND_URL}/api/files/${user.avatar_url}`)
+    : null;
+
   return (
     <AdminLayout>
       <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6" data-testid="admin-user-detail">
@@ -100,8 +104,8 @@ const AdminUserDetailPage = () => {
             <ArrowLeft className="w-5 h-5 text-gray-400" />
           </button>
           <div className="flex min-w-0 flex-1 items-center gap-4">
-            {user.avatar_url ? (
-              <img src={`${BACKEND_URL}/api/files/${user.avatar_url}`} alt="" className="w-14 h-14 rounded-full border-2 border-white/10 object-cover" />
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="" className="w-14 h-14 rounded-full border-2 border-white/10 object-cover" />
             ) : (
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center text-xl font-bold text-white">
                 {user.artist_name?.charAt(0).toUpperCase() || 'A'}

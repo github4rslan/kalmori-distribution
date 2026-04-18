@@ -373,7 +373,9 @@ const ArtistProfilePage = () => {
   }
 
   const tc = artist.theme_color || '#7C4DFF';
-  const avatarUrl = artist.avatar_url ? `${BACKEND_URL}/api/files/${artist.avatar_url}` : null;
+  const avatarUrl = artist.avatar_url
+    ? (artist.avatar_url.startsWith('https://') ? artist.avatar_url : `${BACKEND_URL}/api/files/${artist.avatar_url}`)
+    : null;
   const hasSocials = artist.website || artist.spotify_url || artist.apple_music_url || artist.instagram || artist.twitter;
   const distributedReleases = artist.releases?.filter(r => r.status === 'distributed') || [];
   const pendingReleases = artist.releases?.filter(r => r.status === 'pending_review') || [];

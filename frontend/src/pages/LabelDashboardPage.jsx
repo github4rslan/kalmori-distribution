@@ -22,6 +22,11 @@ const StatCard = ({ label, value, icon, color, testId }) => (
   </div>
 );
 
+const resolveAvatarUrl = (avatarUrl) => {
+  if (!avatarUrl) return null;
+  return avatarUrl.startsWith('https://') ? avatarUrl : `${BACKEND_URL}/api/files/${avatarUrl}`;
+};
+
 const LabelDashboardPage = () => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
@@ -287,8 +292,8 @@ const LabelDashboardPage = () => {
                     <tr key={a.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`roster-artist-${a.id}`}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          {a.avatar_url ? (
-                            <img src={`${BACKEND_URL}/api/files/${a.avatar_url}`} alt="" className="w-8 h-8 rounded-full object-cover" />
+                          {resolveAvatarUrl(a.avatar_url) ? (
+                            <img src={resolveAvatarUrl(a.avatar_url)} alt="" className="w-8 h-8 rounded-full object-cover" />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                               {a.artist_name?.charAt(0).toUpperCase() || 'A'}

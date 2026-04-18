@@ -275,6 +275,10 @@ const SettingsPage = () => {
     );
   }
 
+  const avatarSrc = user?.avatar_url
+    ? (user.avatar_url.startsWith('https://') ? user.avatar_url : `${API.replace('/api', '')}/api/files/${user.avatar_url}`)
+    : null;
+
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6" data-testid="settings-page">
@@ -313,9 +317,9 @@ const SettingsPage = () => {
               <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-6">
                 <label className="relative w-24 h-24 cursor-pointer group">
                   <div className="w-full h-full rounded-full bg-[#1E1E1E] overflow-hidden">
-                    {user?.avatar_url ? (
+                    {avatarSrc ? (
                       <img 
-                        src={`${API.replace('/api', '')}/api/files/${user.avatar_url}`}
+                        src={avatarSrc}
                         alt="Avatar"
                         className="w-full h-full object-cover"
                       />
