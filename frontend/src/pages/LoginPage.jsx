@@ -24,7 +24,6 @@ const LoginPage = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.detail || err.message || 'Login failed';
       setError(typeof errorMsg === 'string' ? errorMsg : 'Login failed');
-      toast.error(typeof errorMsg === 'string' ? errorMsg : 'Login failed');
     } finally {
       setLoading(false);
     }

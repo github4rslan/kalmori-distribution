@@ -136,7 +136,6 @@ const RegisterPage = () => {
       const msg = err.response?.data?.detail || err.message || 'Registration failed';
       const errorMsg = typeof msg === 'string' ? msg : 'Registration failed';
       setError(errorMsg);
-      toast.error(errorMsg);
     } finally { setLoading(false); }
   };
 
