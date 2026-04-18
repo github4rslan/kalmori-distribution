@@ -7,7 +7,7 @@ import {
   MusicNote, Lightning, ShieldCheck, Headset, Check, Star,
   PaperPlaneTilt, Play, Pause, SpeakerHigh, ShoppingCart,
   MagnifyingGlass, Sliders, X, ShareNetwork, SkipBack, SkipForward,
-  DotsThreeVertical, Copy, Heart, DownloadSimple, Flag
+  DotsThreeVertical, Copy, Heart, DownloadSimple, Flag, Sparkle, Gift, Crown
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -137,6 +137,7 @@ export default function InstrumentalsPage() {
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickFilter, setQuickFilter] = useState('all'); // all | new | free | exclusive
 
   // Custom beat request
   const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
@@ -354,6 +355,25 @@ export default function InstrumentalsPage() {
   const currentBeat = beats.find(b => b.id === currentBeatId) || null;
   const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
 
+  // Quick-filter derived list
+  const visibleBeats = beats.filter(b => {
+    if (quickFilter === 'free') return Number(b.prices?.basic_lease || 0) === 0;
+    if (quickFilter === 'exclusive') return !b.exclusive_sold && (b.prices?.exclusive != null);
+    if (quickFilter === 'new') {
+      if (!b.created_at) return true;
+      const age = Date.now() - new Date(b.created_at).getTime();
+      return age < 1000 * 60 * 60 * 24 * 30; // last 30 days
+    }
+    return true;
+  });
+
+  const quickFilterPills = [
+    { id: 'all', label: 'All Beats', icon: MusicNote, color: '#7C4DFF' },
+    { id: 'new', label: 'New', icon: Sparkle, color: '#7C4DFF' },
+    { id: 'free', label: 'Free', icon: Gift, color: '#E040FB' },
+    { id: 'exclusive', label: 'Exclusive', icon: Crown, color: '#FFD700' },
+  ];
+
   return (
     <PublicLayout>
       <div className="max-w-6xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
@@ -374,7 +394,25 @@ export default function InstrumentalsPage() {
             BEAT CATALOG — Airbit-style list
         ══════════════════════════════════════════ */}
         <div className="px-4 pb-2" data-reveal data-reveal-variant="rise" ref={beatListRef}>
-          <p className="text-xs text-gray-600 mb-4">{beats.length} beat{beats.length !== 1 ? 's' : ''} available</p>
+          <p className="text-xs text-gray-600 mb-4">{visibleBeats.length} beat{visibleBeats.length !== 1 ? 's' : ''} available</p>
+
+          {/* Quick filter pills — horizontal scroll on mobile, inline on desktop */}
+          <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
+            {quickFilterPills.map(p => {
+              const active = quickFilter === p.id;
+              const Icon = p.icon;
+              return (
+                <button key={p.id}
+                  onClick={() => setQuickFilter(p.id)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-[12px] font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95 ${active ? 'text-white shadow-lg' : 'text-gray-400 bg-[#111] border border-[#222] hover:text-white hover:border-white/20'}`}
+                  style={active ? { background: `linear-gradient(135deg, ${p.color}, #E040FB)`, boxShadow: `0 4px 16px ${p.color}40` } : undefined}
+                  data-testid={`quick-filter-${p.id}`}>
+                  <Icon className="w-3.5 h-3.5" weight={active ? 'fill' : 'regular'} />
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
 
           {/* Search bar */}
           <div className="flex gap-2 mb-3">
@@ -472,7 +510,7 @@ export default function InstrumentalsPage() {
             <div className="flex justify-center py-16">
               <div className="w-10 h-10 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : beats.length === 0 ? (
+          ) : visibleBeats.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
               <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#7C4DFF20,#E040FB20)' }}>
                 <MusicNote className="w-8 h-8 opacity-40" weight="fill" />
@@ -483,7 +521,7 @@ export default function InstrumentalsPage() {
           ) : (
             <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
               {/* Desktop column header */}
-              <div className="hidden md:grid grid-cols-[56px_1fr_80px_70px_100px_90px_40px] items-center gap-4 px-4 py-2.5 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
+              <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
                 <span />
                 <span>Track</span>
                 <span className="text-center">BPM</span>
@@ -493,7 +531,7 @@ export default function InstrumentalsPage() {
                 <span />
               </div>
 
-              {beats.map((beat, idx) => {
+              {visibleBeats.map((beat, idx) => {
                 const isCurrent = currentBeatId === beat.id;
                 const isThisPlaying = isCurrent && isPlaying;
                 const isFav = favorites.has(beat.id);
@@ -560,7 +598,7 @@ export default function InstrumentalsPage() {
                     </div>
 
                     {/* Desktop layout (grid columns) */}
-                    <div className="hidden md:grid grid-cols-[56px_1fr_80px_70px_100px_90px_40px] items-center gap-4 px-4 py-3 group">
+                    <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3.5 group">
                       {/* Cover */}
                       <button onClick={() => toggleBeat(beat)}
                         className={`relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_16px_rgba(124,77,255,0.4)]' : ''}`}
