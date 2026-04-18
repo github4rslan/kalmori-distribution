@@ -430,57 +430,58 @@ html, body { overflow-x: hidden; max-width: 100%; }
   }
 }
 
-/* Scroll Reveal — matches Ditto Music's Webflow IX2 feel
-   (25px translate-Y + opacity, ~0.8s ease-out, no blur/scale) */
+/* Scroll Reveal — noticeable arrival: translate-Y + scale + blur fade */
 .reveal {
   opacity: 0;
-  transform: translate3d(0, 25px, 0);
-  transition: opacity 0.8s ease-out,
-              transform 0.8s ease-out;
-  will-change: opacity, transform;
+  transform: translate3d(0, 56px, 0) scale(0.96);
+  filter: blur(4px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
 }
 .reveal.is-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
 }
 
-/* Variant classes collapsed to the same fade-up so any legacy data-reveal-variant
-   attributes on pages still animate identically (no surprise behavior) */
-.reveal-left,
-.reveal-right,
+/* Variants — same scale+blur lift, different travel axis */
+.reveal-left  { transform: translate3d(-64px, 0, 0) scale(0.96); }
+.reveal-right { transform: translate3d(64px, 0, 0) scale(0.96); }
 .reveal-scale,
-.reveal-zoom,
+.reveal-zoom  { transform: scale(0.9); }
 .reveal-flip,
 .reveal-tilt,
 .reveal-rise,
-.reveal-fade { transform: translate3d(0, 25px, 0); }
+.reveal-fade  { transform: translate3d(0, 56px, 0) scale(0.96); }
 .reveal-left.is-visible,
 .reveal-right.is-visible,
-.reveal-scale.is-visible,
-.reveal-zoom.is-visible,
 .reveal-flip.is-visible,
 .reveal-tilt.is-visible,
 .reveal-rise.is-visible,
-.reveal-fade.is-visible { transform: translate3d(0, 0, 0); }
+.reveal-fade.is-visible { transform: translate3d(0, 0, 0) scale(1); }
+.reveal-scale.is-visible,
+.reveal-zoom.is-visible { transform: scale(1); }
 
-.reveal.delay-1 { transition-delay: 0.08s; }
-.reveal.delay-2 { transition-delay: 0.16s; }
-.reveal.delay-3 { transition-delay: 0.24s; }
-.reveal.delay-4 { transition-delay: 0.32s; }
-.reveal.delay-5 { transition-delay: 0.40s; }
+.reveal.delay-1 { transition-delay: 0.10s; }
+.reveal.delay-2 { transition-delay: 0.20s; }
+.reveal.delay-3 { transition-delay: 0.30s; }
+.reveal.delay-4 { transition-delay: 0.40s; }
+.reveal.delay-5 { transition-delay: 0.50s; }
 
 @media (max-width: 640px) {
   .reveal,
-  .reveal-left,
-  .reveal-right,
-  .reveal-scale,
-  .reveal-zoom,
   .reveal-flip,
   .reveal-tilt,
   .reveal-rise,
   .reveal-fade {
-    transform: translate3d(0, 20px, 0);
+    transform: translate3d(0, 36px, 0) scale(0.97);
+    filter: blur(3px);
+    transition-duration: 0.75s;
   }
+  .reveal-left  { transform: translate3d(-40px, 0, 0) scale(0.97); }
+  .reveal-right { transform: translate3d(40px, 0, 0) scale(0.97); }
 }
 
 @media (prefers-reduced-motion: reduce) {

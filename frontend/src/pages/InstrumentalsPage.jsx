@@ -374,9 +374,21 @@ export default function InstrumentalsPage() {
     { id: 'exclusive', label: 'Exclusive', icon: Crown, color: '#FFD700' },
   ];
 
+  const isFreeBeat = (b) => Number(b?.prices?.basic_lease || 0) === 0;
+  const isExclusiveAvailable = (b) => !b?.exclusive_sold && b?.prices?.exclusive != null;
+  const isNewBeat = (b) => {
+    if (!b?.created_at) return false;
+    return (Date.now() - new Date(b.created_at).getTime()) < 1000 * 60 * 60 * 24 * 14; // 14 days for badge
+  };
+  const beatTags = (b) => {
+    const raw = [b?.genre, b?.mood, ...(Array.isArray(b?.tags) ? b.tags : [])]
+      .filter(Boolean).map(s => String(s).trim()).filter(Boolean);
+    return Array.from(new Set(raw)).slice(0, 3);
+  };
+
   return (
     <PublicLayout>
-      <div className="max-w-6xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
+      <div className="max-w-7xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
         style={{ paddingBottom: currentBeat ? '130px' : '0' }}>
 
         {/* ── PAGE HEADER ── */}
@@ -397,7 +409,7 @@ export default function InstrumentalsPage() {
           <p className="text-xs text-gray-600 mb-4">{visibleBeats.length} beat{visibleBeats.length !== 1 ? 's' : ''} available</p>
 
           {/* Quick filter pills — horizontal scroll on mobile, inline on desktop */}
-          <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
+          <div className="flex gap-2 mb-3 overflow-x-auto hide-scrollbar -mx-4 px-4 pr-8 md:mx-0 md:px-0 md:pr-0 md:flex-wrap">
             {quickFilterPills.map(p => {
               const active = quickFilter === p.id;
               const Icon = p.icon;
@@ -507,8 +519,33 @@ export default function InstrumentalsPage() {
 
           {/* Beat list */}
           {loadingBeats ? (
-            <div className="flex justify-center py-16">
-              <div className="w-10 h-10 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
+            <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="border-b border-white/[0.04] last:border-b-0">
+                  {/* Mobile skeleton */}
+                  <div className="flex md:hidden items-center gap-3 px-3 py-2.5">
+                    <div className="w-12 h-12 rounded-xl bg-white/[0.06] animate-pulse" />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-3 w-2/3 rounded bg-white/[0.06] animate-pulse" />
+                      <div className="h-2.5 w-1/2 rounded bg-white/[0.04] animate-pulse" />
+                    </div>
+                    <div className="w-20 h-9 rounded-xl bg-white/[0.06] animate-pulse" />
+                  </div>
+                  {/* Desktop skeleton */}
+                  <div className="hidden md:grid grid-cols-[64px_1fr_70px_70px_130px_140px_40px] items-center gap-4 px-5 py-3.5">
+                    <div className="w-14 h-14 rounded-xl bg-white/[0.06] animate-pulse" />
+                    <div className="space-y-2">
+                      <div className="h-3 w-1/2 rounded bg-white/[0.06] animate-pulse" />
+                      <div className="h-2.5 w-1/3 rounded bg-white/[0.04] animate-pulse" />
+                    </div>
+                    <div className="h-3 w-10 mx-auto rounded bg-white/[0.06] animate-pulse" />
+                    <div className="h-3 w-8 mx-auto rounded bg-white/[0.06] animate-pulse" />
+                    <div className="h-5 w-20 mx-auto rounded-full bg-white/[0.06] animate-pulse" />
+                    <div className="h-9 w-28 mx-auto rounded-xl bg-white/[0.06] animate-pulse" />
+                    <div className="h-5 w-5 mx-auto rounded bg-white/[0.04] animate-pulse" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : visibleBeats.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
@@ -569,10 +606,31 @@ export default function InstrumentalsPage() {
                             <Play className="w-4 h-4 text-white drop-shadow ml-0.5" weight="fill" />
                           </div>
                         )}
+                        {isFreeBeat(beat) && (
+                          <span className="absolute top-0.5 left-0.5 px-1 py-px rounded text-[8px] font-black tracking-wider text-white shadow"
+                            style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>FREE</span>
+                        )}
+                        {!isFreeBeat(beat) && isExclusiveAvailable(beat) && (
+                          <span className="absolute top-0.5 left-0.5 px-1 py-px rounded text-[8px] font-black tracking-wider text-black shadow"
+                            style={{ background: '#FFD700' }}>EXCL</span>
+                        )}
                       </button>
                       <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
-                        <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                          {isNewBeat(beat) && (
+                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[8px] font-black tracking-wider text-white"
+                              style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}</p>
+                        {beatTags(beat).length > 0 && (
+                          <div className="flex items-center gap-1 mt-1 overflow-hidden">
+                            {beatTags(beat).slice(0, 2).map((t, i) => (
+                              <span key={i} className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 truncate max-w-[90px]">{t}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <button onClick={() => openPurchaseModal(beat)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
@@ -622,18 +680,40 @@ export default function InstrumentalsPage() {
                             <Play className="w-5 h-5 text-white drop-shadow ml-0.5" weight="fill" />
                           </div>
                         )}
+                        {isFreeBeat(beat) && (
+                          <span className="absolute top-1 left-1 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-white shadow"
+                            style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>FREE</span>
+                        )}
+                        {!isFreeBeat(beat) && isExclusiveAvailable(beat) && (
+                          <span className="absolute top-1 left-1 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-black shadow"
+                            style={{ background: '#FFD700' }}>EXCL</span>
+                        )}
                       </button>
                       {/* Title + producer */}
                       <div className="min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
-                        <p className={`text-[14px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-[14px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                          {isNewBeat(beat) && (
+                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-white"
+                              style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
+                          )}
+                        </div>
                         <p className="text-[12px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'}</p>
                       </div>
                       {/* BPM */}
                       <span className="text-center text-[13px] text-gray-300 font-mono tabular-nums">{beat.bpm}</span>
                       {/* Key */}
                       <span className="text-center text-[13px] text-gray-300">{beat.key}</span>
-                      {/* Tags */}
-                      <span className="text-center text-[11px] text-gray-500 truncate px-1">{beat.genre || beat.mood || '—'}</span>
+                      {/* Tags — colored pills */}
+                      <div className="flex items-center justify-center gap-1 overflow-hidden">
+                        {beatTags(beat).length === 0 ? (
+                          <span className="text-[11px] text-gray-600">—</span>
+                        ) : (
+                          beatTags(beat).map((t, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 truncate max-w-[60px]">{t}</span>
+                          ))
+                        )}
+                      </div>
                       {/* Price + actions */}
                       <div className="flex items-center justify-center gap-1.5">
                         <button onClick={() => toggleFavorite(beat.id)}
@@ -836,7 +916,7 @@ export default function InstrumentalsPage() {
             <div className="bg-gradient-to-b from-[#131214] to-[#0a0a0a] border-t border-white/10 shadow-2xl"
               style={{ boxShadow: '0 -8px 40px rgba(124,77,255,0.2)' }}>
 
-              <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5">
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5">
                 {/* Row 1 — cover, title, controls, buy, close */}
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   {/* Cover art */}
