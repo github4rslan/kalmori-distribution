@@ -7,7 +7,7 @@ import {
   MusicNote, Lightning, ShieldCheck, Headset, Check, Star,
   PaperPlaneTilt, Play, Pause, SpeakerHigh, ShoppingCart,
   MagnifyingGlass, Sliders, X, ShareNetwork, SkipBack, SkipForward,
-  DotsThreeVertical, Copy
+  DotsThreeVertical, Copy, Heart, DownloadSimple, Flag
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -26,6 +26,32 @@ const seededRandom = (seed) => {
     return ((h ^= h >>> 16) >>> 0) / 4294967296;
   };
 };
+
+// Shared 3-dot action menu for beat rows
+const BeatMenu = ({ isFav, onFav, onShare, onDownload, onReport }) => (
+  <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-48">
+    <button onClick={onFav}
+      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+      <Heart className={`w-4 h-4 flex-shrink-0 ${isFav ? 'text-[#E040FB]' : ''}`} weight={isFav ? 'fill' : 'regular'} />
+      {isFav ? 'Remove from Favorites' : 'Add to Favorites'}
+    </button>
+    <button onClick={onShare}
+      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
+      <Copy className="w-4 h-4 flex-shrink-0" />
+      Copy Link
+    </button>
+    <button onClick={onDownload}
+      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors border-t border-white/5">
+      <DownloadSimple className="w-4 h-4 flex-shrink-0" />
+      Download Preview
+    </button>
+    <button onClick={onReport}
+      className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-400 hover:bg-white/5 hover:text-red-400 transition-colors border-t border-white/5">
+      <Flag className="w-4 h-4 flex-shrink-0" />
+      Report Beat
+    </button>
+  </div>
+);
 
 // Waveform visualizer — bars colored progressively based on playhead
 const Waveform = ({ seed, progressPct, isPlaying, onSeek, bars = 48, barColor = '#7C4DFF', dimColor = '#3a2a5c' }) => {
@@ -125,6 +151,34 @@ export default function InstrumentalsPage() {
   const [duration, setDuration] = useState(0);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [wavePulse, setWavePulse] = useState(0);
+  const [favorites, setFavorites] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('kalmori_beat_favorites') || '[]')); }
+    catch { return new Set(); }
+  });
+
+  const toggleFavorite = (beatId) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(beatId)) { next.delete(beatId); toast.success('Removed from favorites'); }
+      else { next.add(beatId); toast.success('Added to favorites'); }
+      localStorage.setItem('kalmori_beat_favorites', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const downloadPreview = (beat) => {
+    const a = document.createElement('a');
+    a.href = `${API_URL}/api/beats/${beat.id}/stream`;
+    a.download = `${beat.title}-preview.mp3`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast.success('Download started');
+  };
+
+  const reportBeat = (beat) => {
+    window.location.href = `mailto:admin@kalmori.org?subject=Report Beat: ${encodeURIComponent(beat.title)}&body=${encodeURIComponent(`Beat: ${beat.title}\nProducer: ${beat.producer_name || 'Kalmori'}\nReason: `)}`;
+  };
 
   // Drive waveform animation at ~20fps while playing
   useEffect(() => {
@@ -302,7 +356,7 @@ export default function InstrumentalsPage() {
 
   return (
     <PublicLayout>
-      <div className="max-w-2xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
+      <div className="max-w-6xl mx-auto bg-[#0a0a0a]" data-testid="instrumentals-page"
         style={{ paddingBottom: currentBeat ? '130px' : '0' }}>
 
         {/* ── PAGE HEADER ── */}
@@ -428,85 +482,149 @@ export default function InstrumentalsPage() {
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
+              {/* Desktop column header */}
+              <div className="hidden md:grid grid-cols-[56px_1fr_80px_70px_100px_90px_40px] items-center gap-4 px-4 py-2.5 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
+                <span />
+                <span>Track</span>
+                <span className="text-center">BPM</span>
+                <span className="text-center">Key</span>
+                <span className="text-center">Tags</span>
+                <span className="text-center">Price</span>
+                <span />
+              </div>
+
               {beats.map((beat, idx) => {
                 const isCurrent = currentBeatId === beat.id;
                 const isThisPlaying = isCurrent && isPlaying;
+                const isFav = favorites.has(beat.id);
                 return (
                   <div
                     key={beat.id}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
+                    className={`relative transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
                     {/* Active left bar */}
                     {isCurrent && <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
 
-                    {/* Cover art — play/pause/equalizer overlay here */}
-                    <button onClick={() => toggleBeat(beat)}
-                      className={`relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
-                      style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
-                      data-testid={`play-beat-${beat.id}`}
-                      aria-label={isThisPlaying ? 'Pause' : 'Play'}>
-                      {beat.cover_url
-                        ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center">
-                            <MusicNote className="w-5 h-5 text-white/20" weight="fill" />
+                    {/* Mobile layout (compact row) */}
+                    <div className="flex md:hidden items-center gap-3 px-3 py-2.5">
+                      <button onClick={() => toggleBeat(beat)}
+                        className={`relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
+                        style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
+                        data-testid={`play-beat-${beat.id}`}
+                        aria-label={isThisPlaying ? 'Pause' : 'Play'}>
+                        {beat.cover_url
+                          ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><MusicNote className="w-5 h-5 text-white/20" weight="fill" /></div>
+                        }
+                        {isThisPlaying ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/55 rounded-xl">
+                            <div className="flex items-end justify-center gap-[2px] h-4">
+                              {[1,2,3,4].map(i => (
+                                <div key={i} className="w-[3px] rounded-full animate-pulse"
+                                  style={{ height: `${6 + (i % 2) * 5}px`, background: 'linear-gradient(180deg,#fff,#E040FB)', animationDelay: `${i * 0.12}s` }} />
+                              ))}
+                            </div>
                           </div>
-                      }
-                      {/* Playing: equalizer over dark scrim. Hover/tap: play/pause icon. */}
-                      {isThisPlaying ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/55 rounded-xl">
-                          <div className="flex items-end justify-center gap-[2px] h-4">
-                            {[1,2,3,4].map(i => (
-                              <div key={i} className="w-[3px] rounded-full animate-pulse"
-                                style={{ height: `${6 + (i % 2) * 5}px`, background: 'linear-gradient(180deg,#fff,#E040FB)', animationDelay: `${i * 0.12}s` }} />
-                            ))}
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+                            <Play className="w-4 h-4 text-white drop-shadow ml-0.5" weight="fill" />
                           </div>
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
-                          <Play className="w-4 h-4 text-white drop-shadow ml-0.5" weight="fill" />
-                        </div>
-                      )}
-                    </button>
-
-                    {/* Info — title on top, producer · BPM · key on one muted line */}
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
-                      <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>
-                        {beat.title}
-                      </p>
-                      <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                        {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
-                      </p>
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
+                        <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                        <p className="text-[11px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}</p>
+                      </div>
+                      <button onClick={() => openPurchaseModal(beat)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
+                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                        data-testid={`buy-beat-${beat.id}`}>
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        ${beat.prices?.basic_lease || '29.99'}
+                      </button>
+                      <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
+                          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                          aria-label="More options">
+                          <DotsThreeVertical className="w-4 h-4" weight="bold" />
+                        </button>
+                        {openMenuId === beat.id && (
+                          <BeatMenu beat={beat} isFav={isFav}
+                            onFav={() => { toggleFavorite(beat.id); setOpenMenuId(null); }}
+                            onShare={() => { shareBeat(beat); setOpenMenuId(null); }}
+                            onDownload={() => { downloadPreview(beat); setOpenMenuId(null); }}
+                            onReport={() => { reportBeat(beat); setOpenMenuId(null); }} />
+                        )}
+                      </div>
                     </div>
 
-                    {/* Price pill — single tap target, price embedded */}
-                    <button
-                      onClick={() => openPurchaseModal(beat)}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
-                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
-                      data-testid={`buy-beat-${beat.id}`}>
-                      <ShoppingCart className="w-3.5 h-3.5" />
-                      ${beat.prices?.basic_lease || '29.99'}
-                    </button>
-
-                    {/* 3-dot menu */}
-                    <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
-                        aria-label="More options">
-                        <DotsThreeVertical className="w-4 h-4" weight="bold" />
+                    {/* Desktop layout (grid columns) */}
+                    <div className="hidden md:grid grid-cols-[56px_1fr_80px_70px_100px_90px_40px] items-center gap-4 px-4 py-3 group">
+                      {/* Cover */}
+                      <button onClick={() => toggleBeat(beat)}
+                        className={`relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_16px_rgba(124,77,255,0.4)]' : ''}`}
+                        style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
+                        aria-label={isThisPlaying ? 'Pause' : 'Play'}>
+                        {beat.cover_url
+                          ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><MusicNote className="w-6 h-6 text-white/20" weight="fill" /></div>
+                        }
+                        {isThisPlaying ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/55 rounded-xl">
+                            <div className="flex items-end justify-center gap-[2px] h-5">
+                              {[1,2,3,4].map(i => (
+                                <div key={i} className="w-[3px] rounded-full animate-pulse"
+                                  style={{ height: `${8 + (i % 2) * 6}px`, background: 'linear-gradient(180deg,#fff,#E040FB)', animationDelay: `${i * 0.12}s` }} />
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="w-5 h-5 text-white drop-shadow ml-0.5" weight="fill" />
+                          </div>
+                        )}
                       </button>
-                      {openMenuId === beat.id && (
-                        <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
-                          <button
-                            onClick={() => { shareBeat(beat); setOpenMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
-                            <Copy className="w-4 h-4 flex-shrink-0" />
-                            Copy Link
-                          </button>
-                        </div>
-                      )}
+                      {/* Title + producer */}
+                      <div className="min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
+                        <p className={`text-[14px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
+                        <p className="text-[12px] text-gray-500 truncate mt-0.5">{beat.producer_name || 'Kalmori'}</p>
+                      </div>
+                      {/* BPM */}
+                      <span className="text-center text-[13px] text-gray-300 font-mono tabular-nums">{beat.bpm}</span>
+                      {/* Key */}
+                      <span className="text-center text-[13px] text-gray-300">{beat.key}</span>
+                      {/* Tags */}
+                      <span className="text-center text-[11px] text-gray-500 truncate px-1">{beat.genre || beat.mood || '—'}</span>
+                      {/* Price + actions */}
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button onClick={() => toggleFavorite(beat.id)}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all opacity-0 group-hover:opacity-100 ${isFav ? 'text-[#E040FB] opacity-100' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+                          aria-label="Favorite">
+                          <Heart className="w-4 h-4" weight={isFav ? 'fill' : 'regular'} />
+                        </button>
+                        <button onClick={() => openPurchaseModal(beat)}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[12px] font-bold transition-all hover:brightness-110 active:scale-95 shadow-md"
+                          style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          ${beat.prices?.basic_lease || '29.99'}
+                        </button>
+                      </div>
+                      {/* 3-dot */}
+                      <div className="relative flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                        <button onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                          aria-label="More options">
+                          <DotsThreeVertical className="w-4 h-4" weight="bold" />
+                        </button>
+                        {openMenuId === beat.id && (
+                          <BeatMenu beat={beat} isFav={isFav}
+                            onFav={() => { toggleFavorite(beat.id); setOpenMenuId(null); }}
+                            onShare={() => { shareBeat(beat); setOpenMenuId(null); }}
+                            onDownload={() => { downloadPreview(beat); setOpenMenuId(null); }}
+                            onReport={() => { reportBeat(beat); setOpenMenuId(null); }} />
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -680,7 +798,7 @@ export default function InstrumentalsPage() {
             <div className="bg-gradient-to-b from-[#131214] to-[#0a0a0a] border-t border-white/10 shadow-2xl"
               style={{ boxShadow: '0 -8px 40px rgba(124,77,255,0.2)' }}>
 
-              <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5">
+              <div className="max-w-6xl mx-auto px-3 sm:px-4 py-2.5">
                 {/* Row 1 — cover, title, controls, buy, close */}
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   {/* Cover art */}
