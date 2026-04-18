@@ -30,7 +30,8 @@ export default function SpotifyAnalyticsPage() {
       if (err.response?.status === 401) {
         navigate('/login');
       } else {
-        setError(err.response?.data?.detail || 'Failed to load Spotify data. Please try again.');
+        const detail = err.response?.data?.detail;
+        setError(typeof detail === 'string' ? detail : 'Failed to load Spotify data. Please try again.');
       }
     } finally {
       setLoading(false);

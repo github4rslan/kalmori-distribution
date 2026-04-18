@@ -25,7 +25,8 @@ export default function AdminAnalyticsReportsPage() {
       const res = await axios.post(`${API}/api/admin/analytics-report/send`, { period, target: 'all' }, { headers });
       setResult(res.data);
     } catch (e) {
-      setError(e.response?.data?.detail || 'Failed to send reports');
+      const detail = e.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Failed to send reports');
     }
     setSending(false);
   };
@@ -38,7 +39,8 @@ export default function AdminAnalyticsReportsPage() {
       setPreviewHtml(res.data.html);
       setPreviewStats(res.data.stats);
     } catch (e) {
-      setError(e.response?.data?.detail || 'Failed to preview');
+      const detail = e.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Failed to preview');
     }
     setPreviewing(false);
   };
