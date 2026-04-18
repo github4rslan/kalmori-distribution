@@ -14,6 +14,58 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Seeded pseudo-random so each beat's waveform is stable across renders
+const seededRandom = (seed) => {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h = Math.imul(h ^ (h >>> 13), 2654435761);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+};
+
+// Waveform visualizer — bars colored progressively based on playhead
+const Waveform = ({ seed, progressPct, isPlaying, onSeek, bars = 48, barColor = '#7C4DFF', dimColor = '#3a2a5c' }) => {
+  const heights = React.useMemo(() => {
+    const rand = seededRandom(seed || 'beat');
+    return Array.from({ length: bars }, (_, i) => {
+      // Soft envelope so middle bars are taller, edges shorter
+      const t = i / (bars - 1);
+      const envelope = 0.45 + 0.55 * Math.sin(Math.PI * t);
+      return Math.max(0.18, Math.min(1, rand() * envelope + 0.15));
+    });
+  }, [seed, bars]);
+
+  return (
+    <div
+      className="relative w-full h-10 flex items-center gap-[2px] cursor-pointer select-none"
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        onSeek?.((e.clientX - rect.left) / rect.width);
+      }}>
+      {heights.map((h, i) => {
+        const barPct = ((i + 0.5) / bars) * 100;
+        const played = barPct <= progressPct;
+        return (
+          <div
+            key={i}
+            className="flex-1 rounded-[2px] transition-[height,background] duration-200"
+            style={{
+              height: `${h * 100}%`,
+              background: played ? barColor : dimColor,
+              opacity: played ? (isPlaying ? 1 : 0.9) : 0.55,
+              transform: isPlaying && played ? `scaleY(${0.85 + Math.abs(Math.sin((Date.now() / 400) + i * 0.6)) * 0.15})` : 'scaleY(1)',
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 const licenseTiers = [
   { id: 'basic_lease', name: 'Basic Lease', price: 29.99, desc: 'Perfect for demos and mixtapes', features: ['MP3 File (320kbps)', 'Up to 5,000 streams', 'Non-exclusive license', 'Credit required'], color: '#7C4DFF' },
   { id: 'premium_lease', name: 'Premium Lease', price: 79.99, desc: 'For serious releases', features: ['WAV + MP3 Files', 'Up to 50,000 streams', 'Trackouts included', 'Non-exclusive license', 'Credit required'], color: '#E040FB', popular: true },
@@ -72,6 +124,14 @@ export default function InstrumentalsPage() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [wavePulse, setWavePulse] = useState(0);
+
+  // Drive waveform animation at ~20fps while playing
+  useEffect(() => {
+    if (!isPlaying) return;
+    const id = setInterval(() => setWavePulse(p => p + 1), 90);
+    return () => clearInterval(id);
+  }, [isPlaying]);
 
   const audioRef = useRef(null);
   const searchTimeout = useRef(null);
@@ -634,20 +694,9 @@ export default function InstrumentalsPage() {
             <div className="bg-gradient-to-b from-[#131214] to-[#0a0a0a] border-t border-white/10 shadow-2xl"
               style={{ boxShadow: '0 -8px 40px rgba(124,77,255,0.2)' }}>
 
-              {/* Progress bar */}
-              <div
-                className="relative h-1 bg-white/[0.06] cursor-pointer group"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  seekTo((e.clientX - rect.left) / rect.width);
-                }}>
-                <div className="absolute inset-y-0 left-0 transition-all" style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg,#7C4DFF,#E040FB)' }} />
-                <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" style={{ left: `calc(${progressPct}% - 6px)` }} />
-              </div>
-
               <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2.5">
+                {/* Row 1 — cover, title, controls, buy, close */}
                 <div className="flex items-center gap-2.5 sm:gap-3">
-
                   {/* Cover art */}
                   <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex-shrink-0 overflow-hidden ${isPlaying ? 'ring-2 ring-[#7C4DFF]/50' : ''}`}
                     style={{ background: 'linear-gradient(135deg,#1a1a2e,#16213e)' }}>
@@ -659,11 +708,10 @@ export default function InstrumentalsPage() {
                     }
                   </div>
 
-                  {/* Title + meta + time */}
+                  {/* Title + meta */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-bold text-white truncate leading-tight">{currentBeat.title}</p>
+                    <p className="text-[13px] sm:text-[14px] font-bold text-white truncate leading-tight">{currentBeat.title}</p>
                     <p className="text-[11px] text-gray-500 truncate mt-0.5">{currentBeat.producer_name || 'Kalmori'} · {currentBeat.bpm} BPM · {currentBeat.key}</p>
-                    <p className="text-[10px] text-gray-600 font-mono mt-0.5 tabular-nums">{formatTime(progress)} / {formatTime(duration)}</p>
                   </div>
 
                   {/* Controls */}
@@ -709,6 +757,24 @@ export default function InstrumentalsPage() {
                       <X className="w-4 h-4" weight="bold" />
                     </button>
                   </div>
+                </div>
+
+                {/* Row 2 — waveform + timestamps */}
+                <div className="flex items-center gap-2.5 sm:gap-3 mt-2.5">
+                  <span className="text-[10px] sm:text-[11px] text-gray-500 font-mono tabular-nums flex-shrink-0 w-10 text-center">
+                    {formatTime(progress)}
+                  </span>
+                  <div className="flex-1 min-w-0" data-wave-pulse={wavePulse}>
+                    <Waveform
+                      seed={currentBeat.id}
+                      progressPct={progressPct}
+                      isPlaying={isPlaying}
+                      onSeek={seekTo}
+                    />
+                  </div>
+                  <span className="text-[10px] sm:text-[11px] text-gray-500 font-mono tabular-nums flex-shrink-0 w-10 text-center">
+                    {formatTime(duration)}
+                  </span>
                 </div>
               </div>
             </div>
