@@ -43,6 +43,7 @@ const PublicLayout = ({ children }) => {
     '/login': 'Sign In',
     '/register': 'Create Account',
     '/reset-password': 'Reset Password',
+    '/request-beat': 'Request Beat',
     '/dashboard': 'Dashboard',
     '/releases': 'My Releases',
     '/releases/new': 'New Release',

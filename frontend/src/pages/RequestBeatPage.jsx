@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, PaperPlaneTilt, Sparkle, Waveform } from '@phosphor-icons/react';
+import React, { useState } from 'react';
+import { Check, PaperPlaneTilt, Sparkle, Waveform } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
@@ -11,9 +10,9 @@ const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', '
 const moods = ['Energetic/Hype', 'Chill/Laid-back', 'Dark/Moody', 'Emotional/Sad', 'Happy/Uplifting', 'Romantic', 'Aggressive', 'Party/Club'];
 const DEFAULT_LICENSE_TYPE = 'basic_lease';
 
-const getInitialForm = (user = null) => ({
-  artist_name: user?.artist_name || user?.name || '',
-  email: user?.email || '',
+const getInitialForm = () => ({
+  artist_name: '',
+  email: '',
   phone: '',
   tempo_range: '',
   reference_tracks: '',
@@ -22,28 +21,19 @@ const getInitialForm = (user = null) => ({
 });
 
 export default function RequestBeatPage() {
-  const { user } = useAuth();
-  const [form, setForm] = useState(() => getInitialForm(user));
+  useAuth();
+  const [form, setForm] = useState(() => getInitialForm());
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    setForm(prev => ({
-      ...prev,
-      artist_name: prev.artist_name || user.artist_name || user.name || '',
-      email: prev.email || user.email || '',
-    }));
-  }, [user]);
 
   const handleFieldChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const resetRequest = () => {
-    setForm(getInitialForm(user));
+    setForm(getInitialForm());
     setSelectedGenre('');
     setSelectedMood('');
     setSubmitted(false);
@@ -87,30 +77,22 @@ export default function RequestBeatPage() {
         <div className="absolute right-0 top-24 h-72 w-72 rounded-full bg-[#00B8D9]/10 blur-[120px] pointer-events-none" />
         <div className="absolute left-0 top-40 h-72 w-72 rounded-full bg-[#E040FB]/10 blur-[120px] pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16" data-testid="request-beat-page">
-          <Link
-            to="/instrumentals"
-            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" weight="bold" />
-            Back to Beat Store
-          </Link>
-
-          <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#090909] px-6 py-8 sm:px-10 sm:py-12 mb-8">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-16" data-testid="request-beat-page">
+          <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#090909] px-6 py-7 sm:px-8 sm:py-8 mb-6">
             <div className="absolute -right-16 top-0 h-40 w-40 rounded-full bg-white/5" />
             <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-[#7C4DFF]/10 blur-3xl" />
 
-            <div className="relative grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="relative grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
               <div>
-                <p className="text-[11px] font-bold text-[#E040FB] tracking-[4px] mb-4">CUSTOM PRODUCTION</p>
-                <h1 className="text-4xl sm:text-5xl font-black text-white leading-[0.95] tracking-tight mb-4">
+                <p className="text-[11px] font-bold text-[#E040FB] tracking-[4px] mb-3">CUSTOM PRODUCTION</p>
+                <h1 className="text-3xl sm:text-[42px] font-black text-white leading-[0.95] tracking-tight mb-3">
                   Request a Beat Built For Your Sound.
                 </h1>
-                <p className="text-base sm:text-lg text-gray-400 max-w-2xl">
+                <p className="text-sm sm:text-base text-gray-400 max-w-2xl">
                   Tell us the vibe, genre, tempo, and references you want. We&apos;ll turn your direction into a custom beat request the Kalmori team can review and follow up on.
                 </p>
 
-                <div className="mt-6 flex flex-wrap gap-3 text-xs sm:text-sm text-gray-300">
+                <div className="mt-5 flex flex-wrap gap-2.5 text-xs sm:text-sm text-gray-300">
                   <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
                     <Sparkle className="w-4 h-4 text-[#E040FB]" weight="fill" />
                     Modern custom production flow
@@ -122,15 +104,15 @@ export default function RequestBeatPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { value: '24-48h', label: 'Response window' },
                   { value: '1 form', label: 'Single submission flow' },
                   { value: 'Direct', label: 'Clear producer brief' },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5">
-                    <p className="text-2xl font-black text-white">{item.value}</p>
-                    <p className="text-sm text-gray-400 mt-1">{item.label}</p>
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+                    <p className="text-xl sm:text-2xl font-black text-white">{item.value}</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">{item.label}</p>
                   </div>
                 ))}
               </div>
@@ -138,7 +120,7 @@ export default function RequestBeatPage() {
           </section>
 
           <section className="rounded-[32px] border border-white/10 bg-[#0b0b0b] p-6 sm:p-8 lg:p-10 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_30px_80px_rgba(0,0,0,0.45)]">
-            <div className="text-center mb-8">
+            <div className="text-center mb-7">
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Request A Custom Beat</h2>
               <p className="text-sm sm:text-base text-gray-400 mt-3">
                 Fill out the form and we&apos;ll get back to you within 24-48 hours.
@@ -167,9 +149,9 @@ export default function RequestBeatPage() {
                   <h3 className="text-base font-bold text-[#E040FB] mb-4">Your Information</h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     {[
-                      { label: 'Artist/Producer Name *', key: 'artist_name', type: 'text', testid: 'req-artist-name' },
-                      { label: 'Email Address *', key: 'email', type: 'email', testid: 'req-email' },
-                      { label: 'Phone Number (Optional)', key: 'phone', type: 'tel', className: 'md:col-span-2' },
+                      { label: 'Artist/Producer Name *', key: 'artist_name', type: 'text', placeholder: 'Your artist or producer name', testid: 'req-artist-name' },
+                      { label: 'Email Address *', key: 'email', type: 'email', placeholder: 'you@example.com', testid: 'req-email' },
+                      { label: 'Phone Number (Optional)', key: 'phone', type: 'tel', placeholder: '+1 234 567 890', className: 'md:col-span-2' },
                     ].map(({ label, key, type, testid, className = '' }) => (
                       <div key={key} className={className}>
                         <label className="block text-sm font-semibold text-gray-300 mb-2">{label}</label>
@@ -177,6 +159,7 @@ export default function RequestBeatPage() {
                           type={type}
                           value={form[key]}
                           onChange={(e) => handleFieldChange(key, e.target.value)}
+                          placeholder={placeholder}
                           className="w-full bg-[#111] border border-[#333] rounded-2xl px-4 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#7C4DFF]/60 focus:ring-1 focus:ring-[#7C4DFF]/30 transition-all"
                           data-testid={testid || undefined}
                         />
