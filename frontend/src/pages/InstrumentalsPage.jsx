@@ -5,7 +5,7 @@ import GlobalFooter from '../components/GlobalFooter';
 import { useAuth } from '../App';
 import {
   MusicNote, Lightning, ShieldCheck, Headset, Check, Star,
-  PaperPlaneTilt, Play, Pause, SpeakerHigh, ShoppingCart,
+  Play, Pause, SpeakerHigh, ShoppingCart,
   MagnifyingGlass, Sliders, X, ShareNetwork, SkipBack, SkipForward,
   DotsThreeVertical, Copy, Heart, DownloadSimple, Flag, Sparkle, Gift, Crown
 } from '@phosphor-icons/react';
@@ -138,10 +138,6 @@ export default function InstrumentalsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [quickFilter, setQuickFilter] = useState('all'); // all | new | free | exclusive
-
-  // Custom beat request
-  const [form, setForm] = useState({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' });
-  const [submitted, setSubmitted] = useState(false);
 
   // Beats & player
   const [beats, setBeats] = useState([]);
@@ -344,12 +340,6 @@ export default function InstrumentalsPage() {
   const shareBeat = (beat) => {
     const url = `${window.location.origin}/instrumentals?beat=${beat.id}`;
     navigator.clipboard.writeText(url).then(() => toast.success('Beat link copied!'));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.artist_name || !form.email || !selectedGenre) return;
-    setSubmitted(true);
   };
 
   const currentBeat = beats.find(b => b.id === currentBeatId) || null;
@@ -934,100 +924,6 @@ export default function InstrumentalsPage() {
           </div>
         </div>
 
-        {/* ── CUSTOM BEAT REQUEST ── */}
-        <div className="mx-4 mt-6 mb-8 rounded-3xl p-6 border border-[#333] bg-[#0a0a0a]" data-testid="beat-request-form" data-reveal data-reveal-variant="scale">
-          <div className="text-center mb-2">
-            <h2 className="text-xl font-extrabold text-white tracking-[2px]">REQUEST A CUSTOM BEAT</h2>
-          </div>
-          <p className="text-sm text-gray-400 text-center mb-6">Fill out the form and we'll get back to you within 24-48 hours</p>
-
-          {submitted ? (
-            <div className="text-center py-8" data-testid="request-success">
-              <div className="w-[90px] h-[90px] rounded-full bg-gradient-to-r from-[#4CAF50] to-[#2E7D32] mx-auto mb-6 flex items-center justify-center">
-                <Check className="w-10 h-10 text-white" weight="bold" />
-              </div>
-              <h3 className="text-2xl font-extrabold text-white mb-3">Request Submitted!</h3>
-              <p className="text-[15px] text-gray-400 leading-relaxed mb-6">We've received your beat request and will contact you within 24-48 hours.</p>
-              <button onClick={() => { setSubmitted(false); setForm({ artist_name: '', email: '', phone: '', tempo_range: '', reference_tracks: '', budget: '', additional_notes: '' }); setSelectedGenre(''); setSelectedMood(''); }}
-                className="px-7 py-3.5 rounded-full bg-[#333] text-white text-sm font-bold tracking-wider">
-                SUBMIT ANOTHER REQUEST
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <h3 className="text-base font-bold text-[#E040FB] mb-4">Your Information</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Artist/Producer Name *', key: 'artist_name', type: 'text', testid: 'req-artist-name' },
-                    { label: 'Email Address *', key: 'email', type: 'email', testid: 'req-email' },
-                    { label: 'Phone Number (Optional)', key: 'phone', type: 'tel', testid: '' },
-                  ].map(({ label, key, type, testid }) => (
-                    <div key={key}>
-                      <label className="block text-sm font-semibold text-gray-300 mb-2">{label}</label>
-                      <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-                        className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white focus:outline-none focus:border-[#7C4DFF]/50"
-                        data-testid={testid || undefined} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#E040FB] mb-4">Beat Requirements</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Genre *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {genres.map(g => (
-                        <button type="button" key={g} onClick={() => setSelectedGenre(g)}
-                          className={`px-3 py-2 rounded-full text-xs font-medium border transition-all ${selectedGenre === g ? 'bg-[#7C4DFF] border-[#7C4DFF] text-white' : 'bg-[#111] border-[#333] text-gray-400'}`}
-                          data-testid={`genre-${g.toLowerCase().replace(/[^a-z]/g, '-')}`}>
-                          {g}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Mood/Vibe</label>
-                    <div className="flex flex-wrap gap-2">
-                      {moods.map(m => (
-                        <button type="button" key={m} onClick={() => setSelectedMood(m)}
-                          className={`px-3 py-2 rounded-full text-xs font-medium border transition-all ${selectedMood === m ? 'bg-[#E040FB] border-[#E040FB] text-white' : 'bg-[#111] border-[#333] text-gray-400'}`}>
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Tempo Range (BPM)</label>
-                    <input type="text" value={form.tempo_range} onChange={e => setForm({ ...form, tempo_range: e.target.value })} placeholder="e.g., 120-140"
-                      className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#7C4DFF]/50" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Reference Tracks</label>
-                    <textarea value={form.reference_tracks} onChange={e => setForm({ ...form, reference_tracks: e.target.value })} placeholder="Share links or names of tracks with a similar vibe" rows={3}
-                      className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white placeholder-gray-600 resize-none focus:outline-none focus:border-[#7C4DFF]/50" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Budget Range</label>
-                    <input type="text" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })} placeholder="e.g., $100-$300"
-                      className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#7C4DFF]/50" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-300 mb-2">Additional Notes</label>
-                    <textarea value={form.additional_notes} onChange={e => setForm({ ...form, additional_notes: e.target.value })} placeholder="Any specific requirements..." rows={3}
-                      className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-4 text-white placeholder-gray-600 resize-none focus:outline-none focus:border-[#7C4DFF]/50" />
-                  </div>
-                </div>
-              </div>
-              <button type="submit"
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-bold tracking-[2px] flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-                data-testid="submit-beat-request">
-                <PaperPlaneTilt className="w-5 h-5" /> SUBMIT REQUEST
-              </button>
-            </form>
-          )}
-        </div>
 
         <GlobalFooter />
 

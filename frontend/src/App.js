@@ -94,6 +94,7 @@ const ArtistProfilePage = lazy(() => import('./pages/ArtistProfilePage'));
 const RoleSelectionPage = lazy(() => import('./pages/RoleSelectionPage'));
 const LabelDashboardPage = lazy(() => import('./pages/LabelDashboardPage'));
 const ProducerBeatBankPage = lazy(() => import('./pages/ProducerBeatBankPage'));
+const RequestBeatPage = lazy(() => import('./pages/RequestBeatPage'));
 const AdminEmailSettingsPage = lazy(() => import('./pages/AdminEmailSettingsPage'));
 const AdminPromoCodesPage = lazy(() => import('./pages/AdminPromoCodesPage'));
 const AdminPlansPage = lazy(() => import('./pages/AdminPlansPage'));
@@ -405,6 +406,7 @@ const AppRouter = () => {
       <Route path="/stores" element={<StoresPage />} />
       <Route path="/leasing" element={<InstrumentalsPage />} />
       <Route path="/instrumentals" element={<InstrumentalsPage />} />
+      <Route path="/request-beat" element={<RequestBeatPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

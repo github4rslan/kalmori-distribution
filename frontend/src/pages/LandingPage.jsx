@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
-import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord } from '@phosphor-icons/react';
+import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord, PaperPlaneTilt } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 
@@ -140,7 +140,7 @@ const LandingPage = () => {
   const handleSellBeats = () => {
     if (!user) return navigate('/register?role=producer');
     if (isAdmin) return navigate('/admin/beats');
-    if (isProducer) return navigate('/producer-beat-bank');
+    if (isProducer) return navigate('/beat-bank');
     // Artists → role selection lets them add producer capability
     return navigate('/select-role');
   };
@@ -275,7 +275,7 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {/* Explore Beats */}
             <button
               onClick={() => navigate('/instrumentals')}
@@ -316,6 +316,28 @@ const LandingPage = () => {
                   <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">For Producers</p>
                   <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Sell Your Beats</h3>
                   <p className="text-xs sm:text-sm text-white/80 leading-snug">Upload, license & earn from every sale</p>
+                </div>
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
+              </div>
+            </button>
+
+            {/* Request Beat */}
+            <button
+              onClick={() => navigate('/request-beat')}
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300 md:col-span-2 lg:col-span-1"
+              style={{ background: 'linear-gradient(135deg, #5B4CFF 0%, #00B8D9 100%)', boxShadow: '0 12px 40px rgba(91,76,255,0.28)' }}
+              data-testid="landing-request-beat-btn">
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <div className="absolute -left-3 -top-3 w-24 h-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
+
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <PaperPlaneTilt className="w-7 h-7 sm:w-8 sm:h-8 text-white" weight="fill" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">Custom Production</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Request Beat</h3>
+                  <p className="text-xs sm:text-sm text-white/80 leading-snug">Share your vision and get a custom beat built around your sound</p>
                 </div>
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
               </div>
