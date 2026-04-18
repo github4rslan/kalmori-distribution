@@ -9,7 +9,7 @@ import logging
 import csv as csv_module
 import io
 
-from core import db, get_current_user
+from core import db, get_current_user, require_label
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class SetSplitInput(BaseModel):
 
 @label_router.get("/dashboard")
 async def label_dashboard(request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
     artist_ids = [r["artist_id"] for r in roster]
     if not artist_ids:
@@ -90,7 +90,7 @@ async def label_dashboard(request: Request):
 
 @label_router.get("/artists")
 async def label_get_artists(request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     roster = await db.label_artists.find({"label_id": user["id"]}, {"_id": 0}).to_list(200)
     artists = []
     for entry in roster:
@@ -113,7 +113,7 @@ async def label_get_artists(request: Request):
 
 @label_router.post("/artists/invite")
 async def label_invite_artist(data: InviteArtistInput, request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     artist = await db.users.find_one({"email": data.email}, {"_id": 0, "id": 1, "name": 1, "artist_name": 1})
     if not artist:
         raise HTTPException(status_code=404, detail="No user found with that email. They need to create a Kalmori account first.")
@@ -131,7 +131,7 @@ async def label_invite_artist(data: InviteArtistInput, request: Request):
 
 @label_router.delete("/artists/{artist_id}")
 async def label_remove_artist(artist_id: str, request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     result = await db.label_artists.delete_one({"label_id": user["id"], "artist_id": artist_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Artist not found on your roster")
@@ -142,7 +142,7 @@ async def label_remove_artist(artist_id: str, request: Request):
 
 @label_router.put("/artists/{artist_id}/split")
 async def label_set_royalty_split(artist_id: str, data: SetSplitInput, request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     if abs((data.artist_split + data.label_split) - 100) > 0.01:
         raise HTTPException(status_code=400, detail="Splits must add up to 100%")
     if data.artist_split < 0 or data.label_split < 0:
@@ -157,7 +157,7 @@ async def label_set_royalty_split(artist_id: str, data: SetSplitInput, request: 
 
 @label_router.get("/royalties")
 async def label_get_royalties(request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
     total_label_earnings = 0
     total_artist_payouts = 0
@@ -212,7 +212,7 @@ async def label_get_royalties(request: Request):
 
 @label_router.get("/royalties/export/csv")
 async def label_export_csv(request: Request):
-    user = await get_current_user(request)
+    user = await require_label(request)
     roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
     artist_ids = [r["artist_id"] for r in roster]
     splits = {r["artist_id"]: {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)} for r in roster}
@@ -251,7 +251,7 @@ async def label_export_pdf(request: Request):
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-    user = await get_current_user(request)
+    user = await require_label(request)
     roster = await db.label_artists.find({"label_id": user["id"], "status": "active"}, {"_id": 0}).to_list(200)
     splits = {r["artist_id"]: {"a": r.get("artist_split", 70), "l": r.get("label_split", 30)} for r in roster}
     buf = io.BytesIO()

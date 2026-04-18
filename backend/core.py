@@ -308,6 +308,12 @@ async def require_admin(request: Request) -> dict:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+async def require_label(request: Request) -> dict:
+    user = await get_current_user(request)
+    if user.get("user_role") not in ["label", "label_producer"]:
+        raise HTTPException(status_code=403, detail="Label access required")
+    return user
+
 # Cloudinary Storage helpers
 def init_storage():
     """Legacy stub — Cloudinary needs no init."""

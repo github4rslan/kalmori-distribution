@@ -314,6 +314,22 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+const LabelRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#FFD700] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+  const role = user?.user_role || user?.role;
+  if (!['label', 'label_producer'].includes(role)) return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
 const PageFallback = () => (
   <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
     <div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
@@ -353,7 +369,7 @@ const AppRouter = () => {
       <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />
       <Route path="/artist/:slug" element={<ArtistProfilePage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
-      <Route path="/label" element={<ProtectedRoute><LabelDashboardPage /></ProtectedRoute>} />
+      <Route path="/label" element={<LabelRoute><LabelDashboardPage /></LabelRoute>} />
       <Route path="/beat-bank" element={<ProtectedRoute><ProducerBeatBankPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
