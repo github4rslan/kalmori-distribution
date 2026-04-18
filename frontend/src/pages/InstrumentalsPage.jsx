@@ -434,85 +434,71 @@ export default function InstrumentalsPage() {
                 return (
                   <div
                     key={beat.id}
-                    className={`relative flex items-center gap-3 px-3 py-3 transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
+                    className={`relative flex items-center gap-3 px-3 py-2.5 transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
                     {/* Active left bar */}
                     {isCurrent && <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
 
-                    {/* Row number / equalizer */}
-                    <div className="w-5 flex-shrink-0 flex items-center justify-center">
-                      {isThisPlaying
-                        ? <div className="flex items-end justify-center gap-px h-3.5">
-                            {[1,2,3].map(i => (
-                              <div key={i} className="w-[3px] rounded-full animate-pulse"
-                                style={{ height: `${6 + i * 3}px`, background: 'linear-gradient(180deg,#7C4DFF,#E040FB)', animationDelay: `${i * 0.15}s` }} />
-                            ))}
-                          </div>
-                        : <span className={`text-[11px] font-mono ${isCurrent ? 'text-[#7C4DFF]' : 'text-gray-600'}`}>{String(idx + 1).padStart(2, '0')}</span>
-                      }
-                    </div>
-
-                    {/* Cover art */}
+                    {/* Cover art — play/pause/equalizer overlay here */}
                     <button onClick={() => toggleBeat(beat)}
                       className={`relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
                       style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
-                      data-testid={`play-beat-${beat.id}`}>
+                      data-testid={`play-beat-${beat.id}`}
+                      aria-label={isThisPlaying ? 'Pause' : 'Play'}>
                       {beat.cover_url
                         ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center">
                             <MusicNote className="w-5 h-5 text-white/20" weight="fill" />
                           </div>
                       }
-                      <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl ${isThisPlaying ? 'opacity-100 bg-black/55' : 'opacity-0 group-hover:opacity-100 group-active:opacity-100 bg-black/60'}`}>
-                        {isThisPlaying
-                          ? <Pause className="w-4 h-4 text-white drop-shadow" weight="fill" />
-                          : <Play className="w-4 h-4 text-white drop-shadow" weight="fill" />
-                        }
-                      </div>
+                      {/* Playing: equalizer over dark scrim. Hover/tap: play/pause icon. */}
+                      {isThisPlaying ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55 rounded-xl">
+                          <div className="flex items-end justify-center gap-[2px] h-4">
+                            {[1,2,3,4].map(i => (
+                              <div key={i} className="w-[3px] rounded-full animate-pulse"
+                                style={{ height: `${6 + (i % 2) * 5}px`, background: 'linear-gradient(180deg,#fff,#E040FB)', animationDelay: `${i * 0.12}s` }} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+                          <Play className="w-4 h-4 text-white drop-shadow ml-0.5" weight="fill" />
+                        </div>
+                      )}
                     </button>
 
-                    {/* Info */}
+                    {/* Info — title on top, producer · BPM · key on one muted line */}
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
                       <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>
                         {beat.title}
                       </p>
                       <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                        {beat.producer_name || 'Kalmori'}
+                        {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
                       </p>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="text-[9px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded-md whitespace-nowrap font-medium">{beat.bpm} BPM</span>
-                        <span className="text-[9px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded-md font-medium">{beat.key}</span>
-                      </div>
                     </div>
 
-                    {/* Price + cart stacked */}
-                    <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
-                      <span className="text-[11px] font-bold text-white">${beat.prices?.basic_lease || '29.99'}</span>
-                      <button
-                        onClick={() => openPurchaseModal(beat)}
-                        className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-md"
-                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
-                        data-testid={`buy-beat-${beat.id}`}>
-                        <ShoppingCart className="w-3.5 h-3.5 text-white" />
-                      </button>
-                    </div>
+                    {/* Price pill — single tap target, price embedded */}
+                    <button
+                      onClick={() => openPurchaseModal(beat)}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
+                      style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                      data-testid={`buy-beat-${beat.id}`}>
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      ${beat.prices?.basic_lease || '29.99'}
+                    </button>
 
                     {/* 3-dot menu */}
                     <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-600 active:text-white transition-all">
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-all"
+                        aria-label="More options">
                         <DotsThreeVertical className="w-4 h-4" weight="bold" />
                       </button>
                       {openMenuId === beat.id && (
                         <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-44">
-                          <button
-                            onClick={() => { openPurchaseModal(beat); setOpenMenuId(null); }}
-                            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
-                            <ShoppingCart className="w-4 h-4 flex-shrink-0" />
-                            Buy License
-                          </button>
                           <button
                             onClick={() => { shareBeat(beat); setOpenMenuId(null); }}
                             className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
