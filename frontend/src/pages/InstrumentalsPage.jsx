@@ -600,8 +600,8 @@ export default function InstrumentalsPage() {
                     {/* Active left bar */}
                     {isCurrent && <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'linear-gradient(180deg,#7C4DFF,#E040FB)' }} />}
 
-                    {/* Mobile layout (compact row) */}
-                    <div className="flex md:hidden items-center gap-3 px-3 py-2.5">
+                    {/* Mobile layout — priority: title > price > badges > tags */}
+                    <div className="flex md:hidden items-center gap-2.5 px-3 py-2.5">
                       <button onClick={() => toggleBeat(beat)}
                         className={`relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden group transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_12px_rgba(124,77,255,0.4)]' : ''}`}
                         style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
@@ -611,57 +611,46 @@ export default function InstrumentalsPage() {
                           ? <img src={beat.cover_url} alt="" className="w-full h-full object-cover" />
                           : <div className="w-full h-full flex items-center justify-center"><MusicNote className="w-5 h-5 text-white/20" weight="fill" /></div>
                         }
-                        {isThisPlaying ? (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/55 rounded-xl">
+                        <div className={`absolute inset-0 flex items-center justify-center rounded-xl transition-opacity ${isThisPlaying ? 'bg-black/55 opacity-100' : 'bg-black/60 opacity-0 group-hover:opacity-100 group-active:opacity-100'}`}>
+                          {isThisPlaying ? (
                             <div className="flex items-end justify-center gap-[2px] h-4">
                               {[1,2,3,4].map(i => (
                                 <div key={i} className="w-[3px] rounded-full animate-pulse"
                                   style={{ height: `${6 + (i % 2) * 5}px`, background: 'linear-gradient(180deg,#fff,#E040FB)', animationDelay: `${i * 0.12}s` }} />
                               ))}
                             </div>
-                          </div>
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
+                          ) : (
                             <Play className="w-4 h-4 text-white drop-shadow ml-0.5" weight="fill" />
-                          </div>
-                        )}
-                        {isFreeBeat(beat) && (
-                          <span className="absolute top-0.5 left-0.5 px-1 py-px rounded text-[8px] font-black tracking-wider text-white shadow"
-                            style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>FREE</span>
-                        )}
-                        {!isFreeBeat(beat) && isExclusiveAvailable(beat) && (
-                          <span className="absolute top-0.5 left-0.5 px-1 py-px rounded text-[8px] font-black tracking-wider text-black shadow"
-                            style={{ background: '#FFD700' }}>EXCL</span>
-                        )}
+                          )}
+                        </div>
                       </button>
                       <div className="flex-1 min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
                         <div className="flex items-center gap-1.5">
                           <p className={`text-[13px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
-                          {isNewBeat(beat) && (
+                          {/* Single-priority inline badge: FREE > EXCL > NEW */}
+                          {isFreeBeat(beat) ? (
+                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[8px] font-black tracking-wider text-white"
+                              style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>FREE</span>
+                          ) : isExclusiveAvailable(beat) ? (
+                            <span className="flex-shrink-0 px-1.5 py-px rounded text-[8px] font-black tracking-wider text-black"
+                              style={{ background: '#FFD700' }}>EXCL</span>
+                          ) : isNewBeat(beat) ? (
                             <span className="flex-shrink-0 px-1.5 py-px rounded text-[8px] font-black tracking-wider text-white"
                               style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
-                          )}
+                          ) : null}
                         </div>
                         <p className="text-[11px] text-gray-500 truncate mt-0.5">
                           {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
-                          {typeof beat.plays === 'number' && beat.plays > 0 && (
-                            <span className="ml-1 text-gray-600">· {beat.plays >= 1000 ? `${(beat.plays / 1000).toFixed(1)}k` : beat.plays} plays</span>
-                          )}
                         </p>
-                        {beatTags(beat).length > 0 && (
-                          <div className="flex items-center gap-1 mt-1 overflow-hidden">
-                            {beatTags(beat).slice(0, 2).map((t, i) => (
-                              <span key={i} className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 truncate max-w-[90px]">{t}</span>
-                            ))}
-                          </div>
-                        )}
                       </div>
+                      {/* Price chip — icon + price, compact */}
                       <button onClick={() => openPurchaseModal(beat)}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
+                        className="flex items-center gap-1 pl-2 pr-2.5 h-9 rounded-full text-white text-[11px] font-bold flex-shrink-0 transition-all active:scale-95 shadow-md"
                         style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}
+                        aria-label={`Buy for $${beat.prices?.basic_lease || '29.99'}`}
                         data-testid={`buy-beat-${beat.id}`}>
-                        <ShoppingCart className="w-3.5 h-3.5" />
-                        ${beat.prices?.basic_lease || '29.99'}
+                        <ShoppingCart className="w-3.5 h-3.5" weight="fill" />
+                        <span className="tabular-nums">${Number(beat.prices?.basic_lease || 29.99) % 1 === 0 ? Number(beat.prices?.basic_lease || 29.99).toFixed(0) : Number(beat.prices?.basic_lease || 29.99).toFixed(2)}</span>
                       </button>
                       <div className="relative flex-shrink-0" onClick={e => e.stopPropagation()}>
                         <button onClick={() => setOpenMenuId(openMenuId === beat.id ? null : beat.id)}
