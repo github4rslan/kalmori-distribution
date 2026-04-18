@@ -288,49 +288,6 @@ class ApiService {
     return response.data;
   }
 
-  // Distribution
-  async getDistributionStatus(releaseId) {
-    const response = await axios.get(`${BASE_URL}/api/releases/${releaseId}/distribution-status`, { headers: this.headers });
-    return response.data;
-  }
-
-  // Audio Upload (web FormData)
-  async uploadAudioFile(trackId, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await axios.post(
-      `${BASE_URL}/api/tracks/${trackId}/upload-audio`,
-      formData,
-      {
-        headers: {
-          ...this.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 120000,
-      }
-    );
-    return response.data;
-  }
-
-  // Cover Art Upload (web FormData)
-  async uploadCoverArt(releaseId, file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await axios.post(
-      `${BASE_URL}/api/releases/${releaseId}/upload-cover`,
-      formData,
-      {
-        headers: {
-          ...this.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-    return response.data;
-  }
-
   getCoverArtUrl(releaseId) {
     return `${BASE_URL}/api/releases/${releaseId}/cover`;
   }
