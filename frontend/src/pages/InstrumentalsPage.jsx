@@ -408,6 +408,82 @@ export default function InstrumentalsPage() {
         <div className="px-4 pb-2" data-reveal data-reveal-variant="rise" ref={beatListRef}>
           <p className="text-xs text-gray-600 mb-4">{visibleBeats.length} beat{visibleBeats.length !== 1 ? 's' : ''} available</p>
 
+          {/* Featured beat hero — picks most-played, or first if tied */}
+          {!loadingBeats && visibleBeats.length > 0 && quickFilter === 'all' && (() => {
+            const featured = [...visibleBeats].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0];
+            if (!featured) return null;
+            const isFeaturedPlaying = currentBeatId === featured.id && isPlaying;
+            return (
+              <div className="relative mb-5 rounded-3xl overflow-hidden border border-white/[0.08]"
+                style={{ background: 'linear-gradient(135deg,#1a0f2e 0%,#0d0820 60%,#000 100%)' }}>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-30 blur-3xl pointer-events-none"
+                  style={{ background: 'radial-gradient(circle,#7C4DFF,transparent 70%)' }} />
+                <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-25 blur-3xl pointer-events-none"
+                  style={{ background: 'radial-gradient(circle,#E040FB,transparent 70%)' }} />
+                <div className="relative flex flex-col sm:flex-row items-stretch gap-4 sm:gap-6 p-4 sm:p-6">
+                  {/* Cover */}
+                  <button onClick={() => toggleBeat(featured)}
+                    className="relative w-full sm:w-48 md:w-56 aspect-square rounded-2xl overflow-hidden flex-shrink-0 group"
+                    style={{ background: featured.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
+                    aria-label={isFeaturedPlaying ? 'Pause' : 'Play'}>
+                    {featured.cover_url
+                      ? <img src={featured.cover_url} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      : <div className="w-full h-full flex items-center justify-center"><MusicNote className="w-14 h-14 text-white/20" weight="fill" /></div>
+                    }
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${isFeaturedPlaying ? 'bg-black/40 opacity-100' : 'bg-black/50 opacity-0 group-hover:opacity-100'}`}>
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl" style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
+                        {isFeaturedPlaying
+                          ? <Pause className="w-7 h-7 text-white" weight="fill" />
+                          : <Play className="w-7 h-7 text-white ml-0.5" weight="fill" />
+                        }
+                      </div>
+                    </div>
+                  </button>
+                  {/* Info */}
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="px-2.5 py-1 rounded-full text-[9px] font-black tracking-[2px] text-white"
+                          style={{ background: 'linear-gradient(135deg,#FFD700,#E040FB)' }}>★ FEATURED</span>
+                        {isNewBeat(featured) && (
+                          <span className="px-2 py-1 rounded-full text-[9px] font-black tracking-wider text-white"
+                            style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
+                        )}
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl font-extrabold text-white truncate">{featured.title}</h3>
+                      <p className="text-sm text-gray-400 mt-1 truncate">
+                        by {featured.producer_name || 'Kalmori'}
+                        {typeof featured.plays === 'number' && featured.plays > 0 && (
+                          <span className="ml-2 text-gray-500">· {featured.plays >= 1000 ? `${(featured.plays / 1000).toFixed(1)}k` : featured.plays} plays</span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-2 mt-3 flex-wrap">
+                        <span className="text-[11px] font-mono text-gray-300 bg-white/5 px-2 py-1 rounded">{featured.bpm} BPM</span>
+                        <span className="text-[11px] text-gray-300 bg-white/5 px-2 py-1 rounded">{featured.key}</span>
+                        {beatTags(featured).slice(0, 3).map((t, i) => (
+                          <span key={i} className="px-2 py-1 rounded text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-3 flex-wrap">
+                      <button onClick={() => openPurchaseModal(featured)}
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-bold transition-all active:scale-95 shadow-lg hover:brightness-110"
+                        style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
+                        <ShoppingCart className="w-4 h-4" weight="fill" />
+                        Buy from ${Number(featured.prices?.basic_lease || 29.99) % 1 === 0 ? Number(featured.prices?.basic_lease || 29.99).toFixed(0) : Number(featured.prices?.basic_lease || 29.99).toFixed(2)}
+                      </button>
+                      <button onClick={() => toggleBeat(featured)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                        {isFeaturedPlaying ? <Pause className="w-4 h-4" weight="fill" /> : <Play className="w-4 h-4" weight="fill" />}
+                        {isFeaturedPlaying ? 'Pause preview' : 'Play preview'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Quick filter pills + inline sort */}
           <div className="flex items-center gap-3 mb-3 md:justify-between">
             <div className="flex gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 pr-8 md:mx-0 md:px-0 md:pr-0 md:flex-wrap flex-1 md:flex-initial">
@@ -428,7 +504,7 @@ export default function InstrumentalsPage() {
             </div>
             <div className="relative flex-shrink-0">
               <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                className="appearance-none bg-[#111] border border-[#222] hover:border-white/20 rounded-full pl-4 pr-9 py-2.5 text-[12px] font-semibold text-gray-300 cursor-pointer focus:outline-none focus:border-[#7C4DFF]/60 transition-colors"
+                className="appearance-none bg-[#111] border border-[#222] hover:border-white/20 rounded-full pl-3 pr-8 h-[38px] text-[12px] font-semibold text-gray-300 cursor-pointer focus:outline-none focus:border-[#7C4DFF]/60 transition-colors"
                 data-testid="inline-sort">
                 <option value="newest">Newest</option>
                 <option value="plays">Most Played</option>
@@ -437,7 +513,7 @@ export default function InstrumentalsPage() {
                 <option value="bpm_low">BPM ↑</option>
                 <option value="bpm_high">BPM ↓</option>
               </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" viewBox="0 0 12 12" fill="none">
+              <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" viewBox="0 0 12 12" fill="none">
                 <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
@@ -549,7 +625,7 @@ export default function InstrumentalsPage() {
                     <div className="w-20 h-9 rounded-xl bg-white/[0.06] animate-pulse" />
                   </div>
                   {/* Desktop skeleton */}
-                  <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3.5">
+                  <div className="hidden md:grid grid-cols-[64px_minmax(180px,1.1fr)_minmax(160px,1.4fr)_60px_60px_170px_130px_40px] items-center gap-4 px-5 py-3.5">
                     <div className="w-14 h-14 rounded-xl bg-white/[0.06] animate-pulse" />
                     <div className="space-y-2">
                       <div className="h-3 w-1/2 rounded bg-white/[0.06] animate-pulse" />
@@ -576,7 +652,7 @@ export default function InstrumentalsPage() {
           ) : (
             <div className="rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0d0d0d]">
               {/* Desktop column header */}
-              <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
+              <div className="hidden md:grid grid-cols-[64px_minmax(180px,1.1fr)_minmax(160px,1.4fr)_60px_60px_170px_130px_40px] items-center gap-4 px-5 py-3 bg-[#0a0a0a] border-b border-white/10 text-[10px] uppercase tracking-[2px] text-gray-500 font-semibold">
                 <span />
                 <span>Track</span>
                 <span className="text-center">Preview</span>
@@ -594,7 +670,7 @@ export default function InstrumentalsPage() {
                 return (
                   <div
                     key={beat.id}
-                    className={`relative transition-all border-b border-white/[0.04] last:border-b-0 ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#161616] active:bg-[#181818]'}`}
+                    className={`relative transition-all border-b border-white/[0.04] last:border-b-0 group ${isCurrent ? 'bg-gradient-to-r from-[#7C4DFF]/15 via-[#7C4DFF]/5 to-transparent' : 'bg-[#111] hover:bg-[#181820] active:bg-[#181818]'}`}
                     data-testid={`beat-${beat.id}`}>
 
                     {/* Active left bar */}
@@ -669,10 +745,10 @@ export default function InstrumentalsPage() {
                     </div>
 
                     {/* Desktop layout (grid columns) */}
-                    <div className="hidden md:grid grid-cols-[64px_minmax(160px,1fr)_minmax(140px,1.3fr)_70px_70px_110px_140px_40px] items-center gap-4 px-5 py-3.5 group">
+                    <div className="hidden md:grid grid-cols-[64px_minmax(180px,1.1fr)_minmax(160px,1.4fr)_60px_60px_170px_130px_40px] items-center gap-4 px-5 py-3.5">
                       {/* Cover */}
                       <button onClick={() => toggleBeat(beat)}
-                        className={`relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden transition-all ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_16px_rgba(124,77,255,0.4)]' : ''}`}
+                        className={`relative w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden transition-all duration-300 group-hover:scale-[1.06] group-hover:shadow-[0_0_20px_rgba(124,77,255,0.3)] ${isCurrent ? 'ring-2 ring-[#7C4DFF]/60 shadow-[0_0_16px_rgba(124,77,255,0.4)]' : ''}`}
                         style={{ background: beat.cover_url ? undefined : 'linear-gradient(135deg,#1a1a2e,#16213e)' }}
                         aria-label={isThisPlaying ? 'Pause' : 'Play'}>
                         {beat.cover_url
@@ -693,20 +769,20 @@ export default function InstrumentalsPage() {
                             <Play className="w-5 h-5 text-white drop-shadow ml-0.5" weight="fill" />
                           </div>
                         )}
-                        {isFreeBeat(beat) && (
+                        {isFreeBeat(beat) ? (
                           <span className="absolute top-1 left-1 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-white shadow"
                             style={{ background: 'linear-gradient(135deg,#E040FB,#7C4DFF)' }}>FREE</span>
-                        )}
-                        {!isFreeBeat(beat) && isExclusiveAvailable(beat) && (
+                        ) : isExclusiveAvailable(beat) ? (
                           <span className="absolute top-1 left-1 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-black shadow"
                             style={{ background: '#FFD700' }}>EXCL</span>
-                        )}
+                        ) : null}
                       </button>
                       {/* Title + producer */}
                       <div className="min-w-0 cursor-pointer" onClick={() => toggleBeat(beat)}>
                         <div className="flex items-center gap-1.5">
                           <p className={`text-[14px] font-semibold truncate leading-tight ${isCurrent ? 'text-white' : 'text-gray-100'}`}>{beat.title}</p>
-                          {isNewBeat(beat) && (
+                          {/* NEW only shows if no cover badge is occupying attention */}
+                          {isNewBeat(beat) && !isFreeBeat(beat) && !isExclusiveAvailable(beat) && (
                             <span className="flex-shrink-0 px-1.5 py-px rounded text-[9px] font-black tracking-wider text-white"
                               style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
                           )}
@@ -738,8 +814,8 @@ export default function InstrumentalsPage() {
                         {beatTags(beat).length === 0 ? (
                           <span className="text-[11px] text-gray-600">—</span>
                         ) : (
-                          beatTags(beat).map((t, i) => (
-                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 truncate max-w-[60px]">{t}</span>
+                          beatTags(beat).slice(0, 2).map((t, i) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-[#7C4DFF] bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 whitespace-nowrap">{t}</span>
                           ))
                         )}
                       </div>
