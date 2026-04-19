@@ -9,6 +9,7 @@ import RoleRoute from './components/RoleRoute';
 import ScrollToTop from './components/ScrollToTop';
 import { getRequiredPlansForFeature } from './components/featureAccess';
 import { api } from './services/api';
+import { getUserRole } from './utils/role';
 import { CartProvider } from './context/CartContext';
 
 // Configure axios for backward compatibility with cookie-based pages
@@ -316,7 +317,7 @@ const AdminRoute = ({ children }) => {
     );
   }
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  if (getUserRole(user) !== 'admin') return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -331,7 +332,7 @@ const LabelRoute = ({ children }) => {
     );
   }
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  const role = user?.user_role || user?.role;
+  const role = getUserRole(user);
   if (!['label', 'label_producer'].includes(role)) return <Navigate to="/dashboard" replace />;
   return children;
 };

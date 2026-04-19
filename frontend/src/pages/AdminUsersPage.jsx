@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getUserRole } from '../utils/role';
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -46,7 +47,7 @@ const AdminUsersPage = () => {
 
   const openEdit = (user) => {
     setEditUser(user);
-    setEditForm({ role: user.role, plan: user.plan, status: user.status || 'active' });
+    setEditForm({ role: getUserRole(user), plan: user.plan, status: user.status || 'active' });
   };
 
   const handleSave = async () => {

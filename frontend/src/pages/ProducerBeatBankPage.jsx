@@ -9,6 +9,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getUserRole } from '../utils/role';
 
 const GENRES = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const MOODS = ['Energetic', 'Chill', 'Dark', 'Emotional', 'Happy', 'Uplifting', 'Romantic', 'Aggressive', 'Party'];
@@ -56,7 +57,7 @@ export default function ProducerBeatBankPage() {
     price_basic: 29.99, price_premium: 79.99, price_unlimited: 149.99, price_exclusive: 499.99
   });
 
-  const role = user?.user_role || user?.role || '';
+  const role = getUserRole(user) || '';
   const ALLOWED = ['producer', 'label', 'label_producer', 'admin'];
 
   useEffect(() => {

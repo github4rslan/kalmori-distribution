@@ -8,6 +8,7 @@ import axios from 'axios';
 import { API } from '../App';
 import { isFeatureLocked } from './featureAccess';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getUserRole } from '../utils/role';
 
 const NOTIFICATION_ROUTES = {
   'new_submission': '/admin/submissions',
@@ -243,10 +244,11 @@ const DashboardLayout = ({ children }) => {
   const plan = user?.plan || 'free';
   const planStatusLabel = plan === 'free' ? 'FREE PLAN' : `${plan.toUpperCase()} ACTIVE`;
   const isLocked = (feat) => isFeatureLocked(plan, feat);
+  const userRole = getUserRole(user);
 
   const producerRoles = ['producer', 'label', 'label_producer'];
-  const isProducerOrLabel = producerRoles.includes(user?.user_role) || producerRoles.includes(user?.role);
-  const isLabelRole = ['label', 'label_producer'].includes(user?.user_role) || ['label', 'label_producer'].includes(user?.role);
+  const isProducerOrLabel = producerRoles.includes(userRole);
+  const isLabelRole = ['label', 'label_producer'].includes(userRole);
 
   const navItems = [
     { path: '/dashboard', icon: <House className="w-5 h-5" />, label: 'Dashboard' },
@@ -308,7 +310,7 @@ const DashboardLayout = ({ children }) => {
                 </Link>
               );
             })}
-            {user?.role === 'admin' && (
+            {userRole === 'admin' && (
               <>
                 <div className="border-t border-white/10 my-3" />
                 <Link to="/admin" onClick={() => setSidebarOpen(false)}
@@ -374,7 +376,7 @@ const DashboardLayout = ({ children }) => {
                   )}
                 </button>
                 {showNotifications && (
-                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={user?.user_role || user?.role} panelRef={notifPanelRef} />
+                  <NotificationPanel notifications={notifications} onMarkRead={markRead} onMarkAllRead={markAllRead} onClose={() => setShowNotifications(false)} onNavigate={(url) => navigate(url)} userRole={userRole} panelRef={notifPanelRef} />
                 )}
               </div>
               <Link to="/releases/new" className="sm:hidden">

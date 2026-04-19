@@ -6,6 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, User, Disc, ChartLineUp, CurrencyDollar, Globe, Target, Users as UsersIcon, MusicNotes, PencilSimple, X, CheckCircle, SpotifyLogo, AppleLogo, InstagramLogo, TwitterLogo, ArrowSquareOut, FloppyDisk } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getUserRole } from '../utils/role';
 
 const StatCard = ({ label, value, icon, color, testId }) => (
   <div className="mobile-card rounded-2xl border border-white/10 bg-[#141414] p-4" data-testid={testId}>
@@ -51,7 +52,7 @@ const AdminUserDetailPage = () => {
         apple_music_url: res.data.user.apple_music_url || '',
         instagram: res.data.user.instagram || '',
         twitter: res.data.user.twitter || '',
-        role: res.data.user.role || 'artist',
+        role: getUserRole(res.data.user) || 'artist',
         plan: res.data.user.plan || 'free',
         status: res.data.user.status || 'active',
       });
@@ -90,6 +91,7 @@ const AdminUserDetailPage = () => {
   const STATUS_LABEL = { distributed: 'Live', pending_review: 'Under Review', processing: 'Processing', rejected: 'Rejected', draft: 'Draft' };
   const statusColor = (s) => s === 'distributed' ? 'text-[#22C55E]' : s === 'pending_review' ? 'text-[#FFD700]' : s === 'rejected' ? 'text-[#EF4444]' : s === 'processing' ? 'text-[#7C4DFF]' : 'text-gray-400';
   const planColors = { pro: '#E040FB', rise: '#FFD700', free: '#666', single: '#7C4DFF', album: '#FF6B6B' };
+  const userRole = getUserRole(user);
 
   const avatarSrc = user.avatar_url
     ? (user.avatar_url.startsWith('https://') ? user.avatar_url : `${BACKEND_URL}/api/files/${user.avatar_url}`)
@@ -115,7 +117,7 @@ const AdminUserDetailPage = () => {
               <h1 className="flex flex-wrap items-center gap-2 text-xl font-bold text-white" data-testid="user-detail-name">
                 {user.artist_name || user.name}
                 <span className="text-xs px-2 py-0.5 rounded-full capitalize" style={{ backgroundColor: `${planColors[user.plan] || '#666'}20`, color: planColors[user.plan] || '#666' }}>{user.plan}</span>
-                <span className={`text-xs capitalize ${user.role === 'admin' ? 'text-[#E53935]' : 'text-gray-500'}`}>{user.role}</span>
+                <span className={`text-xs capitalize ${userRole === 'admin' ? 'text-[#E53935]' : 'text-gray-500'}`}>{userRole}</span>
               </h1>
               <p className="mt-1 break-words text-sm text-gray-500">{user.email} &middot; Joined {new Date(user.created_at).toLocaleDateString()}</p>
             </div>

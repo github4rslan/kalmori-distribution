@@ -28,6 +28,7 @@ import {
   X
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getUserRole } from '../utils/role';
 
 const LANGUAGES = [
   'English', 'Spanish', 'French', 'Portuguese', 'German', 'Italian', 'Japanese',
@@ -227,7 +228,7 @@ const ReleaseDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
-  const userRole = user?.user_role || user?.role;
+  const userRole = getUserRole(user);
   const isAdmin = userRole === 'admin';
   const [freshPlan, setFreshPlan] = useState(null);
   const [saleCampaign, setSaleCampaign] = useState(null);

@@ -6,6 +6,7 @@ import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
 import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord, PaperPlaneTilt } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
+import { getUserRole } from '../utils/role';
 
 // Hero images
 const heroSlideImages = [
@@ -133,7 +134,7 @@ const promoChannels = [
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const role = user?.user_role || user?.role;
+  const role = getUserRole(user);
   const isProducer = ['producer', 'label', 'label_producer'].includes(role);
   const isAdmin = role === 'admin';
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
+import { getUserRole } from '../utils/role';
 
 const RoleRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -16,7 +17,7 @@ const RoleRoute = ({ children, allowedRoles }) => {
 
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
 
-  const role = user?.user_role || user?.role;
+  const role = getUserRole(user);
   if (!allowedRoles.includes(role)) return <Navigate to="/dashboard" replace />;
 
   return children;
