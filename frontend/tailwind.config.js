@@ -75,6 +75,13 @@ module.exports = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
+  		},
+  		zIndex: {
+  			nav: '40',
+  			dropdown: '45',
+  			modal: '50',
+  			toast: '60',
+  			cookie: '70',
   		}
   	}
   },

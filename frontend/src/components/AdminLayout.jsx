@@ -65,9 +65,9 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-nav lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} h-screen`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-nav w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} h-screen`}>
         <div className="h-full flex flex-col overflow-hidden">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-2">
@@ -112,7 +112,7 @@ const AdminLayout = ({ children }) => {
       </aside>
 
       <div className="flex-1 flex min-h-screen flex-col overflow-x-hidden">
-        <header className="safe-top-pad sticky top-0 z-30 border-b border-white/10 bg-black/85 backdrop-blur-xl">
+        <header className="safe-top-pad sticky top-0 z-nav border-b border-white/10 bg-black/85 backdrop-blur-xl">
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2.5 sm:flex sm:justify-between sm:px-5 sm:py-4 lg:px-6">
             <div className="flex items-center gap-2">
               <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => navigate(-1)} data-testid="admin-back-btn"><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>

@@ -389,7 +389,7 @@ const AdminSubmissionsPage = () => {
 
       {/* ── Detail Modal ─────────────────────────────── */}
       {selectedSub && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-testid="review-modal">
+        <div className="fixed inset-0 z-modal flex items-end sm:items-center justify-center p-0 sm:p-4" data-testid="review-modal">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeModal} />
           <div className="relative bg-[#0a0a0a] border border-white/10 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-5xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
 

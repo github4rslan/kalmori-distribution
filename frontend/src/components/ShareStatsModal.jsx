@@ -42,7 +42,7 @@ export default function ShareStatsModal({ onClose }) {
   };
 
   if (loading) return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 z-modal flex items-center justify-center" onClick={onClose}>
       <div className="w-8 h-8 border-2 border-[#7C4DFF] border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -52,7 +52,7 @@ export default function ShareStatsModal({ onClose }) {
   const latestMilestone = milestones.filter(m => m.achieved).pop();
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose} data-testid="share-stats-modal">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-modal flex items-center justify-center p-4" onClick={onClose} data-testid="share-stats-modal">
       <div className="w-full max-w-lg" onClick={e => e.stopPropagation()}>
         {/* Close */}
         <div className="flex justify-end mb-3">

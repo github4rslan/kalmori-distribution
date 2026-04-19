@@ -295,7 +295,7 @@ export default function CalendarPage() {
 
         {/* Add Event Modal */}
         {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="add-event-modal">
+          <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="add-event-modal">
             <div className="bg-[#111] border border-[#222] rounded-2xl p-6 w-full max-w-md mx-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-bold text-lg">Add Event</h3>

@@ -417,7 +417,7 @@ export default function FanAnalyticsPage() {
 
         {/* Digest Preview Modal */}
         {showDigestPreview && digestPreview && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowDigestPreview(false)}>
+          <div className="fixed inset-0 bg-black/70 z-modal flex items-center justify-center p-4" onClick={() => setShowDigestPreview(false)}>
             <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <div className="flex items-center gap-2">

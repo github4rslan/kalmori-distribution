@@ -218,7 +218,7 @@ const AdminUsersPage = () => {
 
         {/* Edit User Modal */}
         {editUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="edit-user-modal">
+          <div className="fixed inset-0 z-modal flex items-center justify-center p-4" data-testid="edit-user-modal">
             <div className="absolute inset-0 bg-black/70" onClick={() => setEditUser(null)} />
             <div className="relative w-full max-w-md space-y-5 rounded-2xl border border-white/10 bg-[#111] p-5 sm:p-6">
               <div className="flex items-center justify-between">
@@ -267,7 +267,7 @@ const AdminUsersPage = () => {
         )}
         {/* Delete Confirmation Modal */}
         {deleteTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" data-testid="delete-user-modal">
+          <div className="fixed inset-0 z-modal flex items-center justify-center p-4" data-testid="delete-user-modal">
             <div className="absolute inset-0 bg-black/70" onClick={() => setDeleteTarget(null)} />
             <div className="relative w-full max-w-md space-y-5 rounded-2xl border border-red-500/30 bg-[#111] p-5 sm:p-6">
               <div className="flex items-center gap-3">

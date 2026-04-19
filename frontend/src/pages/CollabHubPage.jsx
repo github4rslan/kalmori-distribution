@@ -343,7 +343,7 @@ export default function CollabHubPage() {
 
         {/* Create Post Modal */}
         {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="create-post-modal">
+          <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="create-post-modal">
             <div className="bg-[#111] border border-[#222] rounded-2xl p-6 w-full max-w-lg mx-4 space-y-4 max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-bold text-lg">Post Collaboration Opportunity</h3>
@@ -412,7 +412,7 @@ export default function CollabHubPage() {
 
         {/* Invite Modal */}
         {inviteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="invite-modal">
+          <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="invite-modal">
             <div className="bg-[#111] border border-[#222] rounded-2xl p-6 w-full max-w-md mx-4 space-y-4">
               <h3 className="text-white font-bold text-lg">Send Collaboration Invite</h3>
               <div>

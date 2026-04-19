@@ -76,7 +76,7 @@ export default function PublishingPage() {
 
         {/* Popup */}
         {showPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85" data-testid="pub-popup">
+          <div className="fixed inset-0 z-modal flex items-center justify-center p-6 bg-black/85" data-testid="pub-popup">
             <div className="w-full max-w-md rounded-3xl overflow-hidden bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] p-10 text-center">
               <Star className="w-16 h-16 text-[#FFD700] mx-auto" weight="fill" />
               <h2 className="text-2xl font-extrabold text-white mt-6 tracking-wider">WE WILL SOON BE YOUR PUBLISHER</h2>

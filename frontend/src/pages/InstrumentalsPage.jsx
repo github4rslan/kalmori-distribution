@@ -30,7 +30,7 @@ const seededRandom = (seed) => {
 
 // Shared 3-dot action menu for beat rows
 const BeatMenu = ({ isFav, onFav, onShare, onDownload, onReport }) => (
-  <div className="absolute right-0 bottom-10 z-30 bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-48">
+  <div className="absolute right-0 bottom-10 z-dropdown bg-[#1c1c1c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden w-48">
     <button onClick={onFav}
       className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-300 hover:bg-white/5 transition-colors">
       <Heart className={`w-4 h-4 flex-shrink-0 ${isFav ? 'text-[#E040FB]' : ''}`} weight={isFav ? 'fill' : 'regular'} />
@@ -873,7 +873,7 @@ export default function InstrumentalsPage() {
             STICKY BOTTOM PLAYER BAR
         ══════════════════════════════════════════ */}
         {currentBeat && (
-          <div className="fixed bottom-0 left-0 right-0 z-50"
+          <div className="fixed bottom-0 left-0 right-0 z-nav"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
             {/* Gradient fade above player */}
             <div className="h-6 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
@@ -969,7 +969,7 @@ export default function InstrumentalsPage() {
 
         {/* ── PURCHASE MODAL ── */}
         {selectedBeat && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedBeat(null)}>
+          <div className="fixed inset-0 bg-black/80 z-modal flex items-end sm:items-center justify-center" onClick={() => setSelectedBeat(null)}>
             <div className="bg-[#111] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()} data-testid="purchase-modal">
               <div className="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-5 sm:hidden" />
 

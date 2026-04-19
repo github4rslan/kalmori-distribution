@@ -77,10 +77,10 @@ const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, 
 
   const content = (
     <>
-      <div className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="fixed inset-0 z-dropdown bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
       <div
         ref={panelRef}
-        className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-3 z-[100] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111111]/95 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:bottom-auto sm:mt-3 sm:h-auto sm:max-h-[28rem] sm:w-[26rem] sm:rounded-2xl"
+        className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+4.75rem)] bottom-3 z-dropdown overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111111]/95 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:bottom-auto sm:mt-3 sm:h-auto sm:max-h-[28rem] sm:w-[26rem] sm:rounded-2xl"
         data-testid="notification-panel">
         <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
           <div>
@@ -279,9 +279,9 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-nav lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:static inset-y-0 left-0 z-nav w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="h-full flex flex-col">
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/dashboard" className="flex flex-col items-start">
@@ -352,7 +352,7 @@ const DashboardLayout = ({ children }) => {
       </aside>
 
       <div className="flex-1 flex min-h-screen min-w-0 flex-col overflow-x-hidden">
-        <header className="safe-top-pad sticky top-0 z-30 border-b border-white/10 bg-black/85 backdrop-blur-xl">
+        <header className="safe-top-pad sticky top-0 z-nav border-b border-white/10 bg-black/85 backdrop-blur-xl">
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2.5 sm:flex sm:justify-between sm:px-5 sm:py-4 lg:px-6">
             <div className="flex items-center gap-2">
               <button className="touch-target inline-flex items-center justify-center rounded-xl hover:bg-white/5 lg:hidden" onClick={() => navigate(-1)} data-testid="dashboard-back-btn"><ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>

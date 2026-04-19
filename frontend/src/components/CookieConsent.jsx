@@ -39,7 +39,7 @@ export default function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 animate-slide-up" data-testid="cookie-banner">
+    <div className="fixed bottom-0 left-0 right-0 z-cookie p-4 animate-slide-up" data-testid="cookie-banner">
       <div className="max-w-3xl mx-auto bg-[#111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
         <div className="p-5 sm:p-6">
           <div className="flex items-start gap-4">

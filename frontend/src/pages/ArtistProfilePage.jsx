@@ -236,7 +236,7 @@ const ShareBar = ({ slug, themeColor }) => {
         {showQR && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center px-6"
+            className="fixed inset-0 z-modal bg-black/80 backdrop-blur-md flex items-center justify-center px-6"
             onClick={() => setShowQR(false)}
           >
             <motion.div
@@ -272,7 +272,7 @@ const ShareBar = ({ slug, themeColor }) => {
       </AnimatePresence>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="fixed bottom-0 left-0 right-0 z-nav">
         <div className="max-w-xl mx-auto">
           <motion.div
             initial={{ y: 60, opacity: 0 }}
@@ -392,7 +392,7 @@ const ArtistProfilePage = () => {
       </div>
 
       {/* Powered by KALMORI */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="fixed top-4 left-1/2 -translate-x-1/2 z-toast">
         <Link to="/" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-full" data-testid="kalmori-badge">
           <MusicNotes className="w-3.5 h-3.5" weight="fill" style={{ color: tc }} />
           <span className="text-[10px] font-bold tracking-[0.15em] text-white/60 uppercase">Kalmori</span>

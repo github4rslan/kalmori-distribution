@@ -143,7 +143,7 @@ const PublicLayout = ({ children }) => {
       `}</style>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]" data-testid="public-header">
+      <header className="sticky top-0 z-nav bg-black border-b border-[#1a1a1a]" data-testid="public-header">
         <div className="flex items-center justify-between px-4 py-3">
           {isHomePage ? (
             <button onClick={() => setMenuOpen(true)} className="p-1 min-w-[44px] min-h-[44px] flex items-center justify-center" data-testid="menu-toggle">
@@ -194,7 +194,7 @@ const PublicLayout = ({ children }) => {
 
       {/* Slide-out Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[100]" data-testid="slide-menu">
+        <div className="fixed inset-0 z-nav" data-testid="slide-menu">
           <div className="absolute inset-0 bg-black/70" onClick={closeMenu} />
           <div className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-[#0a0a0a] border-r border-[#1a1a1a] flex flex-col animate-slideIn">
             {/* Menu Header */}
@@ -340,7 +340,7 @@ const PublicLayout = ({ children }) => {
 
       {/* Scroll to Top */}
       {showScrollTop && (
-        <button onClick={scrollToTop} className="fixed bottom-[116px] right-5 z-50 w-[50px] h-[50px] rounded-full flex items-center justify-center bg-[#7C4DFF] shadow-lg shadow-[#7C4DFF]/30" data-testid="scroll-to-top">
+        <button onClick={scrollToTop} className="fixed bottom-[116px] right-5 z-nav w-[50px] h-[50px] rounded-full flex items-center justify-center bg-[#7C4DFF] shadow-lg shadow-[#7C4DFF]/30" data-testid="scroll-to-top">
           <ArrowUp className="w-6 h-6 text-white" weight="bold" />
         </button>
       )}

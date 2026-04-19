@@ -847,7 +847,7 @@ const AdminRoyaltyImportPage = () => {
 
         {/* ===== IMPORT DETAIL MODAL ===== */}
         {selectedImport && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-modal flex items-center justify-center p-4"
             onClick={() => { setSelectedImport(null); setImportDetail(null); }} data-testid="admin-import-detail-modal">
             <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl max-w-5xl w-full max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="p-5 border-b border-white/10 flex items-center justify-between">
@@ -944,7 +944,7 @@ const AdminRoyaltyImportPage = () => {
 
         {/* ===== TEMPLATE EDITOR MODAL ===== */}
         {showTemplateEditor && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-modal flex items-center justify-center p-4"
             onClick={() => setShowTemplateEditor(false)} data-testid="template-editor-modal">
             <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl max-w-lg w-full" onClick={e => e.stopPropagation()}>
               <div className="p-5 border-b border-white/10 flex items-center justify-between">
