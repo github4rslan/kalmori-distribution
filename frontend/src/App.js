@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
 import CookieConsent from './components/CookieConsent';
+import FeatureRoute from './components/FeatureRoute';
+import { getRequiredPlansForFeature } from './components/featureAccess';
 import { api } from './services/api';
 import { CartProvider } from './context/CartContext';
 
@@ -353,18 +355,18 @@ const AppRouter = () => {
       <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetailPage /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
       <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
-      <Route path="/spotify-canvas" element={<ProtectedRoute><SpotifyCanvasPage /></ProtectedRoute>} />
-      <Route path="/content-id" element={<ProtectedRoute><ContentIdPage /></ProtectedRoute>} />
+      <Route path="/spotify-canvas" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('spotify_canvas')}><SpotifyCanvasPage /></FeatureRoute>} />
+      <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
       <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
-      <Route path="/collaborations" element={<ProtectedRoute><CollaborationsPage /></ProtectedRoute>} />
+      <Route path="/collaborations" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('collaborations')}><CollaborationsPage /></FeatureRoute>} />
               <Route path="/collab-hub" element={<ProtectedRoute><CollabHubPage /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/royalty-splits" element={<ProtectedRoute><RoyaltySplitsPage /></ProtectedRoute>} />
-      <Route path="/presave-manager" element={<ProtectedRoute><PreSaveManagerPage /></ProtectedRoute>} />
-      <Route path="/fan-analytics" element={<ProtectedRoute><FanAnalyticsPage /></ProtectedRoute>} />
+      <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
+      <Route path="/fan-analytics" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('fan_analytics')}><FanAnalyticsPage /></FeatureRoute>} />
       <Route path="/revenue" element={<ProtectedRoute><RevenueAnalyticsPage /></ProtectedRoute>} />
-      <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
-      <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
+      <Route path="/leaderboard" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('leaderboard')}><LeaderboardPage /></FeatureRoute>} />
+      <Route path="/goals" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('goals')}><GoalsPage /></FeatureRoute>} />
               <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
       <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />

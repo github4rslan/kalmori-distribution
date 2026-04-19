@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, Plus, ShieldCheck, SpotifyLogo, YoutubeLogo, ArrowLeft, ShoppingBag, Bell, Check, UsersThree, Megaphone, HeartStraight, Lightning, CurrencyDollar, Trophy, Target, Buildings, Lock, Crown, Gift, CalendarBlank, ChatCircle, Star, Sparkle, Vault, MusicNote } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API } from '../App';
+import { isFeatureLocked } from './featureAccess';
 
 const NOTIFICATION_ROUTES = {
   'new_submission': '/admin/submissions',
@@ -238,13 +239,7 @@ const DashboardLayout = ({ children }) => {
 
   const plan = user?.plan || 'free';
   const planStatusLabel = plan === 'free' ? 'FREE PLAN' : `${plan.toUpperCase()} ACTIVE`;
-  const LOCKED = {
-    free: ['spotify_canvas', 'content_id', 'collaborations', 'presave', 'fan_analytics', 'leaderboard', 'goals', 'ai_strategy'],
-    rise: ['spotify_canvas', 'content_id', 'leaderboard', 'presave', 'ai_strategy'],
-    pro: [],
-  };
-  const locked = LOCKED[plan] || LOCKED.free;
-  const isLocked = (feat) => locked.includes(feat);
+  const isLocked = (feat) => isFeatureLocked(plan, feat);
 
   const producerRoles = ['producer', 'label', 'label_producer'];
   const isProducerOrLabel = producerRoles.includes(user?.user_role) || producerRoles.includes(user?.role);
