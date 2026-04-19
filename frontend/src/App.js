@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
 import CookieConsent from './components/CookieConsent';
 import FeatureRoute from './components/FeatureRoute';
+import RoleRoute from './components/RoleRoute';
 import { getRequiredPlansForFeature } from './components/featureAccess';
 import { api } from './services/api';
 import { CartProvider } from './context/CartContext';
@@ -373,7 +374,7 @@ const AppRouter = () => {
       <Route path="/artist/:slug" element={<ArtistProfilePage />} />
       <Route path="/select-role" element={<RoleSelectionPage />} />
       <Route path="/label" element={<LabelRoute><LabelDashboardPage /></LabelRoute>} />
-      <Route path="/beat-bank" element={<ProtectedRoute><ProducerBeatBankPage /></ProtectedRoute>} />
+      <Route path="/beat-bank" element={<RoleRoute allowedRoles={['producer', 'label', 'label_producer']}><ProducerBeatBankPage /></RoleRoute>} />
       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
       <Route path="/features" element={<ProtectedRoute><FeaturesPage /></ProtectedRoute>} />
