@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Toaster } from './components/ui/sonner';
 import CookieConsent from './components/CookieConsent';
 import FeatureRoute from './components/FeatureRoute';
+import FocusOnRouteChange from './components/FocusOnRouteChange';
 import RoleRoute from './components/RoleRoute';
 import ScrollToTop from './components/ScrollToTop';
 import { getRequiredPlansForFeature } from './components/featureAccess';
@@ -348,6 +349,7 @@ const AppRouter = () => {
     return (
       <>
         <ScrollToTop />
+        <FocusOnRouteChange />
         <Suspense fallback={<PageFallback />}><AuthCallback /></Suspense>
       </>
     );
@@ -355,6 +357,7 @@ const AppRouter = () => {
   return (
     <>
       <ScrollToTop />
+      <FocusOnRouteChange />
       <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />

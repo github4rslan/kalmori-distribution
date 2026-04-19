@@ -188,7 +188,7 @@ const PublicLayout = ({ children }) => {
         </div>
       </header>
 
-      <main>{children}</main>
+      <main tabIndex={-1}>{children}</main>
 
       {/* Slide-out Menu */}
       {menuOpen && (

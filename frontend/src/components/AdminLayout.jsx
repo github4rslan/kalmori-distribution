@@ -129,7 +129,7 @@ const AdminLayout = ({ children }) => {
             </div>
           </div>
         </header>
-        <main className="mobile-page-shell flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">{children}</main>
+        <main tabIndex={-1} className="mobile-page-shell flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   );
