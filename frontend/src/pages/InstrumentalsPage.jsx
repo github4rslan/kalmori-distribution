@@ -879,8 +879,12 @@ export default function InstrumentalsPage() {
           <div className="space-y-4">
             {licenseTiers.map((tier) => (
               <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border-2 relative overflow-hidden transition-all ${selectedLicense === tier.id ? 'border-opacity-100' : 'border-opacity-30'}`}
-                style={{ borderColor: tier.color }}
+                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border relative overflow-hidden transition-all ${
+                  selectedLicense === tier.id
+                    ? 'border-white/20 bg-white/[0.03] shadow-[0_14px_40px_rgba(0,0,0,0.28)]'
+                    : 'border-white/8 hover:border-white/14'
+                }`}
+                style={selectedLicense === tier.id ? { boxShadow: `0 0 0 1px ${tier.color}30, 0 14px 40px rgba(0,0,0,0.28)` } : undefined}
                 data-testid={`tier-${tier.id}`}>
                 {tier.popular && (
                   <span className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-[10px] font-bold text-white tracking-wider" style={{ backgroundColor: tier.color }}>MOST POPULAR</span>
@@ -1057,8 +1061,12 @@ export default function InstrumentalsPage() {
                   <div className="space-y-2.5 mb-5">
                     {licenseTiers.map(tier => (
                       <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                        className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${selectedLicense === tier.id ? 'bg-white/5' : ''}`}
-                        style={{ borderColor: tier.color, borderOpacity: selectedLicense === tier.id ? 1 : 0.3 }}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                          selectedLicense === tier.id
+                            ? 'bg-white/5 border-white/20'
+                            : 'border-white/10 hover:border-white/20'
+                        }`}
+                        style={selectedLicense === tier.id ? { boxShadow: `0 0 0 1px ${tier.color}30` } : undefined}
                         data-testid={`modal-tier-${tier.id}`}>
                         <div className="text-left">
                           <p className="text-sm font-bold text-white">{tier.name}</p>
