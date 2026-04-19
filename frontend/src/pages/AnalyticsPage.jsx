@@ -48,8 +48,12 @@ const AnalyticsPage = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [importing, setImporting] = useState(false);
   const importRef = useRef(null);
+  const tabPanelRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchAll = async () => {
     try {
@@ -156,6 +160,8 @@ const AnalyticsPage = () => {
             </button>
           ))}
         </div>
+
+        <div ref={tabPanelRef} />
 
         {/* Stats */}
         <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 xl:grid-cols-4 sm:gap-4">

@@ -59,6 +59,7 @@ export default function AdminBeatsPage() {
   const [filterProducer, setFilterProducer] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const audioRef = useRef(null);
+  const tabPanelRef = useRef(null);
   useBodyScrollLock(showForm);
 
   const [form, setForm] = useState({
@@ -70,6 +71,9 @@ export default function AdminBeatsPage() {
     fetchAll();
     return () => { if (audioRef.current) audioRef.current.pause(); };
   }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   // close action menu on outside tap
   useEffect(() => {
@@ -292,6 +296,7 @@ export default function AdminBeatsPage() {
         </div>
 
         {/* ── BEATS TAB ── */}
+        <div ref={tabPanelRef} />
         {activeTab === 'beats' && (
           <div>
             {producers.length > 1 && (

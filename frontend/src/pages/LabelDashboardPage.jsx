@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API, BACKEND_URL, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
@@ -42,8 +42,12 @@ const LabelDashboardPage = () => {
   const [savingSplit, setSavingSplit] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exporting, setExporting] = useState(null);
+  const tabPanelRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchAll = async () => {
     try {
@@ -151,6 +155,7 @@ const LabelDashboardPage = () => {
             </button>
           ))}
         </div>
+        <div ref={tabPanelRef} />
 
         {/* Invite Modal */}
         {showInvite && (

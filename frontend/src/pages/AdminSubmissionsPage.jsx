@@ -160,6 +160,7 @@ const AdminSubmissionsPage = () => {
   const [reviewing, setReviewing] = useState(false);
   const [goLiveHours, setGoLiveHours] = useState(24);
   const [activeTab, setActiveTab] = useState('release');
+  const tabPanelRef = useRef(null);
   useBodyScrollLock(Boolean(selectedSub));
 
   // handle ?release= query param from notification deep links
@@ -168,6 +169,9 @@ const AdminSubmissionsPage = () => {
     const releaseId = params.get('release');
     if (releaseId) openDetail(releaseId);
   }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchSubmissions = async (p = 1, status = '') => {
     setLoading(true);
@@ -445,7 +449,7 @@ const AdminSubmissionsPage = () => {
                 </div>
 
                 {/* Tab content */}
-                <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-4">
+                <div ref={tabPanelRef} className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-4">
 
                   {/* ─ Release tab ─ */}
                   {activeTab === 'release' && (

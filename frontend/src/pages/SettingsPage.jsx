@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
@@ -68,6 +68,8 @@ const SettingsPage = () => {
   const [slugCopied, setSlugCopied] = useState(false);
   const [themeColor, setThemeColor] = useState('#7C4DFF');
   const [savingTheme, setSavingTheme] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+  const tabPanelRef = useRef(null);
 
   useEffect(() => {
     fetchData();
@@ -93,6 +95,9 @@ const SettingsPage = () => {
       window.history.replaceState({}, '', '/settings');
     }
   }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchSpotifyStatus = async () => {
     try {
@@ -287,7 +292,7 @@ const SettingsPage = () => {
           <p className="text-sm text-gray-400">Manage your profile, notifications, integrations, and public artist presence.</p>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="border border-white/10 bg-[#141414]">
             <TabsTrigger value="profile" className="data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-2" /> Profile
@@ -305,6 +310,7 @@ const SettingsPage = () => {
               <ShareNetwork className="w-4 h-4 mr-2" /> Public Profile
             </TabsTrigger>
           </TabsList>
+          <div ref={tabPanelRef}>
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
@@ -852,6 +858,7 @@ const SettingsPage = () => {
               </div>
             )}
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </DashboardLayout>

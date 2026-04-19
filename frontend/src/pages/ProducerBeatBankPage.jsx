@@ -50,6 +50,7 @@ export default function ProducerBeatBankPage() {
   const [playingId, setPlayingId] = useState(null);
   const [platformFee, setPlatformFee] = useState(15);
   const audioRef = useRef(null);
+  const tabPanelRef = useRef(null);
   useBodyScrollLock(showForm);
 
   const [form, setForm] = useState({
@@ -69,6 +70,9 @@ export default function ProducerBeatBankPage() {
     fetchAll();
     return () => { if (audioRef.current) audioRef.current.pause(); };
   }, [role]);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchAll = async () => {
     try {
@@ -281,6 +285,7 @@ export default function ProducerBeatBankPage() {
             </button>
           ))}
         </div>
+        <div ref={tabPanelRef} />
 
         {/* Beats Tab */}
         {activeTab === 'beats' && (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
@@ -33,6 +33,7 @@ export default function RevenueAnalyticsPage() {
   const [calcMix, setCalcMix] = useState({ Spotify: 45, 'Apple Music': 25, 'YouTube Music': 15, 'Amazon Music': 10, Other: 5 });
   const [calcResult, setCalcResult] = useState(null);
   const [calcLoading, setCalcLoading] = useState(false);
+  const tabPanelRef = useRef(null);
 
   const handleExport = async (format) => {
     try {
@@ -55,6 +56,9 @@ export default function RevenueAnalyticsPage() {
   };
 
   useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const fetchData = async () => {
     try {
@@ -165,6 +169,7 @@ export default function RevenueAnalyticsPage() {
         </div>
 
         {/* Combined Summary Cards — always visible */}
+        <div ref={tabPanelRef} />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" data-testid="revenue-summary">
           <SummaryCard
             label="Total Earnings"

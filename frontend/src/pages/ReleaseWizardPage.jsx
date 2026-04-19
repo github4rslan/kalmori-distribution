@@ -104,6 +104,7 @@ export default function ReleaseWizardPage() {
   const [loading, setLoading] = useState(false);
   const [releaseId, setReleaseId] = useState(null);
   const [tabComplete, setTabComplete] = useState({ general: false, tracks: false, territory: false });
+  const tabPanelRef = useRef(null);
 
   // General Information
   const [form, setForm] = useState({
@@ -143,6 +144,9 @@ export default function ReleaseWizardPage() {
 
   const token = document.cookie.split(';').find(c => c.trim().startsWith('access_token='))?.split('=')[1] || localStorage.getItem('access_token');
   const headers = { Authorization: `Bearer ${token}` };
+  useEffect(() => {
+    tabPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [activeTab]);
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -361,6 +365,7 @@ export default function ReleaseWizardPage() {
             </button>
           ))}
         </div>
+        <div ref={tabPanelRef} />
 
         {/* ===== TAB 1: GENERAL INFORMATION ===== */}
         {activeTab === 'general' && (
