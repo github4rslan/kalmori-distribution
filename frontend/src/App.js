@@ -5,6 +5,7 @@ import { Toaster } from './components/ui/sonner';
 import CookieConsent from './components/CookieConsent';
 import FeatureRoute from './components/FeatureRoute';
 import RoleRoute from './components/RoleRoute';
+import ScrollToTop from './components/ScrollToTop';
 import { getRequiredPlansForFeature } from './components/featureAccess';
 import { api } from './services/api';
 import { CartProvider } from './context/CartContext';
@@ -343,44 +344,53 @@ const PageFallback = () => (
 // App Router
 const AppRouter = () => {
   const location = useLocation();
-  if (location.hash?.includes('session_id=')) return <Suspense fallback={<PageFallback />}><AuthCallback /></Suspense>;
+  if (location.hash?.includes('session_id=')) {
+    return (
+      <>
+        <ScrollToTop />
+        <Suspense fallback={<PageFallback />}><AuthCallback /></Suspense>
+      </>
+    );
+  }
   return (
-    <Suspense fallback={<PageFallback />}>
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
-      <Route path="/releases/new" element={<ProtectedRoute><ReleaseWizardPage /></ProtectedRoute>} />
-      <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetailPage /></ProtectedRoute>} />
-      <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-      <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
-      <Route path="/spotify-canvas" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('spotify_canvas')}><SpotifyCanvasPage /></FeatureRoute>} />
-      <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
-      <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
-      <Route path="/collaborations" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('collaborations')}><CollaborationsPage /></FeatureRoute>} />
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<PageFallback />}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/releases" element={<ProtectedRoute><ReleasesPage /></ProtectedRoute>} />
+        <Route path="/releases/new" element={<ProtectedRoute><ReleaseWizardPage /></ProtectedRoute>} />
+        <Route path="/releases/:id" element={<ProtectedRoute><ReleaseDetailPage /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+        <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+        <Route path="/spotify-canvas" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('spotify_canvas')}><SpotifyCanvasPage /></FeatureRoute>} />
+        <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
+        <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
+        <Route path="/collaborations" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('collaborations')}><CollaborationsPage /></FeatureRoute>} />
               <Route path="/collab-hub" element={<ProtectedRoute><CollabHubPage /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/royalty-splits" element={<ProtectedRoute><RoyaltySplitsPage /></ProtectedRoute>} />
-      <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
-      <Route path="/fan-analytics" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('fan_analytics')}><FanAnalyticsPage /></FeatureRoute>} />
-      <Route path="/revenue" element={<ProtectedRoute><RevenueAnalyticsPage /></ProtectedRoute>} />
-      <Route path="/leaderboard" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('leaderboard')}><LeaderboardPage /></FeatureRoute>} />
-      <Route path="/goals" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('goals')}><GoalsPage /></FeatureRoute>} />
+        <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
+        <Route path="/fan-analytics" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('fan_analytics')}><FanAnalyticsPage /></FeatureRoute>} />
+        <Route path="/revenue" element={<ProtectedRoute><RevenueAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('leaderboard')}><LeaderboardPage /></FeatureRoute>} />
+        <Route path="/goals" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('goals')}><GoalsPage /></FeatureRoute>} />
               <Route path="/referrals" element={<ProtectedRoute><ReferralPage /></ProtectedRoute>} />
               <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-      <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />
-      <Route path="/artist/:slug" element={<ArtistProfilePage />} />
-      <Route path="/select-role" element={<RoleSelectionPage />} />
-      <Route path="/label" element={<LabelRoute><LabelDashboardPage /></LabelRoute>} />
-      <Route path="/beat-bank" element={<RoleRoute allowedRoles={['producer', 'label', 'label_producer']}><ProducerBeatBankPage /></RoleRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-      <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
-      <Route path="/features" element={<ProtectedRoute><FeaturesPage /></ProtectedRoute>} />
-      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-      <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissionsPage /></AdminRoute>} />
-      <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+        <Route path="/presave/:campaignId" element={<PreSaveLandingPage />} />
+        <Route path="/artist/:slug" element={<ArtistProfilePage />} />
+        <Route path="/select-role" element={<RoleSelectionPage />} />
+        <Route path="/label" element={<LabelRoute><LabelDashboardPage /></LabelRoute>} />
+        <Route path="/beat-bank" element={<RoleRoute allowedRoles={['producer', 'label', 'label_producer']}><ProducerBeatBankPage /></RoleRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/spotify" element={<ProtectedRoute><SpotifyAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/features" element={<ProtectedRoute><FeaturesPage /></ProtectedRoute>} />
+        <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+        <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissionsPage /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
               <Route path="/admin/users/:userId" element={<AdminRoute><AdminUserDetailPage /></AdminRoute>} />
               <Route path="/admin/beats" element={<AdminRoute><AdminBeatsPage /></AdminRoute>} />
               <Route path="/admin/royalty-import" element={<AdminRoute><AdminRoyaltyImportPage /></AdminRoute>} />
@@ -399,24 +409,25 @@ const AppRouter = () => {
               <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/agreement" element={<AgreementPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
               <Route path="/faq" element={<FAQPage />} />
-      <Route path="/services" element={<ServicesPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/promoting" element={<PromotingPage />} />
-      <Route path="/publishing" element={<PublishingPage />} />
-      <Route path="/stores" element={<StoresPage />} />
-      <Route path="/leasing" element={<InstrumentalsPage />} />
-      <Route path="/instrumentals" element={<InstrumentalsPage />} />
-      <Route path="/request-beat" element={<RequestBeatPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/privacy" element={<PrivacyPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/forgot-password" element={<ResetPasswordPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-    </Suspense>
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/promoting" element={<PromotingPage />} />
+        <Route path="/publishing" element={<PublishingPage />} />
+        <Route path="/stores" element={<StoresPage />} />
+        <Route path="/leasing" element={<InstrumentalsPage />} />
+        <Route path="/instrumentals" element={<InstrumentalsPage />} />
+        <Route path="/request-beat" element={<RequestBeatPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/forgot-password" element={<ResetPasswordPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      </Suspense>
+    </>
   );
 };
 
