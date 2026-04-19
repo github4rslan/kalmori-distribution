@@ -3,6 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { MagnifyingGlass, Plus, PaperPlaneTilt, Check, X, User, MusicNote, Microphone, Headphones, Waveform, Guitar, Faders, Clock, CurrencyDollar, ChatCircle, CaretDown } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -33,6 +34,7 @@ export default function CollabHubPage() {
   const [filterGenre, setFilterGenre] = useState('');
   const [inviteModal, setInviteModal] = useState(null);
   const [inviteMsg, setInviteMsg] = useState('');
+  useBodyScrollLock(showForm || Boolean(inviteModal));
   const [form, setForm] = useState({
     title: '', looking_for: 'vocalist', genre: '', description: '', budget: '', deadline: '',
   });

@@ -5,6 +5,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { Upload, FileArrowUp, FileCsv, CheckCircle, WarningCircle, Clock, Eye, X, Plus, Trash, PencilSimple, FloppyDisk, ShieldWarning, CopySimple, ArrowsLeftRight, CalendarBlank, Play, Pause, Timer } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const AdminRoyaltyImportPage = () => {
   const [activeSection, setActiveSection] = useState('import');
@@ -49,6 +50,7 @@ const AdminRoyaltyImportPage = () => {
   const [bulkProcessing, setBulkProcessing] = useState(false);
 
   const fileInputRef = useRef(null);
+  useBodyScrollLock(Boolean(selectedImport) || showTemplateEditor);
 
   const fetchImports = useCallback(async () => {
     try {

@@ -8,6 +8,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const GENRES = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const MOODS = ['Energetic', 'Chill', 'Dark', 'Emotional', 'Happy', 'Uplifting', 'Romantic', 'Aggressive', 'Party'];
@@ -47,6 +48,7 @@ export default function ProducerBeatBankPage() {
   const [playingId, setPlayingId] = useState(null);
   const [platformFee, setPlatformFee] = useState(15);
   const audioRef = useRef(null);
+  useBodyScrollLock(showForm);
 
   const [form, setForm] = useState({
     title: '', genre: 'Hip-Hop/Rap', bpm: 120, key: 'Cm', mood: 'Energetic',

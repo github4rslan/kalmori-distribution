@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import useScrollReveal from '../hooks/useScrollReveal';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
@@ -18,6 +19,7 @@ const PublicLayout = ({ children }) => {
   const [activeSubmenu, setActiveSubmenu] = useState(null);
 
   useScrollReveal();
+  useBodyScrollLock(menuOpen);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);

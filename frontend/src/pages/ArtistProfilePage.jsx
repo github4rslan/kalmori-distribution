@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, SpotifyLogo, AppleLogo, InstagramLogo, TwitterLogo, MusicNotes, Disc, Play, Pause, ShareNetwork, CheckCircle, Copy, Users, QrCode, X, DownloadSimple } from '@phosphor-icons/react';
 import { API, BACKEND_URL } from '../App';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -204,6 +205,7 @@ const ShareBar = ({ slug, themeColor }) => {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const profileUrl = `${window.location.origin}/artist/${slug}`;
+  useBodyScrollLock(showQR);
 
   const handleCopy = async () => {
     try {

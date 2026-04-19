@@ -4,6 +4,7 @@ import { useAuth, API } from '../App';
 import { Button } from './ui/button';
 import { House, Users, ClipboardText, ChartBar, Gear, SignOut, List, X, ArrowLeft, ShieldCheck, Bell, MusicNote, FileArrowUp, PaperPlaneTilt, Megaphone, Envelope, Tag, Gift, ChartLineUp, FileText, Wallet, PaintBrush, ClockCounterClockwise, Crown } from '@phosphor-icons/react';
 import axios from 'axios';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const getAdminTitle = (pathname) => {
   if (pathname === '/admin') return 'Overview';
@@ -20,6 +21,7 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  useBodyScrollLock(sidebarOpen);
 
   useEffect(() => {
     const fetchPending = async () => {

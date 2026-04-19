@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { MusicNote, CurrencyDollar, Television, ShieldCheck, Check, Star } from '@phosphor-icons/react';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const services = [
   { title: 'Song Registration', desc: 'Register your songs with performance rights organizations worldwide', icon: <MusicNote className="w-7 h-7" />, color: '#FFD700', features: ['ASCAP/BMI Registration', 'Global PRO Coverage', 'Metadata Management'] },
@@ -20,6 +21,7 @@ const stats = [
 export default function PublishingPage() {
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
+  useBodyScrollLock(showPopup);
 
   return (
     <PublicLayout>

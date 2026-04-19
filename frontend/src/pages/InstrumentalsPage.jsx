@@ -11,6 +11,7 @@ import {
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -145,6 +146,7 @@ export default function InstrumentalsPage() {
     try { return new Set(JSON.parse(localStorage.getItem('kalmori_beat_favorites') || '[]')); }
     catch { return new Set(); }
   });
+  useBodyScrollLock(Boolean(selectedBeat));
 
   const toggleFavorite = (beatId) => {
     setFavorites(prev => {

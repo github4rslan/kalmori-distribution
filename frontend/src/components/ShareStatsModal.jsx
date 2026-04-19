@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API } from '../App';
 import { X, ShareNetwork, Copy, Check, Trophy, MusicNotes, Globe, CurrencyDollar, SpotifyLogo } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const PLATFORM_COLORS = { Spotify: '#1DB954', 'Apple Music': '#FC3C44', 'YouTube Music': '#FF0000', 'Amazon Music': '#FF9900', TikTok: '#010101', Tidal: '#00FFFF' };
 
@@ -12,6 +13,7 @@ export default function ShareStatsModal({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const cardRef = useRef(null);
+  useBodyScrollLock(true);
 
   useEffect(() => {
     fetchData();

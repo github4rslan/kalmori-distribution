@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Users, Globe, ChartLineUp, Clock, TrendUp, MusicNote, Lightning, CalendarBlank, MapPin, Rocket, Star, Target, ArrowRight, SpinnerGap, FloppyDisk, Trash, ArrowsLeftRight, X, CaretDown, CaretUp, BookmarkSimple, FilePdf, EnvelopeSimple, Eye } from '@phosphor-icons/react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const COUNTRY_NAMES = { US: 'United States', UK: 'United Kingdom', NG: 'Nigeria', DE: 'Germany', CA: 'Canada', AU: 'Australia', BR: 'Brazil', JP: 'Japan', FR: 'France', IN: 'India', JM: 'Jamaica', KE: 'Kenya', GH: 'Ghana', ZA: 'South Africa' };
 const COUNTRY_FLAGS = { US: '\u{1F1FA}\u{1F1F8}', UK: '\u{1F1EC}\u{1F1E7}', NG: '\u{1F1F3}\u{1F1EC}', DE: '\u{1F1E9}\u{1F1EA}', CA: '\u{1F1E8}\u{1F1E6}', AU: '\u{1F1E6}\u{1F1FA}', BR: '\u{1F1E7}\u{1F1F7}', JP: '\u{1F1EF}\u{1F1F5}', FR: '\u{1F1EB}\u{1F1F7}', IN: '\u{1F1EE}\u{1F1F3}', JM: '\u{1F1EF}\u{1F1F2}', KE: '\u{1F1F0}\u{1F1EA}', GH: '\u{1F1EC}\u{1F1ED}', ZA: '\u{1F1FF}\u{1F1E6}' };
@@ -41,6 +42,7 @@ export default function FanAnalyticsPage() {
   const [digestSending, setDigestSending] = useState(false);
   const [digestPreview, setDigestPreview] = useState(null);
   const [showDigestPreview, setShowDigestPreview] = useState(false);
+  useBodyScrollLock(showDigestPreview);
 
   useEffect(() => { fetchData(); fetchSavedStrategies(); fetchSmartInsights(); }, []);
 

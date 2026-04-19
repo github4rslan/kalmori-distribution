@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { Link } from 'react-router-dom';
 
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -20,6 +21,7 @@ const AdminUsersPage = () => {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  useBodyScrollLock(Boolean(editUser) || Boolean(deleteTarget));
 
   const fetchUsers = async (p = 1, q = '') => {
     setLoading(true);

@@ -7,6 +7,7 @@ import { MusicNotes, House, Disc, ChartLineUp, Wallet, Gear, SignOut, List, X, P
 import axios from 'axios';
 import { API } from '../App';
 import { isFeatureLocked } from './featureAccess';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const NOTIFICATION_ROUTES = {
   'new_submission': '/admin/submissions',
@@ -71,6 +72,7 @@ const getMobileTitle = (pathname) => {
 };
 
 const NotificationPanel = ({ notifications, onMarkRead, onMarkAllRead, onClose, onNavigate, userRole, panelRef }) => {
+  useBodyScrollLock(true);
   if (typeof document === 'undefined') return null;
 
   const content = (
@@ -174,6 +176,7 @@ const DashboardLayout = ({ children }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef(null);
   const notifPanelRef = useRef(null);
+  useBodyScrollLock(sidebarOpen);
 
   // Fetch notifications and unread count
   useEffect(() => {

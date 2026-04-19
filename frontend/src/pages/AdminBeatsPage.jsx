@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const GENRES = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const MOODS = ['Energetic', 'Chill', 'Dark', 'Emotional', 'Happy', 'Uplifting', 'Romantic', 'Aggressive', 'Party'];
@@ -57,6 +58,7 @@ export default function AdminBeatsPage() {
   const [filterProducer, setFilterProducer] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
   const audioRef = useRef(null);
+  useBodyScrollLock(showForm);
 
   const [form, setForm] = useState({
     title: '', genre: 'Hip-Hop/Rap', bpm: 120, key: 'Cm', mood: 'Energetic', description: '',

@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 /* ── helpers ─────────────────────────────────────────── */
 const fmtList = (items = []) => {
@@ -158,6 +159,7 @@ const AdminSubmissionsPage = () => {
   const [reviewing, setReviewing] = useState(false);
   const [goLiveHours, setGoLiveHours] = useState(24);
   const [activeTab, setActiveTab] = useState('release');
+  useBodyScrollLock(Boolean(selectedSub));
 
   // handle ?release= query param from notification deep links
   useEffect(() => {

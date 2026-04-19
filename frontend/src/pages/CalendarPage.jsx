@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { CaretLeft, CaretRight, Plus, Disc, MusicNote, SpotifyLogo, AppleLogo, CalendarBlank, Clock, Trash, X, FloppyDisk } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -28,6 +29,7 @@ export default function CalendarPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', date: '', event_type: 'custom', color: '#7C4DFF', notes: '', reminder: false });
   const [loading, setLoading] = useState(true);
+  useBodyScrollLock(showForm);
 
   const token = localStorage.getItem('token') || localStorage.getItem('access_token');
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
