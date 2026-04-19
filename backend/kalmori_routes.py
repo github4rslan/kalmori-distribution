@@ -452,24 +452,9 @@ DEFAULT_INSTRUMENTALS_CONTENT = {
         "Exclusive Rights Available", "Affordable Lease Options",
         "All Genres: Hip-Hop, R&B, Afrobeats, Dancehall", "Custom Beats on Request"
     ],
-    "whyChooseTitle": "WHY CHOOSE US",
-    "whyChooseItems": [
-        {"icon": "musical-notes", "title": "Industry Quality", "description": "Professional studio-quality beats mixed and mastered to perfection"},
-        {"icon": "flash", "title": "Fast Delivery", "description": "Get your beats delivered within 24-48 hours after purchase"},
-        {"icon": "shield-checkmark", "title": "100% Original", "description": "All beats are original compositions with no samples"},
-        {"icon": "headset", "title": "Support", "description": "Direct communication with the producer for revisions"}
-    ],
-    "licenseTiers": [
-        {"id": "basic_lease", "name": "Basic Lease", "price": 29.99, "description": "Perfect for demos and mixtapes",
-         "features": ["MP3 File (320kbps)", "Up to 5,000 streams", "Non-exclusive license", "Credit required"], "color": "#7C4DFF"},
-        {"id": "premium_lease", "name": "Premium Lease", "price": 79.99, "description": "For serious releases",
-         "features": ["WAV + MP3 Files", "Up to 50,000 streams", "Trackouts included", "Non-exclusive license", "Credit required"],
-         "popular": True, "color": "#E040FB"},
-        {"id": "unlimited_lease", "name": "Unlimited Lease", "price": 149.99, "description": "Maximum flexibility",
-         "features": ["WAV + MP3 + Stems", "Unlimited streams", "Music video rights", "Non-exclusive license", "Credit required"], "color": "#FF4081"},
-        {"id": "exclusive", "name": "Exclusive Rights", "price": 499.99, "description": "Full ownership",
-         "features": ["All files + Stems", "Unlimited usage", "Full ownership", "Beat removed from catalog", "No credit required"], "color": "#FFD700"}
-    ],
+    "whyChooseTitle": "",
+    "whyChooseItems": [],
+    "licenseTiers": [],
     "ctaTitle": "Ready to Get Started?",
     "ctaDescription": "Request a custom beat or browse our catalog"
 }
