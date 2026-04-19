@@ -326,8 +326,9 @@ export default function ReleaseWizardPage() {
       navigate(`/releases/${newId}`);
     } catch (e) {
       toast.error(getSafeErrorDetail(e, 'Failed to submit release'));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const allTracks = volumes.flatMap(v => v.tracks);
