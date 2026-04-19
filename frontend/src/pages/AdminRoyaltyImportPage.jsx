@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Upload, FileArrowUp, FileCsv, CheckCircle, WarningCircle, Clock, Eye, X, Plus, Trash, PencilSimple, FloppyDisk, ShieldWarning, CopySimple, ArrowsLeftRight, CalendarBlank, Play, Pause, Timer } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 
 const AdminRoyaltyImportPage = () => {
   const [activeSection, setActiveSection] = useState('import');
@@ -106,7 +107,7 @@ const AdminRoyaltyImportPage = () => {
       setShowNewSchedule(false);
       setSchedName(''); setSchedNotes(''); setSchedTemplateId(''); setSchedArtistId('');
       fetchSchedules();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to create schedule'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to create schedule')); }
     finally { setSavingSchedule(false); }
   };
 
@@ -145,7 +146,7 @@ const AdminRoyaltyImportPage = () => {
       toast.success(res.data.message);
       fetchReconciliation();
       setSelectedDupEntries([]);
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to resolve'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to resolve')); }
     finally { setBulkProcessing(false); }
   };
 
@@ -161,7 +162,7 @@ const AdminRoyaltyImportPage = () => {
       fetchImports();
       setSelectedUnmatched([]);
       setBulkAssignArtist('');
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to assign'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to assign')); }
     finally { setBulkProcessing(false); }
   };
 
@@ -193,7 +194,7 @@ const AdminRoyaltyImportPage = () => {
       toast.success(`Import complete: ${res.data.matched} matched, ${res.data.unmatched} unmatched`);
       fetchImports();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Import failed');
+      toast.error(getSafeErrorDetail(err, 'Import failed'));
     } finally { setImporting(false); }
   };
 
@@ -217,7 +218,7 @@ const AdminRoyaltyImportPage = () => {
       setAssigningEntry(null); setAssignArtistId('');
       if (selectedImport) handleViewImport(selectedImport);
       fetchImports();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Assignment failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Assignment failed')); }
   };
 
   const openTemplateEditor = (tpl = null) => {

@@ -4,6 +4,7 @@ import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash, CaretDown, Check, CheckCircle, WarningCircle, MusicNotes, ArrowRight, Plus, Gift } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { getSafeErrorDetail } from '../utils/error';
 
 const COUNTRIES = [
   'United States', 'United Kingdom', 'Canada', 'Australia', 'Nigeria', 'Ghana', 'South Africa',
@@ -133,9 +134,7 @@ const RegisterPage = () => {
         navigate('/select-role');
       }
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || 'Registration failed';
-      const errorMsg = typeof msg === 'string' ? msg : 'Registration failed';
-      setError(errorMsg);
+      setError(getSafeErrorDetail(err, err.message || 'Registration failed'));
     } finally { setLoading(false); }
   };
 

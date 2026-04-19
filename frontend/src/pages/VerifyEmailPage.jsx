@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
 import { CheckCircle, XCircle, SpinnerGap } from '@phosphor-icons/react';
+import { getSafeErrorDetail } from '../utils/error';
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -21,7 +22,7 @@ export default function VerifyEmailPage() {
         setTimeout(() => navigate('/dashboard'), 3000);
       } catch (err) {
         setStatus('error');
-        setMessage(err.response?.data?.detail || 'Verification failed');
+        setMessage(getSafeErrorDetail(err, 'Failed to verify email'));
       }
     };
     verify();

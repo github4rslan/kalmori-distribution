@@ -4,6 +4,7 @@ import { MagnifyingGlass, Plus, PaperPlaneTilt, Check, X, User, MusicNote, Micro
 import { toast } from 'sonner';
 import axios from 'axios';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -72,7 +73,7 @@ export default function CollabHubPage() {
       setShowForm(false);
       setForm({ title: '', looking_for: 'vocalist', genre: '', description: '', budget: '', deadline: '' });
       fetchAll();
-    } catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
+    } catch (e) { toast.error(getSafeErrorDetail(e, 'Failed')); }
   };
 
   const handleInvite = async (postId) => {
@@ -82,7 +83,7 @@ export default function CollabHubPage() {
       setInviteModal(null);
       setInviteMsg('');
       fetchAll();
-    } catch (e) { toast.error(e.response?.data?.detail || 'Failed'); }
+    } catch (e) { toast.error(getSafeErrorDetail(e, 'Failed')); }
   };
 
   const handleInviteResponse = async (inviteId, action) => {

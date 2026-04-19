@@ -5,6 +5,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { Megaphone, PaperPlaneTilt, Clock, CheckCircle, WarningCircle, User, MusicNote, Disc } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const AdminLeadsPage = () => {
   const [leads, setLeads] = useState([]);
@@ -31,7 +32,7 @@ const AdminLeadsPage = () => {
       const res = await axios.post(`${API}/admin/leads/send-reminder`, { lead_id: leadId, lead_type: leadType }, { withCredentials: true });
       toast.success(res.data.message);
       fetchLeads();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to send reminder')); }
     finally { setSendingId(null); }
   };
 
@@ -42,7 +43,7 @@ const AdminLeadsPage = () => {
       const res = await axios.post(`${API}/admin/leads/send-all-reminders`, {}, { withCredentials: true });
       toast.success(res.data.message);
       fetchLeads();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to send reminders')); }
     finally { setSendingAll(false); }
   };
 

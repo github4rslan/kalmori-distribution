@@ -26,6 +26,7 @@ import {
   ArrowSquareOut
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const NOTIF_PREF_LABELS = {
   email_releases: { label: 'Release Updates', desc: 'Email when releases are approved or distributed' },
@@ -117,7 +118,7 @@ const SettingsPage = () => {
       setSlugInput(res.data.slug);
       toast.success('Profile URL updated!');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to update URL');
+      toast.error(getSafeErrorDetail(err, 'Failed to update URL'));
     } finally {
       setSavingSlug(false);
     }
@@ -146,7 +147,7 @@ const SettingsPage = () => {
       await axios.put(`${API}/artist/profile/theme`, { theme_color: color }, { withCredentials: true });
       toast.success('Theme color updated!');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to save theme');
+      toast.error(getSafeErrorDetail(err, 'Failed to save theme'));
     } finally {
       setSavingTheme(false);
     }
@@ -260,8 +261,7 @@ const SettingsPage = () => {
 
       toast.error('Could not start checkout. Please try again.');
     } catch (error) {
-      const detail = error.response?.data?.detail || 'Failed to start upgrade. Please try again.';
-      toast.error(detail);
+      toast.error(getSafeErrorDetail(error, 'Failed to start upgrade. Please try again.'));
     }
   };
 

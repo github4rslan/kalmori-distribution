@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 import { UsersThree, PaperPlaneTilt, Check, X, MusicNotes, Percent, UserPlus, Crown, Guitar, Microphone, Sparkle } from '@phosphor-icons/react';
+import { getSafeErrorDetail } from '../utils/error';
 
 const ROLE_OPTIONS = ['Featured Artist', 'Producer', 'Songwriter', 'Mixer', 'Vocalist', 'Other'];
 
@@ -60,7 +61,7 @@ export default function CollaborationsPage() {
       setInviteData({ release_id: '', collaborator_email: '', collaborator_name: '', role: 'Featured Artist', split_percentage: 10 });
       fetchAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to send invite');
+      toast.error(getSafeErrorDetail(err, 'Failed to send invite'));
     } finally { setSubmitting(false); }
   };
 
@@ -69,7 +70,7 @@ export default function CollaborationsPage() {
       await axios.put(`${API}/collaborations/${id}/${action}`, {}, { withCredentials: true });
       toast.success(`Invitation ${action}ed`);
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed')); }
   };
 
   const removeCollab = async (id) => {
@@ -78,7 +79,7 @@ export default function CollaborationsPage() {
       await axios.delete(`${API}/collaborations/${id}`, { withCredentials: true });
       toast.success('Collaborator removed');
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed')); }
   };
 
   const groupedByRelease = owned.reduce((acc, c) => {

@@ -514,8 +514,7 @@ const ReleaseDetailPage = () => {
       toast.success('Distribution submitted!');
       fetchRelease();
     } catch (error) {
-      const msg = error.response?.data?.detail || 'Distribution failed';
-      toast.error(typeof msg === 'string' ? msg : 'Distribution failed');
+      toast.error(getSafeErrorDetail(error, 'Distribution failed'));
     } finally {
       setDistributing(false);
     }

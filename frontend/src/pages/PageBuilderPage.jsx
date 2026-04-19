@@ -4,6 +4,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 import axios from 'axios';
 import { API, BACKEND_URL } from '../App';
 import {
@@ -663,7 +664,7 @@ const PageBuilderPage = () => {
       await axios.post(`${API}/admin/pages/${slug}/publish`, {}, { withCredentials: true });
       setPublished(true);
       toast.success('Page published! Changes are now live.');
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to publish'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to publish')); }
     finally { setSaving(false); }
   };
 

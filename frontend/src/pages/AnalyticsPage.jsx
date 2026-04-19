@@ -12,6 +12,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const PLATFORM_COLORS = { Spotify: '#1DB954', 'Apple Music': '#FC3C44', 'YouTube Music': '#FF0000', 'Amazon Music': '#FF9900', TikTok: '#010101', Tidal: '#00FFFF', Deezer: '#A238FF', SoundCloud: '#FF5500', Other: '#888' };
 
@@ -86,7 +87,7 @@ const AnalyticsPage = () => {
       const res = await axios.post(`${API}/analytics/import`, formData, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success(res.data.message || 'Data imported!');
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Import failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Import failed')); }
     finally { setImporting(false); e.target.value = ''; }
   };
 

@@ -10,6 +10,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 
 const GENRES = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const MOODS = ['Energetic', 'Chill', 'Dark', 'Emotional', 'Happy', 'Uplifting', 'Romantic', 'Aggressive', 'Party'];
@@ -121,7 +122,7 @@ export default function AdminBeatsPage() {
       setBeats(prev => [res.data, ...prev]);
       setShowForm(false); resetForm();
       toast.success('Beat created!');
-    } catch (e) { toast.error(e.response?.data?.detail || 'Failed to create beat'); }
+    } catch (e) { toast.error(getSafeErrorDetail(e, 'Failed to create beat')); }
   };
 
   const handleUpdate = async (e) => {

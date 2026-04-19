@@ -7,6 +7,7 @@ import { useAuth, API } from '../App';
 import { Check, X, ArrowRight, Star, Crown, Lightning, Rocket, ShieldCheck, CurrencyDollar, ChartLineUp, MusicNote, Sparkle, Tag } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -133,7 +134,7 @@ export default function PricingPage() {
           setTimeout(() => window.location.assign(`/settings?upgraded=${plan}`), 800);
         })
         .catch((err) => {
-          const detail = err.response?.data?.detail || 'Failed to activate plan.';
+          const detail = getSafeErrorDetail(err, 'Failed to activate plan.');
           const status = err.response?.status;
           if (status === 503 || status === 502) {
             toast.error(`Payment received but activation failed: ${detail}`, { duration: 8000 });
@@ -174,7 +175,7 @@ export default function PricingPage() {
                     setTimeout(() => window.location.assign('/settings'), 800);
                   })
                   .catch((err) => {
-                    toast.error(err.response?.data?.detail || 'Retry failed. Please contact support.');
+                    toast.error(getSafeErrorDetail(err, 'Retry failed. Please contact support.'));
                   });
               },
             },
@@ -206,7 +207,7 @@ export default function PricingPage() {
       toast.success(`Plan changed to ${plans.find(p => p.id === planId)?.name}!`);
       window.location.assign('/settings');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to change plan');
+      toast.error(getSafeErrorDetail(err, 'Failed to change plan'));
     } finally { setUpgrading(null); }
   };
 
@@ -445,7 +446,7 @@ export default function PricingPage() {
                 try {
                   const res = await axios.post(`${API_URL}/api/promo-codes/validate`, { code: promoCode });
                   setPromoResult(res.data);
-                } catch (e) { setPromoError(e.response?.data?.detail || 'Invalid code'); }
+                } catch (e) { setPromoError(getSafeErrorDetail(e, 'Invalid code')); }
                 setApplyingPromo(false);
               }}
               disabled={applyingPromo || !promoCode.trim()}

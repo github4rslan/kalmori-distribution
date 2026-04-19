@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { PaperPlaneTilt, Eye, ChartLineUp, CalendarBlank, UsersThree, CheckCircle, XCircle } from '@phosphor-icons/react';
 import axios from 'axios';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -24,10 +25,7 @@ export default function AdminAnalyticsReportsPage() {
     try {
       const res = await axios.post(`${API}/api/admin/analytics-report/send`, { period, target: 'all' }, { headers });
       setResult(res.data);
-    } catch (e) {
-      const detail = e.response?.data?.detail;
-      setError(typeof detail === 'string' ? detail : 'Failed to send reports');
-    }
+    } catch (e) { setError(getSafeErrorDetail(e, 'Failed to send reports')); }
     setSending(false);
   };
 
@@ -38,10 +36,7 @@ export default function AdminAnalyticsReportsPage() {
       const res = await axios.post(`${API}/api/admin/analytics-report/preview`, { period }, { headers });
       setPreviewHtml(res.data.html);
       setPreviewStats(res.data.stats);
-    } catch (e) {
-      const detail = e.response?.data?.detail;
-      setError(typeof detail === 'string' ? detail : 'Failed to preview');
-    }
+    } catch (e) { setError(getSafeErrorDetail(e, 'Failed to preview')); }
     setPreviewing(false);
   };
 

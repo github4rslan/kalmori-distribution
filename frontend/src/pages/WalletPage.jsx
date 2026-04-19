@@ -31,6 +31,7 @@ import {
   Bank
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const WalletPage = () => {
   const [wallet, setWallet] = useState(null);
@@ -93,8 +94,7 @@ const WalletPage = () => {
       setWithdrawForm({ amount: '', method: 'paypal', paypal_email: '' });
       fetchData();
     } catch (error) {
-      const msg = error.response?.data?.detail || 'Withdrawal failed';
-      toast.error(typeof msg === 'string' ? msg : 'Withdrawal failed');
+      toast.error(getSafeErrorDetail(error, 'Withdrawal failed'));
     } finally {
       setWithdrawing(false);
     }

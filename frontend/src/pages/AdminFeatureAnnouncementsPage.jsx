@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Lightning, Star, Rocket, ChartLineUp, MusicNote, ShoppingCart, Users, Megaphone, Trash, Plus, X } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const PLAN_OPTIONS = [
   { value: 'free', label: 'Free (All Users)', color: '#A1A1AA' },
@@ -67,7 +68,7 @@ export default function AdminFeatureAnnouncementsPage() {
       setShowForm(false);
       setForm({ title: '', description: '', min_plan: 'free', category: 'general', icon: 'Lightning', color: '#7C4DFF' });
       fetchAnnouncements();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to create announcement'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to create announcement')); }
     finally { setCreating(false); }
   };
 

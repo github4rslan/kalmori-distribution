@@ -5,6 +5,7 @@ import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { useAuth } from '../App';
 import { api } from '../services/api';
+import { getSafeErrorDetail } from '../utils/error';
 
 const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const moods = ['Energetic/Hype', 'Chill/Laid-back', 'Dark/Moody', 'Emotional/Sad', 'Happy/Uplifting', 'Romantic', 'Aggressive', 'Party/Club'];
@@ -64,7 +65,7 @@ export default function RequestBeatPage() {
       setSubmitted(true);
       toast.success('Beat request submitted successfully.');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to submit request.');
+      toast.error(getSafeErrorDetail(error, 'Failed to submit request.'));
     } finally {
       setSubmitting(false);
     }

@@ -5,6 +5,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { PaperPlaneTilt, Plus, Trash, Eye, PaperPlaneRight, UsersThree, EnvelopeSimple, Clock } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const AdminCampaignsPage = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -44,7 +45,7 @@ const AdminCampaignsPage = () => {
       setShowForm(false);
       setName(''); setSubject(''); setBodyHtml(''); setHeaderTitle('');
       fetchCampaigns();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to create campaign')); }
     finally { setSaving(false); }
   };
 
@@ -55,7 +56,7 @@ const AdminCampaignsPage = () => {
       const res = await axios.post(`${API}/admin/campaigns/${id}/send`, {}, { withCredentials: true });
       toast.success(res.data.message);
       fetchCampaigns();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to send campaign')); }
     finally { setSending(null); }
   };
 

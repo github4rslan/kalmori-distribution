@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { SpotifyLogo, Play, Clock, Fire, Users, ArrowSquareOut, MusicNotes, Headphones, Star, ArrowRight } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { getSafeErrorDetail } from '../utils/error';
 
 export default function SpotifyAnalyticsPage() {
   const navigate = useNavigate();
@@ -30,8 +31,7 @@ export default function SpotifyAnalyticsPage() {
       if (err.response?.status === 401) {
         navigate('/login');
       } else {
-        const detail = err.response?.data?.detail;
-        setError(typeof detail === 'string' ? detail : 'Failed to load Spotify data. Please try again.');
+        setError(getSafeErrorDetail(err, 'Failed to load Spotify data. Please try again.'));
       }
     } finally {
       setLoading(false);

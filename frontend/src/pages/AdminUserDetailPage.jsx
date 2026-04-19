@@ -6,6 +6,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, User, Disc, ChartLineUp, CurrencyDollar, Globe, Target, Users as UsersIcon, MusicNotes, PencilSimple, X, CheckCircle, SpotifyLogo, AppleLogo, InstagramLogo, TwitterLogo, ArrowSquareOut, FloppyDisk } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 import { getUserRole } from '../utils/role';
 
 const StatCard = ({ label, value, icon, color, testId }) => (
@@ -68,7 +69,7 @@ const AdminUserDetailPage = () => {
       setEditing(false);
       fetchDetail();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Update failed');
+      toast.error(getSafeErrorDetail(err, 'Update failed'));
     } finally { setSaving(false); }
   };
 

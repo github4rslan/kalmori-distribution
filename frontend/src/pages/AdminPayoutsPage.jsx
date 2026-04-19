@@ -3,6 +3,7 @@ import AdminLayout from '../components/AdminLayout';
 import { Wallet, Check, Clock, Warning, ArrowsClockwise, MagnifyingGlass, Export, Gear, Lightning, Bell } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -53,7 +54,7 @@ export default function AdminPayoutsPage() {
       await axios.put(`${API}/api/admin/payouts/${id}`, { status, ...extra }, { withCredentials: true });
       toast.success(`Payout ${status}`);
       fetchData();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed')); }
   };
 
   const handleBatchProcess = async (status) => {
@@ -66,7 +67,7 @@ export default function AdminPayoutsPage() {
       toast.success(res.data.message);
       setSelected(new Set());
       fetchData();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Batch failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Batch failed')); }
     setProcessing(false);
   };
 
@@ -102,7 +103,7 @@ export default function AdminPayoutsPage() {
       const res = await axios.post(`${API}/api/admin/payouts/auto-process`, {}, { withCredentials: true });
       toast.success(res.data.message);
       fetchData();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Auto-process failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Auto-process failed')); }
     setAutoProcessing(false);
   };
 

@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Button } from '../components/ui/button';
 import { YoutubeLogo, ShieldCheck, CurrencyDollar, Eye, Prohibit, Plus, Check } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const POLICIES = [
   { value: 'monetize', label: 'Monetize', desc: 'Earn revenue from matching videos', icon: <CurrencyDollar className="w-5 h-5" />, color: '#4CAF50' },
@@ -43,7 +44,7 @@ export default function ContentIdPage() {
       toast.success('Content ID registration submitted!');
       fetchData();
       setSelectedRelease('');
-    } catch (err) { toast.error(err.response?.data?.detail || 'Registration failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Registration failed')); }
   };
 
   const updatePolicy = async (regId, policy) => {

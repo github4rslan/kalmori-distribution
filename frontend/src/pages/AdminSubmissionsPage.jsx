@@ -11,6 +11,7 @@ import {
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 
 /* ── helpers ─────────────────────────────────────────── */
 const fmtList = (items = []) => {
@@ -208,9 +209,7 @@ const AdminSubmissionsPage = () => {
       toast.success(msg);
       closeModal();
       fetchSubmissions(page, filter);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Review failed. Please try again.');
-    }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Review failed. Please try again.')); }
     finally { setReviewing(false); }
   };
 

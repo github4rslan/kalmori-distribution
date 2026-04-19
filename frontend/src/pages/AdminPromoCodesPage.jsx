@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { Tag, Plus, Trash, ToggleLeft, ToggleRight, Copy, CheckCircle, XCircle, Percent, CurrencyDollar } from '@phosphor-icons/react';
 import axios from 'axios';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -38,7 +39,7 @@ export default function AdminPromoCodesPage() {
       setShowForm(false);
       setForm({ code: '', discount_type: 'percent', discount_value: 50, applicable_plans: ['rise', 'pro'], max_uses: 100, duration_months: 3, expires_at: '', active: true });
       fetchCodes();
-    } catch (e) { setError(e.response?.data?.detail || e.message); }
+    } catch (e) { setError(getSafeErrorDetail(e, e.message || 'Failed to load promo codes')); }
   };
 
   const toggleActive = async (promo) => {

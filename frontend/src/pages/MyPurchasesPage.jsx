@@ -5,6 +5,7 @@ import { API, useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
 import { toast } from 'sonner';
 import { DownloadSimple, Play, Pause, MusicNotes, Receipt, Check, Clock, ShoppingBag, ArrowRight } from '@phosphor-icons/react';
+import { getSafeErrorDetail } from '../utils/error';
 
 const LICENSE_LABELS = {
   basic_lease: 'Basic Lease',
@@ -198,7 +199,7 @@ export default function MyPurchasesPage() {
       window.URL.revokeObjectURL(url);
       toast.success('Download started!');
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Download failed');
+      toast.error(getSafeErrorDetail(err, 'Download failed'));
     } finally {
       setDownloading(null);
     }

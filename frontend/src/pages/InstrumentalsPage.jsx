@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -328,7 +329,7 @@ export default function InstrumentalsPage() {
       }, { headers, withCredentials: true });
       if (res.data.checkout_url) window.location.href = res.data.checkout_url;
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to process order');
+      toast.error(getSafeErrorDetail(err, 'Failed to process order'));
     } finally { setSigningContract(false); }
   };
 

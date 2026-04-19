@@ -9,6 +9,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { toast } from 'sonner';
 import { Clock, SpotifyLogo, AppleLogo, YoutubeLogo, MusicNotes, Users, Plus, Trash, Link as LinkIcon, Check, PaperPlaneTilt, CalendarBlank, ShareNetwork, Copy } from '@phosphor-icons/react';
+import { getSafeErrorDetail } from '../utils/error';
 
 // ===== Pre-Save Landing Page (Public) =====
 export function PreSaveLandingPage() {
@@ -39,7 +40,7 @@ export function PreSaveLandingPage() {
       setSubscribed(true);
       toast.success("You're on the list!");
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to subscribe');
+      toast.error(getSafeErrorDetail(err, 'Failed to subscribe'));
     } finally { setSubmitting(false); }
   };
 
@@ -185,7 +186,7 @@ export default function PreSaveManagerPage() {
       setFormData({ release_id: '', title: '', description: '', release_date: '', spotify_url: '', apple_music_url: '', youtube_url: '', custom_message: '' });
       fetchAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to create campaign');
+      toast.error(getSafeErrorDetail(err, 'Failed to create campaign'));
     } finally { setSubmitting(false); }
   };
 

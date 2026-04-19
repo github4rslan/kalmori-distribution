@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Button } from '../components/ui/button';
 import { Users, ChartLineUp, CurrencyDollar, Disc, MusicNotes, Globe, Plus, X, Trash, Lightning, Envelope, Percent, FloppyDisk, DownloadSimple, FileText, FileCsv } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const fmt = (n) => {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -89,7 +90,7 @@ const LabelDashboardPage = () => {
       setShowInvite(false);
       fetchAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to add artist');
+      toast.error(getSafeErrorDetail(err, 'Failed to add artist'));
     } finally { setInviting(false); }
   };
 
@@ -113,7 +114,7 @@ const LabelDashboardPage = () => {
       setEditingSplit(null);
       fetchAll();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to update split');
+      toast.error(getSafeErrorDetail(err, 'Failed to update split'));
     } finally { setSavingSplit(false); }
   };
 

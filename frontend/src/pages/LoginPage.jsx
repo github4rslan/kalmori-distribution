@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -22,8 +23,7 @@ const LoginPage = () => {
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err) {
-      const errorMsg = err.response?.data?.detail || err.message || 'Login failed';
-      setError(typeof errorMsg === 'string' ? errorMsg : 'Login failed');
+      setError(getSafeErrorDetail(err, err.message || 'Login failed'));
     } finally {
       setLoading(false);
     }

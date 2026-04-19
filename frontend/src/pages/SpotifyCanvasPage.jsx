@@ -5,6 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { Button } from '../components/ui/button';
 import { SpotifyLogo, Upload, Play, Trash, Check, Warning, VideoCamera } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const CANVAS_SPECS = {
   format: 'MP4 (H.264)', aspect_ratio: '9:16 (vertical)', resolution: '720x1280 min, 1080x1920 recommended',
@@ -40,7 +41,7 @@ export default function SpotifyCanvasPage() {
       toast.success('Canvas created! Now upload your video.');
       fetchData();
       setSelectedRelease('');
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to create canvas'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Failed to create canvas')); }
   };
 
   const uploadVideo = async (canvasId, file) => {
@@ -64,7 +65,7 @@ export default function SpotifyCanvasPage() {
       await axios.post(`${API}/spotify-canvas/${canvasId}/submit`, {}, { withCredentials: true });
       toast.success('Canvas submitted for Spotify review!');
       fetchData();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Submit failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Submit failed')); }
   };
 
   const deleteCanvas = async (canvasId) => {

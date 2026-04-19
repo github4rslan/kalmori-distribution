@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 import { getUserRole } from '../utils/role';
 
 const AdminUsersPage = () => {
@@ -58,7 +59,7 @@ const AdminUsersPage = () => {
       setEditUser(null);
       toast.success('User updated');
       fetchUsers(page, search);
-    } catch (err) { toast.error(err.response?.data?.detail || 'Update failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Update failed')); }
     finally { setSaving(false); }
   };
 
@@ -70,7 +71,7 @@ const AdminUsersPage = () => {
       toast.success(res.data.message || 'User deleted');
       setDeleteTarget(null);
       fetchUsers(page, search);
-    } catch (err) { toast.error(err.response?.data?.detail || 'Delete failed'); }
+    } catch (err) { toast.error(getSafeErrorDetail(err, 'Delete failed')); }
     finally { setDeleting(false); }
   };
 

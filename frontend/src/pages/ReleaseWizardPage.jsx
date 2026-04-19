@@ -5,6 +5,7 @@ import { useAuth, API } from '../App';
 import { ArrowLeft, ArrowRight, MusicNote, Image, Disc, Globe, PaperPlaneTilt, Check, Upload, Plus, Trash, X, Info, CaretDown, CaretUp, PencilSimple, Warning, Barcode, VinylRecord, FileAudio } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { getSafeErrorDetail } from '../utils/error';
 
 const TABS = [
   { id: 'general', label: 'General Information', shortLabel: 'General' },
@@ -324,7 +325,7 @@ export default function ReleaseWizardPage() {
       toast.success('Release submitted for review!');
       navigate(`/releases/${newId}`);
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to submit release');
+      toast.error(getSafeErrorDetail(e, 'Failed to submit release'));
     }
     setLoading(false);
   };

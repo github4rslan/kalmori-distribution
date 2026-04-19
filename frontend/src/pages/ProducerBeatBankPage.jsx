@@ -9,6 +9,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Navigate } from 'react-router-dom';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import { getSafeErrorDetail } from '../utils/error';
 import { getUserRole } from '../utils/role';
 
 const GENRES = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
@@ -105,7 +106,7 @@ export default function ProducerBeatBankPage() {
       resetForm();
       toast.success('Beat added to your bank!');
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to create beat');
+      toast.error(getSafeErrorDetail(e, 'Failed to create beat'));
     }
   };
 
@@ -136,7 +137,7 @@ export default function ProducerBeatBankPage() {
       setBeats(prev => prev.filter(b => b.id !== id));
       toast.success('Beat deleted');
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to delete');
+      toast.error(getSafeErrorDetail(e, 'Failed to delete'));
     }
   };
 

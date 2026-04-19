@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { Megaphone, FloppyDisk, ToggleLeft, ToggleRight, CheckCircle, Rocket, Crown, Tag } from '@phosphor-icons/react';
 import axios from 'axios';
+import { getSafeErrorDetail } from '../utils/error';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -49,7 +50,7 @@ export default function AdminPlansPage() {
       setSaleSuccess('Campaign saved!');
       setTimeout(() => setSaleSuccess(''), 3000);
     } catch (e) {
-      setSaleError(e.response?.data?.detail || 'Failed to save campaign');
+      setSaleError(getSafeErrorDetail(e, 'Failed to save campaign'));
     }
     setSaleSaving(false);
   };
