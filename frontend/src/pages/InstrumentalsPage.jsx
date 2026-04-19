@@ -4,7 +4,7 @@ import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { useAuth } from '../App';
 import {
-  MusicNote, Lightning, ShieldCheck, Headset, Check, Star,
+  MusicNote, Check, Star,
   Play, Pause, SpeakerHigh, ShoppingCart,
   MagnifyingGlass, Sliders, X, ShareNetwork, SkipBack, SkipForward,
   DotsThreeVertical, Copy, Heart, DownloadSimple, Flag, Sparkle, Gift, Crown
@@ -97,13 +97,6 @@ const licenseTiers = [
   { id: 'premium_lease', name: 'Premium Lease', price: 79.99, desc: 'For serious releases', features: ['WAV + MP3 Files', 'Up to 50,000 streams', 'Trackouts included', 'Non-exclusive license', 'Credit required'], color: '#E040FB', popular: true },
   { id: 'unlimited_lease', name: 'Unlimited Lease', price: 149.99, desc: 'Maximum flexibility', features: ['WAV + MP3 + Stems', 'Unlimited streams', 'Music video rights', 'Non-exclusive license', 'Credit required'], color: '#FF4081' },
   { id: 'exclusive', name: 'Exclusive Rights', price: 499.99, desc: 'Full ownership', features: ['All files + Stems', 'Unlimited usage', 'Full ownership', 'Beat removed from catalog', 'No credit required'], color: '#FFD700' },
-];
-
-const whyItems = [
-  { icon: <MusicNote className="w-6 h-6" />, title: 'Industry Quality', desc: 'Professional studio-quality beats mixed and mastered to perfection', color: '#7C4DFF' },
-  { icon: <Lightning className="w-6 h-6" />, title: 'Fast Delivery', desc: 'Get your beats delivered within 24-48 hours after purchase', color: '#E040FB' },
-  { icon: <ShieldCheck className="w-6 h-6" />, title: '100% Original', desc: 'All beats are original compositions with no samples', color: '#FF4081' },
-  { icon: <Headset className="w-6 h-6" />, title: 'Support', desc: 'Direct communication with the producer for revisions', color: '#FFD700' },
 ];
 
 const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
@@ -871,63 +864,6 @@ export default function InstrumentalsPage() {
             <p className="text-xs text-gray-500">Previews play tagged samples. Full untagged files delivered after purchase.</p>
           </div>
         </div>
-
-        {/* ── LICENSING OPTIONS ── */}
-        <div className="p-6 mt-2" data-reveal data-reveal-variant="flip">
-          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-2">LICENSING OPTIONS</h2>
-          <p className="text-sm text-gray-400 text-center mb-6">Choose the right license for your project</p>
-          <div className="space-y-4">
-            {licenseTiers.map((tier) => (
-              <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                className={`w-full bg-[#1a1a1a] rounded-2xl p-6 text-left border relative overflow-hidden transition-all ${
-                  selectedLicense === tier.id
-                    ? 'border-white/20 bg-white/[0.03] shadow-[0_14px_40px_rgba(0,0,0,0.28)]'
-                    : 'border-white/8 hover:border-white/14'
-                }`}
-                style={selectedLicense === tier.id ? { boxShadow: `0 0 0 1px ${tier.color}30, 0 14px 40px rgba(0,0,0,0.28)` } : undefined}
-                data-testid={`tier-${tier.id}`}>
-                {tier.popular && (
-                  <span className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl text-[10px] font-bold text-white tracking-wider" style={{ backgroundColor: tier.color }}>MOST POPULAR</span>
-                )}
-                {selectedLicense === tier.id && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white mb-3" style={{ backgroundColor: tier.color }}>
-                    <Check className="w-3 h-3" weight="bold" /> SELECTED
-                  </span>
-                )}
-                <h3 className="text-lg font-bold mb-2" style={{ color: tier.color }}>{tier.name}</h3>
-                <div className="flex items-start mb-2">
-                  <span className="text-xl font-bold text-white mt-1">$</span>
-                  <span className="text-5xl font-extrabold text-white leading-none">{Math.floor(tier.price)}</span>
-                  <span className="text-xl font-bold text-white mt-1">.{String(Math.round((tier.price % 1) * 100)).padStart(2, '0')}</span>
-                </div>
-                <p className="text-sm text-gray-400 mb-4">{tier.desc}</p>
-                <div className="space-y-2.5">
-                  {tier.features.map((f, j) => (
-                    <div key={j} className="flex items-center gap-2.5">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: tier.color }} weight="bold" />
-                      <span className="text-sm text-gray-300">{f}</span>
-                    </div>
-                  ))}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── WHY CHOOSE US ── */}
-        <div className="p-6" data-reveal data-reveal-variant="zoom">
-          <h2 className="text-sm font-bold text-[#E040FB] tracking-[3px] text-center mb-6">WHY CHOOSE US</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {whyItems.map((item, i) => (
-              <div key={i} className="bg-[#1a1a1a] rounded-2xl p-5 text-center">
-                <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ backgroundColor: `${item.color}20`, color: item.color }}>{item.icon}</div>
-                <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
 
         <GlobalFooter />
 
