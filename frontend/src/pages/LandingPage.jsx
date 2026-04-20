@@ -280,7 +280,7 @@ const LandingPage = () => {
             {/* Explore Beats */}
             <button
               onClick={() => navigate('/instrumentals')}
-              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              className="group relative min-h-[160px] sm:min-h-[176px] overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
               style={{ background: 'linear-gradient(135deg, #7C4DFF 0%, #5E35B1 100%)', boxShadow: '0 12px 40px rgba(124,77,255,0.35)' }}
               data-testid="landing-explore-beats-btn">
               {/* Decorative icon background */}
@@ -303,7 +303,7 @@ const LandingPage = () => {
             {/* Sell Your Beats */}
             <button
               onClick={handleSellBeats}
-              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              className="group relative min-h-[160px] sm:min-h-[176px] overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
               style={{ background: 'linear-gradient(135deg, #E040FB 0%, #C2185B 100%)', boxShadow: '0 12px 40px rgba(224,64,251,0.35)' }}
               data-testid="landing-sell-beats-btn">
               <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
@@ -325,7 +325,7 @@ const LandingPage = () => {
             {/* Request Beat */}
             <button
               onClick={() => navigate('/request-beat')}
-              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              className="group relative min-h-[160px] sm:min-h-[176px] overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
               style={{ background: 'linear-gradient(135deg, #5B4CFF 0%, #00B8D9 100%)', boxShadow: '0 12px 40px rgba(91,76,255,0.28)' }}
               data-testid="landing-request-beat-btn">
               <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
@@ -347,7 +347,7 @@ const LandingPage = () => {
             {/* Collaboration Hub */}
             <button
               onClick={() => navigate('/collab-hub')}
-              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              className="group relative min-h-[160px] sm:min-h-[176px] overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
               style={{ background: 'linear-gradient(135deg, #2196F3 0%, #7C4DFF 100%)', boxShadow: '0 12px 40px rgba(33,150,243,0.28)' }}
               data-testid="landing-collaboration-hub-btn">
               <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />

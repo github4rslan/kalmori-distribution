@@ -5,7 +5,7 @@ import { useAuth, API } from '../App';
 import {
   MusicNote, Plus, Trash, PencilSimple, Upload, Play, Pause,
   X, Check, CurrencyDollar, User, Percent, ChartBar, ShoppingBag,
-  Waveform, ArrowClockwise, Funnel, Archive, DotsThreeVertical
+  Waveform, ArrowClockwise, Funnel, Archive, DotsThreeVertical, Sparkle
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -57,7 +57,11 @@ export default function AdminBeatsPage() {
   const [savingFee, setSavingFee] = useState(false);
   const [newFee, setNewFee] = useState(15);
   const [filterProducer, setFilterProducer] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [beatSearch, setBeatSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [savingStatus, setSavingStatus] = useState({});
+  const [regeneratingPreview, setRegeneratingPreview] = useState({});
   const audioRef = useRef(null);
   const tabPanelRef = useRef(null);
   useBodyScrollLock(showForm);
@@ -111,7 +115,21 @@ export default function AdminBeatsPage() {
     role: b.producer_role,
   }])).values()];
 
-  const filteredBeats = filterProducer ? beats.filter(b => b.created_by === filterProducer) : beats;
+  const normalizedBeatSearch = beatSearch.trim().toLowerCase();
+  const filteredBeats = beats.filter((beat) => {
+    if (filterProducer && beat.created_by !== filterProducer) return false;
+    if (statusFilter !== 'all' && (beat.status || 'active') !== statusFilter) return false;
+    if (!normalizedBeatSearch) return true;
+    return [
+      beat.title,
+      beat.genre,
+      beat.mood,
+      beat.key,
+      beat.description,
+      beat.producer_name,
+      beat.producer_email,
+    ].filter(Boolean).some((value) => value.toLowerCase().includes(normalizedBeatSearch));
+  });
 
   const resetForm = () => {
     setForm({ title: '', genre: 'Hip-Hop/Rap', bpm: 120, key: 'Cm', mood: 'Energetic', description: '',
@@ -151,6 +169,33 @@ export default function AdminBeatsPage() {
       setBeats(prev => prev.filter(b => b.id !== id));
       toast.success('Beat deleted');
     } catch (e) { toast.error('Failed to delete'); }
+  };
+
+  const handleStatusToggle = async (beat) => {
+    const nextStatus = (beat.status || 'active') === 'active' ? 'inactive' : 'active';
+    setSavingStatus((prev) => ({ ...prev, [beat.id]: true }));
+    try {
+      const res = await axios.put(`${API}/beats/${beat.id}`, { status: nextStatus }, { withCredentials: true });
+      setBeats((prev) => prev.map((item) => item.id === beat.id ? res.data : item));
+      toast.success(nextStatus === 'active' ? 'Beat activated' : 'Beat archived');
+    } catch (e) {
+      toast.error(getSafeErrorDetail(e, 'Failed to update beat status'));
+    } finally {
+      setSavingStatus((prev) => ({ ...prev, [beat.id]: false }));
+    }
+  };
+
+  const handleRegeneratePreview = async (beatId) => {
+    setRegeneratingPreview((prev) => ({ ...prev, [beatId]: true }));
+    try {
+      await axios.post(`${API}/beats/${beatId}/watermark`, {}, { withCredentials: true });
+      await fetchAll();
+      toast.success('Preview regenerated');
+    } catch (e) {
+      toast.error(getSafeErrorDetail(e, 'Failed to regenerate preview'));
+    } finally {
+      setRegeneratingPreview((prev) => ({ ...prev, [beatId]: false }));
+    }
   };
 
   const handleAudioUpload = async (beatId, file) => {
@@ -246,19 +291,19 @@ export default function AdminBeatsPage() {
       <div className="max-w-5xl mx-auto" data-testid="admin-beats-page">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-white">Beat Bank</h1>
             <p className="text-xs text-white/40 mt-0.5">Platform fee: {platformFee}%</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button onClick={fetchAll}
-              className="w-9 h-9 rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center"
+              className="w-9 h-9 rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center flex-shrink-0"
               title="Refresh">
               <ArrowClockwise className="w-4 h-4" />
             </button>
             <button onClick={() => { resetForm(); setShowForm(true); }}
-              className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 rounded-full transition-all active:scale-95"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 text-white text-sm font-bold px-4 py-2 rounded-full transition-all active:scale-95"
               style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
               data-testid="add-beat-btn">
               <Plus className="w-4 h-4" weight="bold" />
@@ -299,8 +344,29 @@ export default function AdminBeatsPage() {
         <div ref={tabPanelRef} />
         {activeTab === 'beats' && (
           <div>
+            <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <input
+                  value={beatSearch}
+                  onChange={(e) => setBeatSearch(e.target.value)}
+                  className="w-full bg-[#111] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF]"
+                  placeholder="Search title, producer, genre, mood or key"
+                  data-testid="admin-beat-search"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-[#111] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF] sm:w-40"
+                data-testid="admin-status-filter">
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
             {producers.length > 1 && (
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
                 <Funnel className="w-4 h-4 text-white/40 flex-shrink-0" />
                 <select value={filterProducer} onChange={(e) => setFilterProducer(e.target.value)}
                   className="flex-1 bg-[#111] border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF]">
@@ -402,6 +468,25 @@ export default function AdminBeatsPage() {
                             </label>
                             <div className="border-t border-white/5" />
                             <button
+                              className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                                (beat.status || 'active') === 'active'
+                                  ? 'text-yellow-300 hover:bg-white/5'
+                                  : 'text-green-400 hover:bg-white/5'
+                              }`}
+                              onClick={() => { handleStatusToggle(beat); setOpenMenuId(null); }}
+                              data-testid={`admin-toggle-status-${beat.id}`}>
+                              <Check className="w-4 h-4 flex-shrink-0" />
+                              <span>{(beat.status || 'active') === 'active' ? 'Set Inactive' : 'Set Active'}</span>
+                            </button>
+                            <button
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-40"
+                              onClick={() => { handleRegeneratePreview(beat.id); setOpenMenuId(null); }}
+                              disabled={!beat.audio_url || regeneratingPreview[beat.id]}
+                              data-testid={`admin-regenerate-preview-${beat.id}`}>
+                              <Sparkle className="w-4 h-4 flex-shrink-0" />
+                              <span>{regeneratingPreview[beat.id] ? 'Refreshing Preview...' : 'Regenerate Preview'}</span>
+                            </button>
+                            <button
                               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 hover:text-white transition-colors"
                               onClick={() => { startEdit(beat); setOpenMenuId(null); }}
                               data-testid={`edit-beat-${beat.id}`}>
@@ -425,6 +510,9 @@ export default function AdminBeatsPage() {
                       <span>{beat.plays || 0} plays</span>
                       <span>{beat.sales_count || 0} sales</span>
                       <span className="capitalize">{beat.mood}</span>
+                      <span className={(beat.status || 'active') === 'active' ? 'text-green-400' : 'text-yellow-300'}>
+                        {(beat.status || 'active') === 'active' ? 'Active' : 'Inactive'}
+                      </span>
                       {beat.has_stems && <span className="text-[#7C4DFF]">Stems included</span>}
                       {uploading[beat.id] && <span className="text-yellow-400">Uploading audio…</span>}
                       {uploading[`stems_${beat.id}`] && <span className="text-yellow-400">Uploading stems…</span>}

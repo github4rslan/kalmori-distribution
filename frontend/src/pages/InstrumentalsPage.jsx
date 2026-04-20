@@ -7,7 +7,8 @@ import {
   MusicNote, Check, Star,
   Play, Pause, SpeakerHigh, ShoppingCart,
   MagnifyingGlass, Sliders, X, ShareNetwork, SkipBack, SkipForward,
-  DotsThreeVertical, Copy, Heart, DownloadSimple, Flag, Sparkle, Gift, Crown
+  DotsThreeVertical, Copy, Heart, DownloadSimple, Flag, Sparkle, Gift, Crown,
+  Users, Palette, ArrowRight, PaperPlaneTilt
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -100,6 +101,37 @@ const licenseTiers = [
   { id: 'unlimited_lease', name: 'Unlimited Lease', price: 149.99, desc: 'Maximum flexibility', features: ['WAV + MP3 + Stems', 'Unlimited streams', 'Music video rights', 'Non-exclusive license', 'Credit required'], color: '#FF4081' },
   { id: 'exclusive', name: 'Exclusive Rights', price: 499.99, desc: 'Full ownership', features: ['All files + Stems', 'Unlimited usage', 'Full ownership', 'Beat removed from catalog', 'No credit required'], color: '#FFD700' },
 ];
+
+const licenseCardMeta = {
+  basic_lease: {
+    badge: 'STARTER',
+    badgeStyle: 'bg-white/10 text-white',
+    icon: <MusicNote className="w-6 h-6" weight="fill" />,
+    highlight: 'Perfect for demos and songwriter cuts',
+    subHighlight: 'Affordable non-exclusive entry point',
+  },
+  premium_lease: {
+    badge: 'POPULAR',
+    badgeStyle: 'bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white',
+    icon: <Sparkle className="w-6 h-6" weight="fill" />,
+    highlight: 'More files and a bigger release ceiling',
+    subHighlight: 'Best for artists ready to release properly',
+  },
+  unlimited_lease: {
+    badge: 'FLEXIBLE',
+    badgeStyle: 'bg-gradient-to-r from-[#E040FB] to-[#FF4081] text-white',
+    icon: <SpeakerHigh className="w-6 h-6" weight="fill" />,
+    highlight: 'Unlimited streams, sales, and video rights',
+    subHighlight: 'Built for serious campaigns and repeat use',
+  },
+  exclusive: {
+    badge: 'FULL RIGHTS',
+    badgeStyle: 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black',
+    icon: <Crown className="w-6 h-6" weight="fill" />,
+    highlight: 'Full ownership transfer after purchase',
+    subHighlight: 'Beat is removed from the catalog for everyone else',
+  },
+};
 
 const genres = ['Hip-Hop/Rap', 'R&B/Soul', 'Afrobeats', 'Dancehall', 'Reggae', 'Pop', 'Trap', 'Drill', 'Gospel', 'Electronic/EDM', 'Latin', 'Other'];
 const moods = ['Energetic/Hype', 'Chill/Laid-back', 'Dark/Moody', 'Emotional/Sad', 'Happy/Uplifting', 'Romantic', 'Aggressive', 'Party/Club'];
@@ -292,18 +324,6 @@ export default function InstrumentalsPage() {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const skipBeat = (dir) => {
-    if (!beats.length) return;
-    const idx = beats.findIndex(b => b.id === currentBeatId);
-    const next = beats[(idx + dir + beats.length) % beats.length];
-    if (next && next.id !== currentBeatId) {
-      // Force swap by clearing first
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-      setCurrentBeatId(null);
-      setTimeout(() => toggleBeat(next), 0);
-    }
-  };
-
   const openPurchaseModal = (beat) => {
     setSelectedBeat(beat);
     setSelectedLicense('basic_lease');
@@ -338,28 +358,6 @@ export default function InstrumentalsPage() {
     navigator.clipboard.writeText(url).then(() => toast.success('Beat link copied!'));
   };
 
-  const currentBeat = beats.find(b => b.id === currentBeatId) || null;
-  const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
-
-  // Quick-filter derived list
-  const visibleBeats = beats.filter(b => {
-    if (quickFilter === 'free') return Number(b.prices?.basic_lease || 0) === 0;
-    if (quickFilter === 'exclusive') return !b.exclusive_sold && (b.prices?.exclusive != null);
-    if (quickFilter === 'new') {
-      if (!b.created_at) return true;
-      const age = Date.now() - new Date(b.created_at).getTime();
-      return age < 1000 * 60 * 60 * 24 * 30; // last 30 days
-    }
-    return true;
-  });
-
-  const quickFilterPills = [
-    { id: 'all', label: 'All Beats', icon: MusicNote, color: '#7C4DFF' },
-    { id: 'new', label: 'New', icon: Sparkle, color: '#7C4DFF' },
-    { id: 'free', label: 'Free', icon: Gift, color: '#E040FB' },
-    { id: 'exclusive', label: 'Exclusive', icon: Crown, color: '#FFD700' },
-  ];
-
   const isFreeBeat = (b) => Number(b?.prices?.basic_lease || 0) === 0;
   const isExclusiveAvailable = (b) => !b?.exclusive_sold && b?.prices?.exclusive != null;
   const isNewBeat = (b) => {
@@ -370,6 +368,78 @@ export default function InstrumentalsPage() {
     const raw = [b?.genre, b?.mood, ...(Array.isArray(b?.tags) ? b.tags : [])]
       .filter(Boolean).map(s => String(s).trim()).filter(Boolean);
     return Array.from(new Set(raw)).slice(0, 3);
+  };
+
+  const quickFilterPills = [
+    { id: 'all', label: 'All Beats', icon: MusicNote, color: '#7C4DFF' },
+    { id: 'new', label: 'New', icon: Sparkle, color: '#7C4DFF' },
+    { id: 'free', label: 'Free', icon: Gift, color: '#E040FB' },
+    { id: 'exclusive', label: 'Exclusive', icon: Crown, color: '#FFD700' },
+  ];
+
+  const filteredBeats = beats.filter((b) => {
+    if (quickFilter === 'free') return isFreeBeat(b);
+    if (quickFilter === 'exclusive') return isExclusiveAvailable(b);
+    if (quickFilter === 'new') {
+      if (!b.created_at) return true;
+      const age = Date.now() - new Date(b.created_at).getTime();
+      return age < 1000 * 60 * 60 * 24 * 30; // last 30 days
+    }
+    return true;
+  });
+
+  // While the catalog is still small, fall back to the full list instead of showing an empty state.
+  const visibleBeats = quickFilter !== 'all' && filteredBeats.length === 0 ? beats : filteredBeats;
+  const currentBeat = visibleBeats.find(b => b.id === currentBeatId) || beats.find(b => b.id === currentBeatId) || null;
+  const featuredBeat = visibleBeats.length > 0
+    ? [...visibleBeats].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0]
+    : null;
+  const heroBeat = currentBeat || featuredBeat;
+  const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
+  const serviceShortcuts = [
+    {
+      id: 'request-beat',
+      eyebrow: 'Custom Production',
+      title: 'Request Beat',
+      desc: 'Share your sound and get a beat built around your vision.',
+      path: '/request-beat',
+      icon: PaperPlaneTilt,
+      gradient: 'from-[#26C6DA] via-[#3B82F6] to-[#7C4DFF]',
+      glow: 'rgba(38,198,218,0.28)',
+    },
+    {
+      id: 'collab-hub',
+      eyebrow: 'Find Collaborators',
+      title: 'Collaboration Hub',
+      desc: 'Meet vocalists, producers, mixers, and writers in one place.',
+      path: '/collab-hub',
+      icon: Users,
+      gradient: 'from-[#2196F3] via-[#5E72FF] to-[#7C4DFF]',
+      glow: 'rgba(33,150,243,0.24)',
+    },
+    {
+      id: 'cover-art',
+      eyebrow: 'Release Support',
+      title: 'Need Cover Art?',
+      desc: 'Get help packaging your next song with artwork and release-ready support.',
+      path: '/services',
+      icon: Palette,
+      gradient: 'from-[#FF4D8D] via-[#E040FB] to-[#7C4DFF]',
+      glow: 'rgba(224,64,251,0.24)',
+    },
+  ];
+
+  const skipBeat = (dir) => {
+    if (!visibleBeats.length) return;
+    const idx = visibleBeats.findIndex(b => b.id === currentBeatId);
+    const safeIndex = idx >= 0 ? idx : 0;
+    const next = visibleBeats[(safeIndex + dir + visibleBeats.length) % visibleBeats.length];
+    if (next && next.id !== currentBeatId) {
+      // Force swap by clearing first
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+      setCurrentBeatId(null);
+      setTimeout(() => toggleBeat(next), 0);
+    }
   };
 
   return (
@@ -395,10 +465,10 @@ export default function InstrumentalsPage() {
           <p className="text-xs text-gray-600 mb-4">{visibleBeats.length} beat{visibleBeats.length !== 1 ? 's' : ''} available</p>
 
           {/* Featured beat hero — picks most-played, or first if tied */}
-          {!loadingBeats && visibleBeats.length > 0 && quickFilter === 'all' && (() => {
-            const featured = [...visibleBeats].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0];
-            if (!featured) return null;
+          {!loadingBeats && heroBeat && (() => {
+            const featured = heroBeat;
             const isFeaturedPlaying = currentBeatId === featured.id && isPlaying;
+            const isPinnedCurrentBeat = currentBeatId === featured.id;
             return (
               <div className="relative mb-5 rounded-3xl overflow-hidden border border-white/[0.08]"
                 style={{ background: 'linear-gradient(135deg,#1a0f2e 0%,#0d0820 60%,#000 100%)' }}>
@@ -428,19 +498,24 @@ export default function InstrumentalsPage() {
                   {/* Info */}
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2.5 py-1 rounded-full text-[9px] font-black tracking-[2px] text-white"
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="hidden px-2.5 py-1 rounded-full text-[9px] font-black tracking-[2px] text-white"
                           style={{ background: 'linear-gradient(135deg,#FFD700,#E040FB)' }}>★ FEATURED</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black tracking-[2px] text-white"
+                          style={{ background: 'linear-gradient(135deg,#FFD700,#E040FB)' }}>
+                          <Star className="w-3 h-3" weight="fill" />
+                          {isPinnedCurrentBeat ? 'NOW PLAYING' : 'FEATURED'}
+                        </span>
                         {isNewBeat(featured) && (
                           <span className="px-2 py-1 rounded-full text-[9px] font-black tracking-wider text-white"
                             style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>NEW</span>
                         )}
                       </div>
                       <h3 className="text-2xl sm:text-3xl font-extrabold text-white truncate">{featured.title}</h3>
-                      <p className="text-sm text-gray-400 mt-1 truncate">
+                      <p className="text-sm text-gray-400 mt-1 break-words">
                         by {featured.producer_name || 'Kalmori'}
                         {typeof featured.plays === 'number' && featured.plays > 0 && (
-                          <span className="ml-2 text-gray-500">· {featured.plays >= 1000 ? `${(featured.plays / 1000).toFixed(1)}k` : featured.plays} plays</span>
+                          <span className="ml-2 text-gray-500">- {featured.plays >= 1000 ? `${(featured.plays / 1000).toFixed(1)}k` : featured.plays} plays</span>
                         )}
                       </p>
                       <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -451,15 +526,15 @@ export default function InstrumentalsPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-3 flex-wrap">
+                    <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                       <button onClick={() => openPurchaseModal(featured)}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-bold transition-all active:scale-95 shadow-lg hover:brightness-110"
+                        className="w-full sm:w-auto justify-center flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-bold transition-all active:scale-95 shadow-lg hover:brightness-110"
                         style={{ background: 'linear-gradient(135deg,#7C4DFF,#E040FB)' }}>
                         <ShoppingCart className="w-4 h-4" weight="fill" />
                         Buy from ${Number(featured.prices?.basic_lease || 29.99) % 1 === 0 ? Number(featured.prices?.basic_lease || 29.99).toFixed(0) : Number(featured.prices?.basic_lease || 29.99).toFixed(2)}
                       </button>
                       <button onClick={() => toggleBeat(featured)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                        className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 rounded-full text-white text-sm font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
                         {isFeaturedPlaying ? <Pause className="w-4 h-4" weight="fill" /> : <Play className="w-4 h-4" weight="fill" />}
                         {isFeaturedPlaying ? 'Pause preview' : 'Play preview'}
                       </button>
@@ -495,10 +570,10 @@ export default function InstrumentalsPage() {
                 data-testid="inline-sort">
                 <option value="newest">Newest</option>
                 <option value="plays">Most Played</option>
-                <option value="price_low">Price ↑</option>
-                <option value="price_high">Price ↓</option>
-                <option value="bpm_low">BPM ↑</option>
-                <option value="bpm_high">BPM ↓</option>
+                <option value="price_low">Price Low</option>
+                <option value="price_high">Price High</option>
+                <option value="bpm_low">BPM Low</option>
+                <option value="bpm_high">BPM High</option>
               </select>
               <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" viewBox="0 0 12 12" fill="none">
                 <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -515,10 +590,10 @@ export default function InstrumentalsPage() {
                 data-testid="inline-sort-mobile">
                 <option value="newest">Newest</option>
                 <option value="plays">Most Played</option>
-                <option value="price_low">Price ↑</option>
-                <option value="price_high">Price ↓</option>
-                <option value="bpm_low">BPM ↑</option>
-                <option value="bpm_high">BPM ↓</option>
+                <option value="price_low">Price Low</option>
+                <option value="price_high">Price High</option>
+                <option value="bpm_low">BPM Low</option>
+                <option value="bpm_high">BPM High</option>
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" viewBox="0 0 12 12" fill="none">
                 <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -555,7 +630,7 @@ export default function InstrumentalsPage() {
           {/* Filters panel */}
           {showFilters && (
             <div className="bg-[#111] border border-[#222] rounded-2xl p-4 mb-4 space-y-4" data-testid="filters-panel">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] text-gray-500 mb-1 block uppercase tracking-wider">Genre</label>
                   <select value={selectedGenre} onChange={e => setSelectedGenre(e.target.value)}
@@ -585,16 +660,16 @@ export default function InstrumentalsPage() {
                   <select value={sortBy} onChange={e => setSortBy(e.target.value)}
                     className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-white text-sm" data-testid="filter-sort">
                     <option value="newest">Newest</option>
-                    <option value="price_low">Price ↑</option>
-                    <option value="price_high">Price ↓</option>
-                    <option value="bpm_low">BPM ↑</option>
-                    <option value="bpm_high">BPM ↓</option>
+                    <option value="price_low">Price Low</option>
+                    <option value="price_high">Price High</option>
+                    <option value="bpm_low">BPM Low</option>
+                    <option value="bpm_high">BPM High</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-gray-500 mb-1 block uppercase tracking-wider">BPM: {bpmRange[0]} – {bpmRange[1]}</label>
-                <div className="flex items-center gap-3">
+                <label className="text-[10px] text-gray-500 mb-1 block uppercase tracking-wider">BPM: {bpmRange[0]} - {bpmRange[1]}</label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <input type="range" min="60" max="200" value={bpmRange[0]} onChange={e => setBpmRange([parseInt(e.target.value), bpmRange[1]])}
                     className="flex-1 accent-[#7C4DFF]" data-testid="bpm-min-slider" />
                   <input type="range" min="60" max="200" value={bpmRange[1]} onChange={e => setBpmRange([bpmRange[0], parseInt(e.target.value)])}
@@ -723,7 +798,7 @@ export default function InstrumentalsPage() {
                           ) : null}
                         </div>
                         <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                          {beat.producer_name || 'Kalmori'} · {beat.bpm} BPM · {beat.key}
+                          {beat.producer_name || 'Kalmori'} - {beat.bpm} BPM - {beat.key}
                         </p>
                       </div>
                       {/* Price chip — icon + price, compact */}
@@ -868,6 +943,60 @@ export default function InstrumentalsPage() {
           </div>
         </div>
 
+        <section className="px-4 pt-6 pb-10 sm:pt-8 sm:pb-12" data-testid="instrumentals-service-shortcuts">
+          <div className="rounded-[28px] border border-white/[0.06] bg-[radial-gradient(circle_at_top,rgba(124,77,255,0.14),transparent_42%),linear-gradient(180deg,#0f0f12_0%,#09090b_100%)] px-4 py-5 sm:px-6 sm:py-6">
+            <div className="max-w-2xl">
+              <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] text-[#E040FB] uppercase mb-2">Need More Than A Beat?</p>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Keep the release moving with the right next step.</h2>
+              <p className="mt-2 text-sm sm:text-[15px] text-gray-400 leading-relaxed">
+                If you already found a sound you like, here are the next services artists usually need.
+              </p>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 lg:grid-cols-3 gap-3.5 sm:gap-4">
+              {serviceShortcuts.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => navigate(card.path)}
+                    className={`group relative overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br ${card.gradient} p-[1px] text-left transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]`}
+                    style={{ boxShadow: `0 18px 44px ${card.glow}` }}
+                    data-testid={`instrumentals-shortcut-${card.id}`}>
+                    <div className="relative h-full min-h-[172px] rounded-[23px] bg-[linear-gradient(180deg,rgba(14,14,18,0.92)_0%,rgba(8,8,12,0.98)_100%)] px-4 py-4 sm:px-5 sm:py-5">
+                      <div className="absolute inset-0 opacity-60 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(124,77,255,0.16),transparent_34%)]" />
+                      <div className="relative flex h-full flex-col">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/10 backdrop-blur-md">
+                            <Icon className="w-6 h-6 text-white" weight="fill" />
+                          </div>
+                          <div className="w-11 h-11 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.06] text-white/90 transition-all duration-300 group-hover:bg-white group-hover:text-black">
+                            <ArrowRight className="w-5 h-5" weight="bold" />
+                          </div>
+                        </div>
+
+                        <div className="mt-5">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/60">{card.eyebrow}</p>
+                          <h3 className="mt-2 text-[24px] leading-none sm:text-[26px] font-extrabold text-white tracking-tight">{card.title}</h3>
+                          <p className="mt-3 text-sm text-gray-300 leading-relaxed max-w-[28ch]">{card.desc}</p>
+                        </div>
+
+                        <div className="mt-auto pt-5">
+                          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
+                            Open now
+                            <ArrowRight className="w-3.5 h-3.5" weight="bold" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         <GlobalFooter />
 
         {/* ══════════════════════════════════════════
@@ -997,25 +1126,68 @@ export default function InstrumentalsPage() {
               {purchaseStep === 'license' && (
                 <>
                   <p className="text-xs font-bold text-[#E040FB] tracking-[2px] mb-3">SELECT LICENSE</p>
-                  <div className="space-y-2.5 mb-5">
-                    {licenseTiers.map(tier => (
-                      <button key={tier.id} onClick={() => setSelectedLicense(tier.id)}
-                        className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                          selectedLicense === tier.id
-                            ? 'bg-white/5 border-white/20'
-                            : 'border-white/10 hover:border-white/20'
-                        }`}
-                        style={selectedLicense === tier.id ? { boxShadow: `0 0 0 1px ${tier.color}30` } : undefined}
-                        data-testid={`modal-tier-${tier.id}`}>
-                        <div className="text-left">
-                          <p className="text-sm font-bold text-white">{tier.name}</p>
-                          <p className="text-xs text-gray-500">{tier.desc}</p>
-                        </div>
-                        <span className="text-lg font-extrabold" style={{ color: tier.color }}>
-                          ${selectedBeat.prices?.[tier.id] || tier.price}
-                        </span>
-                      </button>
-                    ))}
+                  <div className="space-y-4 mb-5">
+                    {licenseTiers.map(tier => {
+                      const meta = licenseCardMeta[tier.id] || {};
+                      const selected = selectedLicense === tier.id;
+                      const price = selectedBeat.prices?.[tier.id] || tier.price;
+
+                      return (
+                        <button
+                          key={tier.id}
+                          onClick={() => setSelectedLicense(tier.id)}
+                          className={`w-full overflow-hidden rounded-2xl text-left transition-all ${
+                            tier.id === 'exclusive'
+                              ? 'border-2 border-[#FFD700]'
+                              : selected
+                                ? 'border-2 border-white/20'
+                                : 'border border-white/10'
+                          } ${selected ? 'shadow-lg scale-[1.01]' : 'hover:border-white/20'}`}
+                          style={selected ? { boxShadow: `0 0 0 1px ${tier.color}30` } : undefined}
+                          data-testid={`modal-tier-${tier.id}`}>
+                          <div className={`py-2.5 px-4 text-center ${selected ? 'bg-[#E040FB]' : meta.badgeStyle || 'bg-white/10 text-white'}`}>
+                            <span className="text-[11px] font-black tracking-[3px]">
+                              {selected ? 'SELECTED LICENSE' : meta.badge || 'LICENSE'}
+                            </span>
+                          </div>
+
+                          <div className="bg-[#111] p-5">
+                            <div className="text-center mb-4">
+                              <div
+                                className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                                style={{ backgroundColor: `${tier.color}15`, color: tier.color }}>
+                                {meta.icon || <MusicNote className="w-6 h-6" weight="fill" />}
+                              </div>
+                              <h4 className="text-xl font-black tracking-[2px] text-white">{tier.name.toUpperCase()}</h4>
+                              <p className="text-xs text-gray-500 mt-1">{tier.desc}</p>
+                            </div>
+
+                            <div className="text-center mb-4">
+                              <div className="flex items-baseline justify-center">
+                                <span className="text-lg font-bold" style={{ color: tier.color }}>$</span>
+                                <span className="text-4xl font-black text-white">{price}</span>
+                              </div>
+                            </div>
+
+                            <div
+                              className="rounded-xl p-3 mb-4 text-center border"
+                              style={{ backgroundColor: `${tier.color}10`, borderColor: `${tier.color}30` }}>
+                              <p className="text-sm font-bold" style={{ color: tier.color }}>{meta.highlight}</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5">{meta.subHighlight}</p>
+                            </div>
+
+                            <div className="space-y-2.5">
+                              {tier.features.map((feature, idx) => (
+                                <div key={idx} className="flex items-center gap-2.5">
+                                  <Check className="w-4 h-4 text-[#4CAF50] flex-shrink-0" weight="bold" />
+                                  <span className="text-sm text-gray-300">{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                   <button onClick={() => { if (!user) { navigate('/login'); return; } setPurchaseStep('contract'); }}
                     disabled={!selectedLicense}

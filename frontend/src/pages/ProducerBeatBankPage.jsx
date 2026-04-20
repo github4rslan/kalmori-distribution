@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useAuth, API } from '../App';
 import {
   MusicNote, Plus, Trash, PencilSimple, Upload, Play, Pause,
-  X, Check, CurrencyDollar, ShoppingBag, Waveform, Tag, DownloadSimple, Archive
+  X, Check, CurrencyDollar, ShoppingBag, Waveform, Tag, Archive, Funnel, ArrowClockwise
 } from '@phosphor-icons/react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -19,8 +19,8 @@ const KEYS = ['Am', 'Cm', 'Dm', 'Em', 'Fm', 'Gm', 'C', 'D', 'E', 'F', 'G', 'A', 
 // Brand colors from design_guidelines.json
 const PRIMARY = '#7C4DFF';
 const SECONDARY = '#E040FB';
-const ALERT = '#FF3B30';
 const HIGHLIGHT = '#FFD700';
+const PRODUCER_ALLOWED_ROLES = ['producer', 'label', 'label_producer', 'admin'];
 
 const StatCard = ({ label, value, icon, color, sub }) => (
   <div className="bg-[#141414] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all">
@@ -49,6 +49,9 @@ export default function ProducerBeatBankPage() {
   const [uploading, setUploading] = useState({});
   const [playingId, setPlayingId] = useState(null);
   const [platformFee, setPlatformFee] = useState(15);
+  const [beatSearch, setBeatSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [savingStatus, setSavingStatus] = useState({});
   const audioRef = useRef(null);
   const tabPanelRef = useRef(null);
   useBodyScrollLock(showForm);
@@ -60,10 +63,9 @@ export default function ProducerBeatBankPage() {
   });
 
   const role = getUserRole(user) || '';
-  const ALLOWED = ['producer', 'label', 'label_producer', 'admin'];
 
   useEffect(() => {
-    if (!ALLOWED.includes(role)) {
+    if (!PRODUCER_ALLOWED_ROLES.includes(role)) {
       setLoading(false);
       return undefined;
     }
@@ -94,6 +96,19 @@ export default function ProducerBeatBankPage() {
   const totalRevenue = sales.reduce((a, s) => a + (s.producer_amount || 0), 0);
   const totalPlays = beats.reduce((a, b) => a + (b.plays || 0), 0);
   const totalSales = sales.length;
+  const normalizedBeatSearch = beatSearch.trim().toLowerCase();
+  const visibleBeats = beats.filter((beat) => {
+    const currentStatus = beat.status || 'active';
+    if (statusFilter !== 'all' && currentStatus !== statusFilter) return false;
+    if (!normalizedBeatSearch) return true;
+    return [
+      beat.title,
+      beat.genre,
+      beat.mood,
+      beat.key,
+      beat.description,
+    ].filter(Boolean).some((value) => value.toLowerCase().includes(normalizedBeatSearch));
+  });
 
   const resetForm = () => {
     setForm({ title: '', genre: 'Hip-Hop/Rap', bpm: 120, key: 'Cm', mood: 'Energetic', description: '',
@@ -142,6 +157,20 @@ export default function ProducerBeatBankPage() {
       toast.success('Beat deleted');
     } catch (e) {
       toast.error(getSafeErrorDetail(e, 'Failed to delete'));
+    }
+  };
+
+  const handleStatusToggle = async (beat) => {
+    const nextStatus = (beat.status || 'active') === 'active' ? 'inactive' : 'active';
+    setSavingStatus((prev) => ({ ...prev, [beat.id]: true }));
+    try {
+      const res = await axios.put(`${API}/beats/${beat.id}`, { status: nextStatus }, { withCredentials: true });
+      setBeats((prev) => prev.map((item) => item.id === beat.id ? res.data : item));
+      toast.success(nextStatus === 'active' ? 'Beat is now live' : 'Beat hidden from the bank');
+    } catch (e) {
+      toast.error(getSafeErrorDetail(e, 'Failed to update beat status'));
+    } finally {
+      setSavingStatus((prev) => ({ ...prev, [beat.id]: false }));
     }
   };
 
@@ -227,33 +256,39 @@ export default function ProducerBeatBankPage() {
     setShowForm(true);
   };
 
-  const producerShare = ((100 - platformFee) / 100);
-
   const tabs = [
     { id: 'beats', label: 'My Beats', count: beats.length },
     { id: 'sales', label: 'Sales Log', count: sales.length },
   ];
 
-  if (!ALLOWED.includes(role)) return <Navigate to="/dashboard" replace />;
+  if (!PRODUCER_ALLOWED_ROLES.includes(role)) return <Navigate to="/dashboard" replace />;
 
   return (
     <DashboardLayout>
       <div className="max-w-5xl mx-auto" data-testid="producer-beat-bank">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight">Beat Bank</h1>
             <p className="text-white/40 text-sm mt-1">
-              Upload & manage your beats — earn {(100 - platformFee).toFixed(0)}% of every sale
+              Upload and manage your beats while earning {(100 - platformFee).toFixed(0)}% of every sale
             </p>
           </div>
-          <button
-            onClick={() => { resetForm(); setShowForm(true); }}
-            className="flex items-center gap-2 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all active:scale-95"
-            style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
-            data-testid="add-beat-btn">
-            <Plus className="w-4 h-4" weight="bold" /> Add Beat
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={fetchAll}
+              className="w-10 h-10 rounded-full border border-white/10 text-white/40 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center flex-shrink-0"
+              title="Refresh beat bank">
+              <ArrowClockwise className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { resetForm(); setShowForm(true); }}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all active:scale-95"
+              style={{ background: `linear-gradient(90deg, ${PRIMARY}, ${SECONDARY})` }}
+              data-testid="add-beat-btn">
+              <Plus className="w-4 h-4" weight="bold" /> Add Beat
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -271,10 +306,10 @@ export default function ProducerBeatBankPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-[#141414] border border-white/10 rounded-xl p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-[#141414] border border-white/10 rounded-xl p-1 overflow-x-auto scrollbar-none">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-shrink-0 px-4 sm:px-5 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'text-white'
                   : 'text-white/40 hover:text-white/70'
@@ -290,6 +325,30 @@ export default function ProducerBeatBankPage() {
         {/* Beats Tab */}
         {activeTab === 'beats' && (
           <div>
+            <div className="flex flex-col gap-3 mb-5 sm:flex-row">
+              <div className="flex-1">
+                <input
+                  value={beatSearch}
+                  onChange={(e) => setBeatSearch(e.target.value)}
+                  className={inputCls}
+                  placeholder="Search your beats"
+                  data-testid="beat-bank-search"
+                />
+              </div>
+              <div className="sm:w-52 relative">
+                <Funnel className="w-4 h-4 text-white/30 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className={`${selectCls} pl-10`}
+                  data-testid="beat-bank-status-filter">
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+
             {loading ? (
               <div className="flex justify-center py-16">
                 <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: `${SECONDARY} transparent transparent transparent` }} />
@@ -307,17 +366,31 @@ export default function ProducerBeatBankPage() {
                   <Plus className="w-4 h-4 inline mr-1.5" weight="bold" />Add Your First Beat
                 </button>
               </div>
+            ) : visibleBeats.length === 0 ? (
+              <div className="text-center py-20 border border-dashed border-white/10 rounded-2xl">
+                <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-white/5">
+                  <Funnel className="w-7 h-7 text-white/30" />
+                </div>
+                <h3 className="text-white font-bold text-lg mb-2">No beats match these filters</h3>
+                <p className="text-white/40 text-sm mb-5">Try a different search or switch the status filter back to all</p>
+                <button
+                  onClick={() => { setBeatSearch(''); setStatusFilter('all'); }}
+                  className="px-6 py-2.5 rounded-full border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-all">
+                  Clear Filters
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
-                {beats.map((beat) => (
+                {visibleBeats.map((beat) => (
                   <div key={beat.id}
-                    className="bg-[#141414] border border-white/5 rounded-2xl p-4 hover:border-white/15 transition-all group"
+                    className="bg-[#141414] border border-white/5 rounded-2xl p-3 sm:p-4 hover:border-white/15 transition-all group"
                     data-testid={`beat-row-${beat.id}`}>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       {/* Cover / Play */}
-                      <div className="relative flex-shrink-0">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <div className="relative flex-shrink-0">
                         {beat.cover_url ? (
-                          <img src={`${API}/beats/${beat.id}/cover`} alt={beat.title}
+                          <img src={beat.cover_url} alt={beat.title}
                             className="w-14 h-14 rounded-xl object-cover" />
                         ) : (
                           <div className="w-14 h-14 rounded-xl flex items-center justify-center"
@@ -333,11 +406,11 @@ export default function ProducerBeatBankPage() {
                             ? <Pause className="w-5 h-5 text-white" weight="fill" />
                             : <Play className="w-5 h-5 text-white" weight="fill" />}
                         </button>
-                      </div>
+                        </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="text-sm font-bold text-white truncate">{beat.title}</h3>
                           {playingId === beat.id && (
                             <div className="flex items-center gap-0.5">
@@ -349,14 +422,15 @@ export default function ProducerBeatBankPage() {
                           )}
                         </div>
                         <p className="text-xs text-white/40 mt-0.5">
-                          {beat.genre} · {beat.bpm} BPM · {beat.key} · {beat.mood}
+                          {beat.genre} - {beat.bpm} BPM - {beat.key} - {beat.mood}
                         </p>
                         <div className="flex items-center gap-3 mt-1.5">
                           <span className="text-xs" style={{ color: PRIMARY }}>${beat.prices?.basic_lease}</span>
-                          <span className="text-xs text-white/30">·</span>
+                          
                           <span className="text-xs text-white/40">{beat.plays || 0} plays</span>
-                          <span className="text-xs text-white/30">·</span>
+                          
                           <span className="text-xs text-white/40">{beat.sales_count || 0} sold</span>
+                        </div>
                         </div>
                       </div>
 
@@ -373,7 +447,24 @@ export default function ProducerBeatBankPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center flex-wrap gap-1 w-full sm:w-auto sm:justify-end">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border sm:hidden ${
+                          beat.status === 'active' ? 'border-green-400/30 text-green-400' : 'border-yellow-400/30 text-yellow-300'
+                        }`}>{beat.status || 'active'}</span>
+                        <button
+                          onClick={() => handleStatusToggle(beat)}
+                          disabled={savingStatus[beat.id]}
+                          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                            (beat.status || 'active') === 'active'
+                              ? 'bg-green-400/10 text-green-400 hover:bg-green-400/15'
+                              : 'bg-yellow-400/10 text-yellow-300 hover:bg-yellow-400/15'
+                          } disabled:opacity-60`}
+                          title={(beat.status || 'active') === 'active' ? 'Set beat inactive' : 'Set beat active'}
+                          data-testid={`toggle-status-${beat.id}`}>
+                          {savingStatus[beat.id]
+                            ? 'Saving...'
+                            : (beat.status || 'active') === 'active' ? 'Live' : 'Hidden'}
+                        </button>
                         {/* Upload audio */}
                         <label className="cursor-pointer p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors" title="Upload Audio">
                           <input type="file" accept="audio/*" className="hidden"
