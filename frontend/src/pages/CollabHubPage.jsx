@@ -211,24 +211,24 @@ export default function CollabHubPage() {
 
   return (
     <Layout>
-      <div className="space-y-5 sm:space-y-6" data-testid="collab-hub-page">
-        <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(124,77,255,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(224,64,251,0.14),transparent_28%),linear-gradient(180deg,#101014_0%,#09090b_100%)] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-          <div className="px-4 py-5 sm:px-6 sm:py-6">
+      <div className="mx-auto max-w-5xl space-y-4 px-3 pb-4 pt-3 sm:space-y-6 sm:px-4 sm:pb-6 sm:pt-4 lg:px-6" data-testid="collab-hub-page">
+        <div className="overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(124,77,255,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(224,64,251,0.14),transparent_28%),linear-gradient(180deg,#101014_0%,#09090b_100%)] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          <div className="px-3.5 py-4 sm:px-6 sm:py-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#7C4DFF]/30 bg-[#7C4DFF]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-[#C6B2FF]">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#7C4DFF]/30 bg-[#7C4DFF]/10 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.24em] sm:tracking-[0.28em] text-[#C6B2FF]">
                   <Sparkle className="h-3.5 w-3.5" weight="fill" />
                   Create Together
                 </div>
-                <h1 className="mt-3 text-[32px] leading-[0.95] font-extrabold tracking-tight text-white sm:text-[38px]" data-testid="collab-hub-title">Collaboration Hub</h1>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-300 sm:text-[15px]">
+                <h1 className="mt-3 text-[28px] leading-[0.96] font-extrabold tracking-tight text-white sm:text-[38px]" data-testid="collab-hub-title">Collaboration Hub</h1>
+                <p className="mt-2.5 max-w-xl text-[14px] leading-relaxed text-gray-300 sm:text-[15px]">
                   Find collaborators, post opportunities, and connect with other artists in a cleaner, faster workspace.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2.5">
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] font-semibold text-gray-200">
+                <div className="mt-3.5 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-gray-200">
                     {posts.length} open opportunities
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] font-semibold text-gray-200">
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-gray-200">
                     Producers, vocalists, mixers, writers
                   </span>
                 </div>
@@ -237,7 +237,7 @@ export default function CollabHubPage() {
               {isAuthenticated ? (
                 <button
                   onClick={() => setShowForm(true)}
-                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
+                  className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
                   data-testid="create-post-btn"
                 >
                   <Plus className="w-4 h-4" /> Post Opportunity
@@ -246,14 +246,14 @@ export default function CollabHubPage() {
                 <div className="grid w-full grid-cols-2 gap-3 lg:w-auto">
                   <button
                     onClick={() => navigate('/login', { state: { from: { pathname: '/collab-hub' } } })}
-                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                    className="flex min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
                     data-testid="guest-sign-in-btn"
                   >
                     <SignIn className="w-4 h-4" /> Sign In
                   </button>
                   <button
                     onClick={() => navigate('/register', { state: { from: { pathname: '/collab-hub' } } })}
-                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
+                    className="flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
                     data-testid="guest-register-btn"
                   >
                     <UserPlus className="w-4 h-4" /> Create Account
@@ -265,9 +265,9 @@ export default function CollabHubPage() {
         </div>
 
         {!isAuthenticated && (
-          <div className="rounded-[24px] border border-[#7C4DFF]/20 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(10,10,10,0.98))] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
-            <p className="text-lg font-semibold leading-tight text-white">Browse the collaboration board without signing in.</p>
-            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-gray-300">
+          <div className="rounded-[22px] sm:rounded-[24px] border border-[#7C4DFF]/20 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(10,10,10,0.98))] p-4 sm:p-5 shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
+            <p className="text-[17px] sm:text-lg font-semibold leading-tight text-white">Browse the collaboration board without signing in.</p>
+            <p className="mt-2 max-w-xl text-[14px] sm:text-[15px] leading-relaxed text-gray-300">
               You can explore open opportunities now. Sign in when you want to post your own opportunity or send an invite.
             </p>
           </div>
@@ -279,7 +279,7 @@ export default function CollabHubPage() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`min-w-[110px] flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                className={`min-w-[98px] flex-1 rounded-xl px-3 py-2.5 text-[13px] sm:text-sm font-semibold transition ${
                   tab === t.key
                     ? 'bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] text-white shadow-[0_10px_26px_rgba(124,77,255,0.28)]'
                     : 'text-gray-400 hover:text-white'
@@ -300,7 +300,7 @@ export default function CollabHubPage() {
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="min-h-[48px] rounded-2xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
+              className="min-h-[44px] rounded-xl sm:rounded-2xl border border-white/10 bg-[#111] px-3 py-2.5 text-[13px] sm:text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
               data-testid="filter-role"
             >
               <option value="" className="bg-black">All Roles</option>
@@ -309,7 +309,7 @@ export default function CollabHubPage() {
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="min-h-[48px] rounded-2xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
+              className="min-h-[44px] rounded-xl sm:rounded-2xl border border-white/10 bg-[#111] px-3 py-2.5 text-[13px] sm:text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
               data-testid="filter-genre"
             >
               <option value="" className="bg-black">All Genres</option>
@@ -321,7 +321,7 @@ export default function CollabHubPage() {
         {loading || authLoading ? (
           <div className="py-12 text-center text-gray-500">Loading...</div>
         ) : tab === 'browse' ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="posts-grid">
+          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2" data-testid="posts-grid">
             {posts.length === 0 ? (
               <div className="col-span-2 rounded-[24px] border border-white/10 bg-[#101012] p-8 text-center shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
                 <MusicNote className="mx-auto mb-3 h-12 w-12 text-gray-600" />
@@ -334,44 +334,44 @@ export default function CollabHubPage() {
               const role = getRoleInfo(post.looking_for);
 
               return (
-                <div key={post.id} className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#151518_0%,#101012_100%)] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.24)] transition hover:border-[#7C4DFF]/30" data-testid={`post-${post.id}`}>
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/15 text-[#A78BFA]">
+                <div key={post.id} className="rounded-[22px] sm:rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#151518_0%,#101012_100%)] p-4 sm:p-5 shadow-[0_20px_45px_rgba(0,0,0,0.24)] transition hover:border-[#7C4DFF]/30" data-testid={`post-${post.id}`}>
+                  <div className="mb-3.5 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-[16px] sm:rounded-2xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/15 text-[#A78BFA]">
                         {role.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate text-[22px] leading-none font-bold tracking-tight text-white sm:text-xl">{post.title}</p>
-                        <p className="mt-1 truncate text-sm text-gray-500">{post.artist_name}</p>
+                        <p className="truncate text-[17px] sm:text-xl leading-none font-bold tracking-tight text-white">{post.title}</p>
+                        <p className="mt-1 truncate text-[13px] sm:text-sm text-gray-500">{post.artist_name}</p>
                       </div>
                     </div>
-                    <span className="rounded-full border border-[#E040FB]/25 bg-[#E040FB]/12 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#E879F9]">
+                    <span className="rounded-full border border-[#E040FB]/25 bg-[#E040FB]/12 px-2.5 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-[#E879F9]">
                       {role.label}
                     </span>
                   </div>
 
-                  {post.description && <p className="mb-4 line-clamp-3 text-[15px] leading-relaxed text-gray-300">{post.description}</p>}
+                  {post.description && <p className="mb-3.5 line-clamp-3 text-[14px] leading-relaxed text-gray-300">{post.description}</p>}
 
-                  <div className="mb-4 flex flex-wrap gap-2">
+                  <div className="mb-3.5 flex flex-wrap gap-2">
                     {post.genre && (
-                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-gray-200">
+                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-gray-200">
                         {post.genre}
                       </span>
                     )}
                     {post.budget && (
-                      <span className="flex items-center gap-1 rounded-full border border-[#22C55E]/25 bg-[#22C55E]/10 px-3 py-1 text-[11px] font-medium text-[#4ADE80]">
+                      <span className="flex items-center gap-1 rounded-full border border-[#22C55E]/25 bg-[#22C55E]/10 px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-[#4ADE80]">
                         <CurrencyDollar className="h-3 w-3" /> {post.budget}
                       </span>
                     )}
                     {post.deadline && (
-                      <span className="flex items-center gap-1 rounded-full border border-[#FFD700]/25 bg-[#FFD700]/10 px-3 py-1 text-[11px] font-medium text-[#FACC15]">
+                      <span className="flex items-center gap-1 rounded-full border border-[#FFD700]/25 bg-[#FFD700]/10 px-2.5 py-1 text-[10px] sm:text-[11px] font-medium text-[#FACC15]">
                         <Clock className="h-3 w-3" /> {post.deadline}
                       </span>
                     )}
                   </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-sm text-gray-500">{post.responses} response{post.responses !== 1 ? 's' : ''}</span>
+                    <span className="text-[13px] sm:text-sm text-gray-500">{post.responses} response{post.responses !== 1 ? 's' : ''}</span>
                     <button
                       onClick={() => {
                         if (!isAuthenticated) {
@@ -381,7 +381,7 @@ export default function CollabHubPage() {
                         setInviteModal(post.id);
                         setInviteMsg('');
                       }}
-                      className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(124,77,255,0.25)] transition hover:brightness-110 sm:w-auto"
+                      className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-2.5 text-[13px] sm:text-sm font-semibold text-white shadow-[0_12px_28px_rgba(124,77,255,0.25)] transition hover:brightness-110 sm:w-auto"
                       data-testid={`invite-btn-${post.id}`}
                     >
                       <PaperPlaneTilt className="h-4 w-4" /> {isAuthenticated ? 'Send Invite' : 'Sign In to Invite'}
