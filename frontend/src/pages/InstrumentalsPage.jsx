@@ -148,6 +148,15 @@ export default function InstrumentalsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const handleServiceShortcut = (card) => {
+    if (card.id === 'collaborations' && !user) {
+      navigate('/login', { state: { from: { pathname: card.path } } });
+      return;
+    }
+
+    navigate(card.path);
+  };
+
   // Purchase modal state
   const [selectedLicense, setSelectedLicense] = useState('');
   const [selectedBeat, setSelectedBeat] = useState(null);
@@ -407,8 +416,9 @@ export default function InstrumentalsPage() {
   const effectiveSortBy = quickFilter === 'new' ? 'newest' : sortBy;
   const visibleBeats = sortBeats(baseVisibleBeats, effectiveSortBy);
   const currentBeat = visibleBeats.find(b => b.id === currentBeatId) || beats.find(b => b.id === currentBeatId) || null;
-  const featuredBeat = visibleBeats.length > 0
-    ? [...visibleBeats].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0]
+  const featuredPool = visibleBeats.length > 0 ? visibleBeats : beats;
+  const featuredBeat = featuredPool.length > 0
+    ? [...featuredPool].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0]
     : null;
   const heroBeat = currentBeat || featuredBeat;
   const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
@@ -424,11 +434,11 @@ export default function InstrumentalsPage() {
       glow: 'rgba(38,198,218,0.28)',
     },
     {
-      id: 'collab-hub',
+      id: 'collaborations',
       eyebrow: 'Find Collaborators',
       title: 'Collaboration Hub',
       desc: 'Meet vocalists, producers, mixers, and writers in one place.',
-      path: '/collab-hub',
+      path: '/collaborations',
       icon: Users,
       gradient: 'from-[#2196F3] via-[#5E72FF] to-[#7C4DFF]',
       glow: 'rgba(33,150,243,0.24)',
@@ -976,7 +986,7 @@ export default function InstrumentalsPage() {
                   <button
                     key={card.id}
                     type="button"
-                    onClick={() => navigate(card.path)}
+                    onClick={() => handleServiceShortcut(card)}
                     className={`group relative overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 bg-gradient-to-br ${card.gradient} p-[1px] text-left transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]`}
                     style={{ boxShadow: `0 18px 44px ${card.glow}` }}
                     data-testid={`instrumentals-shortcut-${card.id}`}>

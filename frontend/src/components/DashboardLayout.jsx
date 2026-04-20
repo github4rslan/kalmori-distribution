@@ -62,7 +62,6 @@ const getMobileTitle = (pathname) => {
   if (pathname === '/wallet') return 'Wallet';
   if (pathname === '/purchases') return 'My Purchases';
   if (pathname === '/collaborations') return 'Collaborations';
-  if (pathname === '/collab-hub') return 'Collaboration Hub';
   if (pathname === '/settings') return 'Settings';
   if (pathname === '/spotify') return 'Spotify Data';
   if (pathname === '/spotify-canvas') return 'Spotify Canvas';
@@ -264,7 +263,6 @@ const DashboardLayout = ({ children }) => {
     { path: '/content-id', icon: <YoutubeLogo className="w-5 h-5" />, label: 'Content ID', feat: 'content_id' },
     { path: '/purchases', icon: <ShoppingBag className="w-5 h-5" />, label: 'My Purchases' },
     { path: '/collaborations', icon: <UsersThree className="w-5 h-5" />, label: 'Collaborations', feat: 'collaborations' },
-    { path: '/collab-hub', icon: <Lightning className="w-5 h-5" />, label: 'Collab Hub' },
     { path: '/messages', icon: <ChatCircle className="w-5 h-5" />, label: 'Messages' },
     { path: '/royalty-splits', icon: <CurrencyDollar className="w-5 h-5" />, label: 'Royalty Splits' },
     { path: '/presave-manager', icon: <Megaphone className="w-5 h-5" />, label: 'Pre-Save', feat: 'presave' },

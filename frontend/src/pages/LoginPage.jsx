@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash } from '@phosphor-icons/react';
 import { toast } from 'sonner';
@@ -12,7 +12,9 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const returnPath = location.state?.from?.pathname || '/dashboard';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ const LoginPage = () => {
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate(returnPath, { replace: true });
     } catch (err) {
       setError(getSafeErrorDetail(err, err.message || 'Login failed'));
     } finally {

@@ -111,7 +111,6 @@ const AdminAnalyticsReportsPage = lazy(() => import('./pages/AdminAnalyticsRepor
 const AdminContractsPage = lazy(() => import('./pages/AdminContractsPage'));
 const AdminPayoutsPage = lazy(() => import('./pages/AdminPayoutsPage'));
 const CalendarPage = lazy(() => import('./pages/CalendarPage'));
-const CollabHubPage = lazy(() => import('./pages/CollabHubPage'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 const RoyaltySplitsPage = lazy(() => import('./pages/RoyaltySplitsPage'));
 const PageBuilderPage = lazy(() => import('./pages/PageBuilderPage'));
@@ -375,7 +374,7 @@ const AppRouter = () => {
         <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
         <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
         <Route path="/collaborations" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('collaborations')}><CollaborationsPage /></FeatureRoute>} />
-        <Route path="/collab-hub" element={<CollabHubPage />} />
+        <Route path="/collab-hub" element={<Navigate to="/collaborations" replace />} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/royalty-splits" element={<ProtectedRoute><RoyaltySplitsPage /></ProtectedRoute>} />
         <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
