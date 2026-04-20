@@ -325,22 +325,44 @@ const LandingPage = () => {
             {/* Request Beat */}
             <button
               onClick={() => navigate('/request-beat')}
-              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-9 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300 md:col-span-2"
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
               style={{ background: 'linear-gradient(135deg, #5B4CFF 0%, #00B8D9 100%)', boxShadow: '0 12px 40px rgba(91,76,255,0.28)' }}
               data-testid="landing-request-beat-btn">
               <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
               <div className="absolute -left-3 -top-3 w-24 h-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
 
-              <div className="relative flex items-center gap-4 sm:gap-5 md:gap-7">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                   <PaperPlaneTilt className="w-7 h-7 sm:w-8 sm:h-8 text-white" weight="fill" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">Custom Production</p>
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight mb-1.5">Request Beat</h3>
-                  <p className="text-xs sm:text-sm md:text-base text-white/80 leading-snug max-w-2xl">Share your vision and get a custom beat built around your sound with a cleaner dedicated request flow.</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Request Beat</h3>
+                  <p className="text-xs sm:text-sm text-white/80 leading-snug">Share your vision and get a custom beat built around your sound.</p>
                 </div>
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
+              </div>
+            </button>
+
+            {/* Collaboration Hub */}
+            <button
+              onClick={() => navigate('/collab-hub')}
+              className="group relative overflow-hidden rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-left transition-all active:scale-[0.98] hover:-translate-y-1 duration-300"
+              style={{ background: 'linear-gradient(135deg, #2196F3 0%, #7C4DFF 100%)', boxShadow: '0 12px 40px rgba(33,150,243,0.28)' }}
+              data-testid="landing-collaboration-hub-btn">
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 rounded-full bg-white/10 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <div className="absolute -left-3 -top-3 w-24 h-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
+
+              <div className="relative flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white" weight="fill" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-[11px] font-bold text-white/70 tracking-[2px] uppercase mb-1">Find Collaborators</p>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1">Collaboration Hub</h3>
+                  <p className="text-xs sm:text-sm text-white/80 leading-snug">Meet vocalists, producers, mixers, and songwriters in one place.</p>
+                </div>
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0 group-hover:translate-x-1 transition-transform" weight="bold" />
               </div>
             </button>
           </div>
@@ -536,20 +558,33 @@ const LandingPage = () => {
               { icon: <CurrencyDollar className="w-7 h-7" weight="fill" />, color: '#FFD700', title: 'Revenue Dashboard', desc: 'See your earnings per platform, export reports as PDF or CSV, and use the royalty calculator to model future revenue.' },
               { icon: <Brain className="w-7 h-7" weight="fill" />, color: '#9C27B0', title: 'AI Release Strategy', desc: 'Get AI-powered release plans with optimal timing, playlist targeting, and marketing recommendations tailored to your genre.' },
               { icon: <Target className="w-7 h-7" weight="fill" />, color: '#FF6B6B', title: 'Pre-Save Campaigns', desc: 'Build hype before your release drops. Create pre-save pages where fans lock in your music on their streaming platform.' },
-              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#2196F3', title: 'Collaboration Hub', desc: 'Find vocalists, producers, mixers, and songwriters. Post collabs, connect, and create together right inside Kalmori.' },
+              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#2196F3', title: 'Collaboration Hub', desc: 'Find vocalists, producers, mixers, and songwriters. Post collabs, connect, and create together right inside Kalmori.', path: '/collab-hub' },
               { icon: <Trophy className="w-7 h-7" weight="fill" />, color: '#FF9800', title: 'Release Leaderboard', desc: 'See how your releases stack up against your own catalog. Track momentum, hot streaks, and weekly performance.' },
               { icon: <ShareNetwork className="w-7 h-7" weight="fill" />, color: '#00BCD4', title: 'Artist Public Profile', desc: 'Your shareable link-in-bio with audio previews, custom theme colors, social links, and QR code sharing.' },
               { icon: <ShieldCheck className="w-7 h-7" weight="fill" />, color: '#7C4DFF', title: 'Keep 100% Ownership', desc: 'Your music, your masters. Kalmori never claims ownership or copyright. You stay in complete creative control.' },
-            ].map((f, i) => (
-              <div key={i} className="bg-[#111] rounded-2xl p-7 border border-white/5 hover:border-[#E040FB]/30 transition-all group" data-testid={`artist-feature-${i}`}>
+            ].map((f, i) => {
+              const isClickable = Boolean(f.path);
+              const CardTag = isClickable ? 'button' : 'div';
+              return (
+              <CardTag
+                key={i}
+                type={isClickable ? 'button' : undefined}
+                onClick={isClickable ? () => navigate(f.path) : undefined}
+                className={`bg-[#111] rounded-2xl p-7 border border-white/5 transition-all group ${isClickable ? 'w-full cursor-pointer text-left hover:border-[#E040FB]/30 focus:outline-none focus:ring-2 focus:ring-[#E040FB]/40' : 'hover:border-[#E040FB]/30'}`}
+                data-testid={`artist-feature-${i}`}>
                 <div className="w-12 h-12 rounded-xl mb-5 flex items-center justify-center group-hover:scale-110 transition-transform"
                   style={{ backgroundColor: `${f.color}15`, color: f.color }}>
                   {f.icon}
                 </div>
                 <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+                {isClickable && (
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold tracking-[2px] text-[#E040FB]">
+                    OPEN HUB <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
+              </CardTag>
+            );})}
           </div>
           <div className="mt-10 text-center">
             <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full animate-btn-gradient text-white text-sm font-bold tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#E040FB]/20" data-testid="artist-features-cta-btn">
@@ -580,18 +615,31 @@ const LandingPage = () => {
               { icon: <ChartLineUp className="w-7 h-7" weight="fill" />, color: '#1DB954', title: 'Sales Analytics', desc: 'Track beat sales, preview plays, licensing revenue, and fan engagement. Know exactly which beats are performing best.' },
               { icon: <ChatCircleDots className="w-7 h-7" weight="fill" />, color: '#2196F3', title: 'Direct Messaging', desc: 'Chat directly with artists interested in your beats. Share files, negotiate deals, and finalize collaborations all in-app.' },
               { icon: <Globe className="w-7 h-7" weight="fill" />, color: '#E040FB', title: 'Distribute Your Own Music', desc: 'Producers can also distribute their own releases to 150+ platforms. Not just a marketplace — it is your full distribution hub.' },
-              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#FF9800', title: 'Collaboration Hub', desc: 'Post that you are open for work. Connect with vocalists, rappers, and other producers looking for beats and production.' },
+              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#FF9800', title: 'Collaboration Hub', desc: 'Post that you are open for work. Connect with vocalists, rappers, and other producers looking for beats and production.', path: '/collab-hub' },
               { icon: <CurrencyDollar className="w-7 h-7" weight="fill" />, color: '#7C4DFF', title: 'Instant Payouts', desc: 'Earnings from beat sales and streaming royalties are deposited directly into your Kalmori wallet. Withdraw anytime via PayPal or bank.' },
-            ].map((f, i) => (
-              <div key={i} className="bg-[#111] rounded-2xl p-7 border border-white/5 hover:border-[#FFD700]/30 transition-all group" data-testid={`producer-feature-${i}`}>
+            ].map((f, i) => {
+              const isClickable = Boolean(f.path);
+              const CardTag = isClickable ? 'button' : 'div';
+              return (
+              <CardTag
+                key={i}
+                type={isClickable ? 'button' : undefined}
+                onClick={isClickable ? () => navigate(f.path) : undefined}
+                className={`bg-[#111] rounded-2xl p-7 border border-white/5 transition-all group ${isClickable ? 'w-full cursor-pointer text-left hover:border-[#FFD700]/30 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/40' : 'hover:border-[#FFD700]/30'}`}
+                data-testid={`producer-feature-${i}`}>
                 <div className="w-12 h-12 rounded-xl mb-5 flex items-center justify-center group-hover:scale-110 transition-transform"
                   style={{ backgroundColor: `${f.color}15`, color: f.color }}>
                   {f.icon}
                 </div>
                 <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+                {isClickable && (
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold tracking-[2px] text-[#FFD700]">
+                    OPEN HUB <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
+              </CardTag>
+            );})}
           </div>
           <div className="mt-10 text-center">
             <button onClick={() => navigate('/register')} className="px-10 py-4 rounded-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black text-sm font-black tracking-[2px] inline-flex items-center gap-3 hover:brightness-110 transition-all shadow-lg shadow-[#FFD700]/20" data-testid="producer-features-cta-btn">
@@ -624,20 +672,33 @@ const LandingPage = () => {
               { icon: <Waveform className="w-7 h-7" weight="fill" />, color: '#00BCD4', title: 'AI Audio Watermarking', desc: 'AI-generated voice tags automatically overlaid on beat previews. Clean versions unlock after purchase for full protection.' },
               { icon: <ChatCircleDots className="w-7 h-7" weight="fill" />, color: '#2196F3', title: 'In-App Messaging', desc: 'Real-time chat with file sharing, audio messages, read receipts, and typing indicators. Collaborate without leaving the platform.' },
               { icon: <HandCoins className="w-7 h-7" weight="fill" />, color: '#FF9800', title: 'Producer Royalty Splits', desc: 'Auto-calculated royalty splits between producers and artists on every beat stream and purchase. Credited directly to wallets.' },
-              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#E040FB', title: 'Collaboration Hub', desc: 'Post collaboration opportunities, find vocalists, producers, and engineers. Build your network and create together.' },
+              { icon: <Users className="w-7 h-7" weight="fill" />, color: '#E040FB', title: 'Collaboration Hub', desc: 'Post collaboration opportunities, find vocalists, producers, and engineers. Build your network and create together.', path: '/collab-hub' },
               { icon: <ShareNetwork className="w-7 h-7" weight="fill" />, color: '#00BCD4', title: 'Artist Public Profile', desc: 'Your shareable link-in-bio page with audio previews, custom theme colors, QR code sharing, and pre-save campaigns.' },
               { icon: <Trophy className="w-7 h-7" weight="fill" />, color: '#FF6B6B', title: 'Release Leaderboard', desc: 'See how your releases stack up. Track momentum, hot streaks, and compete with your own catalog.' },
               { icon: <Target className="w-7 h-7" weight="fill" />, color: '#7C4DFF', title: 'Goal Tracking & Milestones', desc: 'Set stream goals, revenue targets, and geographic reach milestones. Watch your progress and celebrate achievements.' },
-            ].map((f, i) => (
-              <div key={i} className="bg-[#111] rounded-2xl p-7 border border-white/5 hover:border-white/15 transition-all group" data-testid={`feature-card-${i}`}>
+            ].map((f, i) => {
+              const isClickable = Boolean(f.path);
+              const CardTag = isClickable ? 'button' : 'div';
+              return (
+              <CardTag
+                key={i}
+                type={isClickable ? 'button' : undefined}
+                onClick={isClickable ? () => navigate(f.path) : undefined}
+                className={`bg-[#111] rounded-2xl p-7 border border-white/5 transition-all group ${isClickable ? 'w-full cursor-pointer text-left hover:border-white/15 focus:outline-none focus:ring-2 focus:ring-[#7C4DFF]/40' : 'hover:border-white/15'}`}
+                data-testid={`feature-card-${i}`}>
                 <div className="w-12 h-12 rounded-xl mb-5 flex items-center justify-center group-hover:scale-110 transition-transform"
                   style={{ backgroundColor: `${f.color}15`, color: f.color }}>
                   {f.icon}
                 </div>
                 <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+                {isClickable && (
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold tracking-[2px] text-[#7C4DFF]">
+                    OPEN HUB <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
+              </CardTag>
+            );})}
           </div>
         </div>
       </section>

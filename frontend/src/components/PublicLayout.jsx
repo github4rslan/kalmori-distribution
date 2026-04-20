@@ -55,6 +55,7 @@ const PublicLayout = ({ children }) => {
     '/spotify-canvas': 'Spotify Canvas',
     '/content-id': 'Content ID',
     '/instrumentals': 'Beat Store',
+    '/collab-hub': 'Collaboration Hub',
   };
 
   const getPageTitle = () => {

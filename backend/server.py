@@ -902,8 +902,15 @@ async def create_collab_post(data: CollabPostCreate, request: Request):
 
 @api_router.get("/collab-hub/posts")
 async def list_collab_posts(request: Request, looking_for: str = None, genre: str = None):
-    user = await get_current_user(request)
-    query = {"status": "open", "user_id": {"$ne": user["id"]}}
+    user = None
+    try:
+        user = await get_current_user(request)
+    except HTTPException as exc:
+        if exc.status_code != 401:
+            raise
+    query = {"status": "open"}
+    if user:
+        query["user_id"] = {"$ne": user["id"]}
     if looking_for:
         query["looking_for"] = looking_for
     if genre:

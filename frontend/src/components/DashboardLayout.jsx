@@ -62,6 +62,7 @@ const getMobileTitle = (pathname) => {
   if (pathname === '/wallet') return 'Wallet';
   if (pathname === '/purchases') return 'My Purchases';
   if (pathname === '/collaborations') return 'Collaborations';
+  if (pathname === '/collab-hub') return 'Collaboration Hub';
   if (pathname === '/settings') return 'Settings';
   if (pathname === '/spotify') return 'Spotify Data';
   if (pathname === '/spotify-canvas') return 'Spotify Canvas';
