@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { Link as LinkIcon, Copy, CheckCircle, Users, Gift, Trophy, ArrowRight, ShareNetwork } from '@phosphor-icons/react';
+import axios from 'axios';
 import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -10,18 +11,13 @@ export default function ReferralPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const token = localStorage.getItem('token') || localStorage.getItem('access_token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchData = useCallback(async () => {
     try {
-      const [linkRes, statsRes] = await Promise.all([
-        fetch(`${API}/api/referral/my-link`, { headers }),
-        fetch(`${API}/api/referral/stats`, { headers }),
+      const [linkResponse, statsResponse] = await Promise.all([
+        axios.get(`${API}/api/referral/my-link`, { withCredentials: true }),
+        axios.get(`${API}/api/referral/stats`, { withCredentials: true }),
       ]);
-      const linkData = await linkRes.json();
-      const statsData = await statsRes.json();
-      setData({ ...linkData, ...statsData });
+      setData({ ...(linkResponse.data || {}), ...(statsResponse.data || {}) });
     } catch (e) { console.error(e); }
     setLoading(false);
   }, []);

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 
-from core import db, get_current_user, require_admin
+from core import db, get_current_user, require_admin, check_feature_access, get_effective_user_plan
 
 logger = logging.getLogger(__name__)
 royalty_routes = APIRouter(prefix="/api")
@@ -21,6 +21,7 @@ DEFAULT_SPLITS = {
 async def get_royalty_splits(request: Request):
     """Get all active royalty splits for the current user (as producer or artist)"""
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "royalty_splits")
     uid = user["id"]
     splits = await db.royalty_splits.find(
         {"$or": [{"producer_id": uid}, {"artist_id": uid}]}, {"_id": 0}
@@ -39,6 +40,7 @@ async def get_royalty_splits(request: Request):
 async def get_splits_summary(request: Request):
     """Dashboard summary of royalty split earnings"""
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "royalty_splits")
     uid = user["id"]
     splits = await db.royalty_splits.find(
         {"$or": [{"producer_id": uid}, {"artist_id": uid}]}, {"_id": 0}

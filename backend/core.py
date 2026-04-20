@@ -367,15 +367,15 @@ SUBSCRIPTION_PLANS = {
         "max_releases": -1,
         "release_types": ["single", "ep", "album"],
         "pay_per_release": False,
-        "features": ["Unlimited releases", "150+ streaming platforms", "Free ISRC codes", "Basic analytics", "Standard support", "Kalmori keeps 20% of revenue"],
-        "locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaborations", "spotify_data", "beat_marketplace", "messaging", "royalty_splits"]
+        "features": ["Unlimited releases", "150+ streaming platforms", "Free ISRC codes", "Basic analytics", "Join collaborations", "Standard support", "Kalmori keeps 20% of revenue"],
+        "locked": ["ai_strategy", "revenue_export", "content_id", "spotify_canvas", "leaderboard", "goals", "presave", "fan_analytics", "collaboration_management", "spotify_data", "beat_marketplace", "messaging", "royalty_splits"]
     },
     "rise": {
         "name": "Rise", "price": 24.99, "revenue_share": 5,
         "max_releases": -1,
         "release_types": ["single"],
         "pay_per_release": True,
-        "features": ["Single releases (pay per release)", "150+ streaming platforms", "Free ISRC & UPC codes", "Advanced analytics", "Revenue dashboard", "Fan Analytics", "In-App messaging", "Beat marketplace access", "Goal Tracking", "Priority support", "Kalmori keeps only 5% of revenue"],
+        "features": ["Single releases (pay per release)", "150+ streaming platforms", "Free ISRC & UPC codes", "Advanced analytics", "Revenue dashboard", "Fan Analytics", "In-App messaging", "Collaboration management", "Beat marketplace access", "Goal Tracking", "Priority support", "Kalmori keeps only 5% of revenue"],
         "locked": ["ai_strategy", "content_id", "spotify_canvas", "leaderboard", "presave", "royalty_splits", "spotify_data"]
     },
     "pro": {
@@ -383,7 +383,7 @@ SUBSCRIPTION_PLANS = {
         "max_releases": -1,
         "release_types": ["single", "ep", "album"],
         "pay_per_release": False,
-        "features": ["Everything in Rise", "Keep 100% of royalties", "Album & Single releases", "AI Release Strategy", "Revenue Export (PDF/CSV)", "YouTube Content ID", "Spotify Canvas", "Spotify Data (Real API)", "Release Leaderboard", "Pre-Save Campaigns", "Collaborations & Splits", "Producer Royalty Splits", "Dedicated account manager"],
+        "features": ["Everything in Rise", "Keep 100% of royalties", "Album & Single releases", "AI Release Strategy", "Revenue Export (PDF/CSV)", "YouTube Content ID", "Spotify Canvas", "Spotify Data (Real API)", "Release Leaderboard", "Pre-Save Campaigns", "Producer Royalty Splits", "Dedicated account manager"],
         "locked": []
     },
 }
@@ -404,12 +404,18 @@ def check_feature_access(user_plan: str, feature: str):
     if feature in locked:
         plan_names = {
             "ai_strategy": "Pro", "revenue_export": "Pro", "content_id": "Pro", "spotify_canvas": "Pro",
-            "leaderboard": "Pro", "goals": "Pro", "presave": "Pro", "fan_analytics": "Rise",
-            "collaborations": "Rise", "spotify_data": "Pro", "beat_marketplace": "Rise",
+            "leaderboard": "Pro", "goals": "Rise", "presave": "Pro", "fan_analytics": "Rise",
+            "collaboration_management": "Rise", "collaborations": "Rise", "spotify_data": "Pro", "beat_marketplace": "Rise",
             "messaging": "Rise", "royalty_splits": "Pro"
         }
         required = plan_names.get(feature, "Pro")
         raise HTTPException(status_code=403, detail=f"This feature requires the {required} plan. Upgrade at /pricing")
+
+
+def get_effective_user_plan(user: Optional[dict]) -> str:
+    if (user or {}).get("role") == "admin":
+        return "pro"
+    return (user or {}).get("plan", "free")
 
 
 def resolve_feature_action_url(category: str = "general", has_access: bool = True) -> str:

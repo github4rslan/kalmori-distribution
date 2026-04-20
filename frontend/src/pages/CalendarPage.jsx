@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { CaretLeft, CaretRight, Plus, Disc, MusicNote, SpotifyLogo, AppleLogo, CalendarBlank, Clock, Trash, X, FloppyDisk } from '@phosphor-icons/react';
+import axios from 'axios';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
@@ -31,20 +32,17 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   useBodyScrollLock(showForm);
 
-  const token = localStorage.getItem('token') || localStorage.getItem('access_token');
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
   const fetchEvents = useCallback(async () => {
     try {
-      const [evRes, upRes] = await Promise.all([
-        fetch(`${API}/api/calendar/events?month=${month + 1}&year=${year}`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API}/api/calendar/upcoming`, { headers: { Authorization: `Bearer ${token}` } }),
+      const [eventsResponse, upcomingResponse] = await Promise.all([
+        axios.get(`${API}/api/calendar/events?month=${month + 1}&year=${year}`, { withCredentials: true }),
+        axios.get(`${API}/api/calendar/upcoming`, { withCredentials: true }),
       ]);
-      if (evRes.ok) { const d = await evRes.json(); setEvents(d.events || []); }
-      if (upRes.ok) { const d = await upRes.json(); setUpcoming(d.upcoming || []); }
+      setEvents(eventsResponse.data?.events || []);
+      setUpcoming(upcomingResponse.data?.upcoming || []);
     } catch (e) { console.error(e); }
     setLoading(false);
-  }, [month, year, token]);
+  }, [month, year]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
@@ -75,24 +73,17 @@ export default function CalendarPage() {
     const dateStr = form.date || selectedDateStr;
     if (!dateStr) { toast.error('Select a date'); return; }
     try {
-      const res = await fetch(`${API}/api/calendar/events`, {
-        method: 'POST', headers, body: JSON.stringify({ ...form, date: dateStr }),
-      });
-      if (res.ok) {
-        toast.success('Event added!');
-        setShowForm(false);
-        setForm({ title: '', date: '', event_type: 'custom', color: '#7C4DFF', notes: '', reminder: false });
-        fetchEvents();
-      } else {
-        const d = await res.json();
-        toast.error(d.detail || 'Failed');
-      }
-    } catch (e) { toast.error('Error adding event'); }
+      await axios.post(`${API}/api/calendar/events`, { ...form, date: dateStr }, { withCredentials: true });
+      toast.success('Event added!');
+      setShowForm(false);
+      setForm({ title: '', date: '', event_type: 'custom', color: '#7C4DFF', notes: '', reminder: false });
+      fetchEvents();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Error adding event'); }
   };
 
   const handleDelete = async (eventId) => {
     try {
-      await fetch(`${API}/api/calendar/events/${eventId}`, { method: 'DELETE', headers });
+      await axios.delete(`${API}/api/calendar/events/${eventId}`, { withCredentials: true });
       toast.success('Deleted');
       fetchEvents();
     } catch (e) { toast.error('Failed to delete'); }

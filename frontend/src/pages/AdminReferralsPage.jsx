@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { Users, Gift, Trophy, ArrowUp } from '@phosphor-icons/react';
+import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -8,13 +9,10 @@ export default function AdminReferralsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/referral/overview`, { headers });
-      if (res.ok) setData(await res.json());
+      const response = await axios.get(`${API}/api/admin/referral/overview`, { withCredentials: true });
+      setData(response.data);
     } catch (e) { console.error(e); }
     setLoading(false);
   }, []);

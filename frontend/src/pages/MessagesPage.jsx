@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import { ChatCircle, PaperPlaneTilt, User, ArrowLeft, Paperclip, FileArrowDown, Play, Pause, Checks, Check } from '@phosphor-icons/react';
+import axios from 'axios';
 import { toast } from 'sonner';
+import { useAuth } from '../App';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -96,6 +98,7 @@ function TypingIndicator({ name }) {
 }
 
 export default function MessagesPage() {
+  const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConvo, setActiveConvo] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -108,39 +111,30 @@ export default function MessagesPage() {
   const pollRef = useRef(null);
   const typingRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  const token = localStorage.getItem('token') || localStorage.getItem('access_token');
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const userId = (() => {
-    try { return JSON.parse(atob(token.split('.')[1])).sub; } catch { return ''; }
-  })();
+  const userId = user?.id || '';
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/messages/conversations`, { headers });
-      if (res.ok) setConversations(await res.json());
+      const response = await axios.get(`${API}/api/messages/conversations`, { withCredentials: true });
+      setConversations(response.data || []);
     } catch (e) { console.error(e); }
     setLoading(false);
-  }, [token]);
+  }, []);
 
   const fetchMessages = useCallback(async (convoId) => {
     try {
-      const res = await fetch(`${API}/api/messages/${convoId}`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        // Handle both old format (array) and new format ({messages, typing})
-        if (Array.isArray(data)) {
-          setMessages(data);
-          setOtherTyping(false);
-        } else {
-          setMessages(data.messages || []);
-          setOtherTyping((data.typing || []).length > 0);
-        }
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      const response = await axios.get(`${API}/api/messages/${convoId}`, { withCredentials: true });
+      const data = response.data;
+      if (Array.isArray(data)) {
+        setMessages(data);
+        setOtherTyping(false);
+      } else {
+        setMessages(data.messages || []);
+        setOtherTyping((data.typing || []).length > 0);
       }
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (e) { console.error(e); }
-  }, [token]);
+  }, []);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
@@ -159,30 +153,19 @@ export default function MessagesPage() {
     // Throttle: send at most once per 2 seconds
     if (typingRef.current) return;
     typingRef.current = true;
-    fetch(`${API}/api/messages/${activeConvo}/typing`, {
-      method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
-    }).catch(() => {});
+    axios.post(`${API}/api/messages/${activeConvo}/typing`, {}, { withCredentials: true }).catch(() => {});
     setTimeout(() => { typingRef.current = false; }, 2000);
-  }, [activeConvo, token]);
+  }, [activeConvo]);
 
   const handleSend = async () => {
     if (!newMsg.trim() || !activeConvo) return;
     setSending(true);
     try {
-      const res = await fetch(`${API}/api/messages/${activeConvo}`, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newMsg }),
-      });
-      if (res.ok) {
-        setNewMsg('');
-        fetchMessages(activeConvo);
-        fetchConversations();
-      } else {
-        const err = await res.json();
-        toast.error(err.detail || 'Failed to send');
-      }
-    } catch (e) { toast.error('Failed to send message'); }
+      await axios.post(`${API}/api/messages/${activeConvo}`, { text: newMsg }, { withCredentials: true });
+      setNewMsg('');
+      fetchMessages(activeConvo);
+      fetchConversations();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Failed to send message'); }
     setSending(false);
   };
 
@@ -194,12 +177,11 @@ export default function MessagesPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch(`${API}/api/messages/${activeConvo}/upload`, {
-        method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData,
-      });
-      if (res.ok) { toast.success('File shared!'); fetchMessages(activeConvo); fetchConversations(); }
-      else { const err = await res.json(); toast.error(err.detail || 'Upload failed'); }
-    } catch (e) { toast.error('Upload failed'); }
+      await axios.post(`${API}/api/messages/${activeConvo}/upload`, formData, { withCredentials: true });
+      toast.success('File shared!');
+      fetchMessages(activeConvo);
+      fetchConversations();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Upload failed'); }
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };

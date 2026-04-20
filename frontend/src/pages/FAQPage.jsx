@@ -35,7 +35,7 @@ const faqSections = [
     items: [
       {
         q: 'What plans does Kalmori offer?',
-        a: 'We offer three plans:\n\nFree Plan ($0) — Unlimited releases with no upfront cost. Kalmori keeps 20% of your streaming revenue. Includes basic analytics and standard support.\n\nRise Plan ($24.99/release) — Pay per single release. Kalmori keeps only 5% of your revenue. Includes advanced analytics, fan analytics, beat marketplace, in-app messaging, goal tracking, and priority support.\n\nPro Plan ($49.99/month) — Albums and singles with unlimited releases. You keep 100% of your royalties. Includes AI Release Strategy, revenue exports, YouTube Content ID, Spotify Canvas, pre-save campaigns, collaborations, royalty splits, and a dedicated account manager.'
+        a: 'We offer three plans:\n\nFree Plan ($0) — Unlimited releases with no upfront cost. Kalmori keeps 20% of your streaming revenue. Includes basic analytics, standard support, and the ability to join collaboration invites.\n\nRise Plan ($24.99/release) — Pay per single release. Kalmori keeps only 5% of your revenue. Includes advanced analytics, fan analytics, beat marketplace, in-app messaging, collaboration management, goal tracking, and priority support.\n\nPro Plan ($49.99/month) — Albums and singles with unlimited releases. You keep 100% of your royalties. Includes AI Release Strategy, revenue exports, YouTube Content ID, Spotify Canvas, pre-save campaigns, release leaderboards, producer royalty splits, and a dedicated account manager.'
       },
       {
         q: 'What does "Kalmori keeps 20%" mean on the Free plan?',
@@ -51,7 +51,7 @@ const faqSections = [
       },
       {
         q: 'What makes the Pro plan worth it?',
-        a: 'The Pro plan is designed for serious artists and labels who want maximum control. You keep 100% of your royalties (Kalmori takes 0%), get unlimited album and single releases, AI-powered release strategies, revenue exports, YouTube Content ID, Spotify Canvas uploads, pre-save campaigns, collaboration tools, royalty splits, and a dedicated account manager.'
+        a: 'The Pro plan is designed for serious artists and labels who want maximum control. You keep 100% of your royalties (Kalmori takes 0%), get unlimited album and single releases, AI-powered release strategies, revenue exports, YouTube Content ID, Spotify Canvas uploads, pre-save campaigns, release leaderboard access, producer royalty splits, and a dedicated account manager.'
       },
       {
         q: 'Can I upgrade or downgrade my plan?',
@@ -295,3 +295,4 @@ export default function FAQPage() {
     </PublicLayout>
   );
 }
+

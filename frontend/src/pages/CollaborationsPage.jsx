@@ -122,7 +122,7 @@ export default function CollaborationsPage() {
         {!canManageCollaborations && (
           <div className="rounded-2xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/10 p-5" data-testid="collaborations-participation-note">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl bg-[#7C4DFF]/15 p-2 text-[#C6B2FF]">
+              <div className="mt-0.5 rounded-xl bg-[#7C4DFF]/15 p-2 text-[#7C4DFF]">
                 <Crown className="w-4 h-4" weight="fill" />
               </div>
               <div>

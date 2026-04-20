@@ -34,7 +34,7 @@ from core import (
     hash_password, verify_password, create_access_token, create_refresh_token,
     generate_upc, generate_isrc, get_current_user, require_admin,
     init_storage, put_object, get_object, get_jwt_secret, JWT_ALGORITHM,
-    resolve_feature_action_url,
+    resolve_feature_action_url, check_feature_access, get_effective_user_plan,
 )
 import jwt
 import requests
@@ -1724,6 +1724,7 @@ class PreSaveCampaign(BaseModel):
 @api_router.post("/presave/campaigns")
 async def create_presave_campaign(data: PreSaveCampaign, request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "presave")
     release = await db.releases.find_one({"id": data.release_id, "artist_id": user["id"]}, {"_id": 0})
     if not release:
         raise HTTPException(status_code=404, detail="Release not found")
@@ -1754,6 +1755,7 @@ async def create_presave_campaign(data: PreSaveCampaign, request: Request):
 @api_router.get("/presave/campaigns")
 async def get_my_presave_campaigns(request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "presave")
     campaigns = await db.presave_campaigns.find({"artist_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
     return {"campaigns": campaigns}
 
@@ -1803,6 +1805,7 @@ async def subscribe_presave(campaign_id: str, request: Request):
 @api_router.delete("/presave/campaigns/{campaign_id}")
 async def delete_presave_campaign(campaign_id: str, request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "presave")
     result = await db.presave_campaigns.delete_one({"id": campaign_id, "artist_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Campaign not found")

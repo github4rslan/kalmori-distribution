@@ -375,8 +375,8 @@ const AppRouter = () => {
         <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
         <Route path="/collaborations" element={<ProtectedRoute><CollaborationsPage /></ProtectedRoute>} />
         <Route path="/collab-hub" element={<Navigate to="/collaborations" replace />} />
-              <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-              <Route path="/royalty-splits" element={<ProtectedRoute><RoyaltySplitsPage /></ProtectedRoute>} />
+        <Route path="/messages" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('messaging')}><MessagesPage /></FeatureRoute>} />
+        <Route path="/royalty-splits" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('royalty_splits')}><RoyaltySplitsPage /></FeatureRoute>} />
         <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
         <Route path="/fan-analytics" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('fan_analytics')}><FanAnalyticsPage /></FeatureRoute>} />
         <Route path="/revenue" element={<ProtectedRoute><RevenueAnalyticsPage /></ProtectedRoute>} />

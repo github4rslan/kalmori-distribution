@@ -1,21 +1,27 @@
 """In-App Messaging Routes — Conversations, Messages, File sharing, Typing indicators"""
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from datetime import datetime, timezone, timedelta
 from io import BytesIO
+import re
 import uuid
 import logging
 
-from core import db, get_current_user, put_object, get_object, APP_NAME
+from core import db, get_current_user, put_object, get_object, APP_NAME, check_feature_access, get_effective_user_plan
 
 logger = logging.getLogger(__name__)
 messages_router = APIRouter(prefix="/api")
+
+
+def require_messaging_access(user: dict):
+    check_feature_access(get_effective_user_plan(user), "messaging")
 
 
 @messages_router.get("/messages/conversations")
 async def list_conversations(request: Request):
     """List all conversations for the current user (only from accepted collab invites)"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     uid = user["id"]
     convos = await db.conversations.find(
         {"participants": uid}, {"_id": 0}
@@ -43,6 +49,7 @@ async def list_conversations(request: Request):
 async def unread_message_count(request: Request):
     """Get total unread message count for the current user"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     convos = await db.conversations.find({"participants": user["id"]}, {"id": 1, "_id": 0}).to_list(100)
     convo_ids = [c["id"] for c in convos]
     if not convo_ids:
@@ -57,6 +64,7 @@ async def unread_message_count(request: Request):
 async def get_messages(conversation_id: str, request: Request):
     """Get messages for a conversation (only if user is a participant)"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -86,6 +94,7 @@ async def get_messages(conversation_id: str, request: Request):
 async def send_message(conversation_id: str, request: Request):
     """Send a message in a conversation (only if user is a participant)"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -124,6 +133,7 @@ async def send_message(conversation_id: str, request: Request):
 async def upload_chat_file(conversation_id: str, request: Request, file: UploadFile = File(...)):
     """Upload a file/audio in a chat conversation"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -172,6 +182,7 @@ async def upload_chat_file(conversation_id: str, request: Request, file: UploadF
 async def get_chat_file(file_path: str, request: Request):
     """Download a chat file (validates user is a participant)"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     parts = file_path.split("/")
     convo_id = None
     for i, p in enumerate(parts):
@@ -182,6 +193,15 @@ async def get_chat_file(file_path: str, request: Request):
         convo = await db.conversations.find_one({"id": convo_id, "participants": user["id"]})
         if not convo:
             raise HTTPException(status_code=403, detail="Access denied")
+        message = await db.messages.find_one({
+            "conversation_id": convo_id,
+            "$or": [
+                {"file_url": file_path},
+                {"file_url": {"$regex": f"{re.escape(file_path)}$"}},
+            ],
+        }, {"_id": 0, "file_url": 1})
+        if message and str(message.get("file_url", "")).startswith("http"):
+            return RedirectResponse(message["file_url"])
     data, content_type = get_object(file_path)
     fname = parts[-1] if parts else "file"
     return StreamingResponse(BytesIO(data), media_type=content_type,
@@ -192,6 +212,7 @@ async def get_chat_file(file_path: str, request: Request):
 async def set_typing(conversation_id: str, request: Request):
     """Signal that the user is typing in a conversation"""
     user = await get_current_user(request)
+    require_messaging_access(user)
     convo = await db.conversations.find_one({"id": conversation_id, "participants": user["id"]})
     if not convo:
         raise HTTPException(status_code=404, detail="Conversation not found")

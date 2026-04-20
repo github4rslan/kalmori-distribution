@@ -6,7 +6,7 @@ from typing import Optional
 from datetime import datetime, timezone, timedelta
 import io, csv, uuid, random
 
-from core import db, get_current_user, SUBSCRIPTION_PLANS, check_feature_access
+from core import db, get_current_user, SUBSCRIPTION_PLANS, check_feature_access, get_effective_user_plan
 
 analytics_router = APIRouter(prefix="/api", tags=["Analytics"])
 
@@ -181,6 +181,7 @@ async def get_trending(request: Request):
 @analytics_router.get("/analytics/leaderboard")
 async def get_leaderboard(request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "leaderboard")
     releases = await db.releases.find({"artist_id": user["id"]}, {"_id": 0}).to_list(100)
     if not releases:
         return {"leaderboard": [], "total_releases": 0, "active_releases": 0}
@@ -227,6 +228,7 @@ async def get_leaderboard(request: Request):
 @analytics_router.post("/goals")
 async def create_goal(data: CreateGoalInput, request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "goals")
     if data.goal_type not in GOAL_TYPES:
         raise HTTPException(status_code=400, detail=f"Invalid goal_type. Must be one of: {', '.join(GOAL_TYPES.keys())}")
     goal_id = f"goal_{uuid.uuid4().hex[:12]}"
@@ -244,6 +246,7 @@ async def create_goal(data: CreateGoalInput, request: Request):
 @analytics_router.get("/goals")
 async def get_goals(request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "goals")
     goals = await db.goals.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1).isoformat()
@@ -275,6 +278,7 @@ async def get_goals(request: Request):
 @analytics_router.delete("/goals/{goal_id}")
 async def delete_goal(goal_id: str, request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "goals")
     result = await db.goals.delete_one({"id": goal_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Goal not found")
@@ -623,6 +627,7 @@ async def import_streaming_data(request: Request, file: UploadFile = File(...)):
 @analytics_router.get("/fan-analytics/overview")
 async def get_fan_analytics(request: Request):
     user = await get_current_user(request)
+    check_feature_access(get_effective_user_plan(user), "fan_analytics")
     campaigns = await db.presave_campaigns.find({"artist_id": user["id"]}, {"_id": 0}).to_list(50)
     total_subscribers = sum(c.get("subscriber_count", 0) for c in campaigns)
     total_campaigns = len(campaigns)

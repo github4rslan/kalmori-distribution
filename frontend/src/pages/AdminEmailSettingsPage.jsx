@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { Envelope, Globe, CheckCircle, XCircle, ArrowClockwise, Trash, Plus, Copy, Lightning, WarningCircle } from '@phosphor-icons/react';
+import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -29,17 +30,12 @@ export default function AdminEmailSettingsPage() {
   const [success, setSuccess] = useState('');
   const [copied, setCopied] = useState('');
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
   const fetchDomains = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/email/domain`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        setDomains(data.domains || []);
-        setCurrentSender(data.current_sender || '');
-      }
+      const response = await axios.get(`${API}/api/admin/email/domain`, { withCredentials: true });
+      const data = response.data || {};
+      setDomains(data.domains || []);
+      setCurrentSender(data.current_sender || '');
     } catch (e) { console.error(e); }
     setLoading(false);
   }, []);
@@ -52,15 +48,11 @@ export default function AdminEmailSettingsPage() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${API}/api/admin/email/domain`, {
-        method: 'POST', headers, body: JSON.stringify({ domain: newDomain.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to add domain');
+      await axios.post(`${API}/api/admin/email/domain`, { domain: newDomain.trim() }, { withCredentials: true });
       setSuccess(`Domain "${newDomain}" added. Add the DNS records below, then click Verify.`);
       setNewDomain('');
       fetchDomains();
-    } catch (e) { setError(e.message); }
+    } catch (e) { setError(e.response?.data?.detail || e.message); }
     setAdding(false);
   };
 
@@ -69,18 +61,15 @@ export default function AdminEmailSettingsPage() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${API}/api/admin/email/domain/${domainId}/verify`, {
-        method: 'POST', headers,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Verification failed');
+      const response = await axios.post(`${API}/api/admin/email/domain/${domainId}/verify`, {}, { withCredentials: true });
+      const data = response.data || {};
       if (data.status === 'verified') {
         setSuccess('Domain verified! You can now activate it.');
       } else {
         setSuccess('Verification triggered. DNS records may take up to 48 hours to propagate. Try again later.');
       }
       fetchDomains();
-    } catch (e) { setError(e.message); }
+    } catch (e) { setError(e.response?.data?.detail || e.message); }
     setVerifying(null);
   };
 
@@ -88,20 +77,17 @@ export default function AdminEmailSettingsPage() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${API}/api/admin/email/domain/${domainId}/activate`, {
-        method: 'POST', headers,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Activation failed');
+      const response = await axios.post(`${API}/api/admin/email/domain/${domainId}/activate`, {}, { withCredentials: true });
+      const data = response.data || {};
       setSuccess(data.message);
       fetchDomains();
-    } catch (e) { setError(e.message); }
+    } catch (e) { setError(e.response?.data?.detail || e.message); }
   };
 
   const deleteDomain = async (domainId) => {
     if (!window.confirm('Remove this domain? Emails will revert to the default sender.')) return;
     try {
-      await fetch(`${API}/api/admin/email/domain/${domainId}`, { method: 'DELETE', headers });
+      await axios.delete(`${API}/api/admin/email/domain/${domainId}`, { withCredentials: true });
       fetchDomains();
     } catch (e) { console.error(e); }
   };

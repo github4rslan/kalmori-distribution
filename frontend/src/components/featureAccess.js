@@ -1,6 +1,6 @@
 export const LOCKED_FEATURES_BY_PLAN = {
-  free: ['spotify_canvas', 'content_id', 'collaborations', 'presave', 'fan_analytics', 'leaderboard', 'goals', 'ai_strategy'],
-  rise: ['spotify_canvas', 'content_id', 'leaderboard', 'presave', 'ai_strategy'],
+  free: ['spotify_canvas', 'content_id', 'presave', 'fan_analytics', 'leaderboard', 'goals', 'ai_strategy', 'messaging', 'royalty_splits'],
+  rise: ['spotify_canvas', 'content_id', 'leaderboard', 'presave', 'ai_strategy', 'royalty_splits'],
   pro: [],
 };
 

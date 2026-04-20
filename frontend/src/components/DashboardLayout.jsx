@@ -263,8 +263,8 @@ const DashboardLayout = ({ children }) => {
     { path: '/content-id', icon: <YoutubeLogo className="w-5 h-5" />, label: 'Content ID', feat: 'content_id' },
     { path: '/purchases', icon: <ShoppingBag className="w-5 h-5" />, label: 'My Purchases' },
     { path: '/collaborations', icon: <UsersThree className="w-5 h-5" />, label: 'Collaborations' },
-    { path: '/messages', icon: <ChatCircle className="w-5 h-5" />, label: 'Messages' },
-    { path: '/royalty-splits', icon: <CurrencyDollar className="w-5 h-5" />, label: 'Royalty Splits' },
+    { path: '/messages', icon: <ChatCircle className="w-5 h-5" />, label: 'Messages', feat: 'messaging' },
+    { path: '/royalty-splits', icon: <CurrencyDollar className="w-5 h-5" />, label: 'Royalty Splits', feat: 'royalty_splits' },
     { path: '/presave-manager', icon: <Megaphone className="w-5 h-5" />, label: 'Pre-Save', feat: 'presave' },
     { path: '/fan-analytics', icon: <HeartStraight className="w-5 h-5" />, label: 'Fan Analytics', feat: 'fan_analytics' },
     { path: '/leaderboard', icon: <Trophy className="w-5 h-5" />, label: 'Leaderboard', feat: 'leaderboard' },
@@ -302,7 +302,7 @@ const DashboardLayout = ({ children }) => {
                     location.pathname === item.path ? 'bg-[#7C4DFF]/10 text-[#7C4DFF] border border-[#7C4DFF]/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
                   data-testid={`nav-${item.label.toLowerCase()}`}
-                  title={itemLocked ? `Upgrade to Pro to unlock ${item.label}` : ''}>
+                  title={itemLocked ? `Upgrade to unlock ${item.label}` : ''}>
                   {item.icon}
                   <span className="flex-1">{item.label}</span>
                   {itemLocked && <Lock className="w-3.5 h-3.5 text-gray-600" />}
