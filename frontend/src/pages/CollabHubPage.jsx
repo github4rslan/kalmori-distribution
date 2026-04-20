@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import DashboardLayout from '../components/DashboardLayout';
 import PublicLayout from '../components/PublicLayout';
-import { Plus, PaperPlaneTilt, Check, X, User, MusicNote, Microphone, Headphones, Waveform, Guitar, Faders, Clock, CurrencyDollar, SignIn, UserPlus } from '@phosphor-icons/react';
+import { Plus, PaperPlaneTilt, Check, X, User, MusicNote, Microphone, Headphones, Waveform, Guitar, Faders, Clock, CurrencyDollar, SignIn, UserPlus, Sparkle } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
@@ -198,7 +198,7 @@ export default function CollabHubPage() {
     }
   };
 
-  const inputCls = 'w-full bg-black border border-[#333] rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#7C4DFF]';
+  const inputCls = 'w-full rounded-xl border border-white/10 bg-[#09090b] px-4 py-3 text-white text-sm shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline-none focus:border-[#7C4DFF]';
   const tabs = [
     { key: 'browse', label: 'Browse', count: posts.length },
     ...(isAuthenticated
@@ -211,70 +211,96 @@ export default function CollabHubPage() {
 
   return (
     <Layout>
-      <div className="space-y-6" data-testid="collab-hub-page">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white" data-testid="collab-hub-title">Collaboration Hub</h1>
-            <p className="mt-1 text-sm text-gray-400">Find collaborators, post opportunities, and connect with other artists.</p>
-          </div>
+      <div className="space-y-5 sm:space-y-6" data-testid="collab-hub-page">
+        <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(124,77,255,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(224,64,251,0.14),transparent_28%),linear-gradient(180deg,#101014_0%,#09090b_100%)] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          <div className="px-4 py-5 sm:px-6 sm:py-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#7C4DFF]/30 bg-[#7C4DFF]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-[#C6B2FF]">
+                  <Sparkle className="h-3.5 w-3.5" weight="fill" />
+                  Create Together
+                </div>
+                <h1 className="mt-3 text-[32px] leading-[0.95] font-extrabold tracking-tight text-white sm:text-[38px]" data-testid="collab-hub-title">Collaboration Hub</h1>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-300 sm:text-[15px]">
+                  Find collaborators, post opportunities, and connect with other artists in a cleaner, faster workspace.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2.5">
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] font-semibold text-gray-200">
+                    {posts.length} open opportunities
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] font-semibold text-gray-200">
+                    Producers, vocalists, mixers, writers
+                  </span>
+                </div>
+              </div>
 
-          {isAuthenticated ? (
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 rounded-lg bg-[#7C4DFF] px-4 py-2.5 text-sm font-medium text-white hover:brightness-110"
-              data-testid="create-post-btn"
-            >
-              <Plus className="w-4 h-4" /> Post Opportunity
-            </button>
-          ) : (
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => navigate('/login', { state: { from: { pathname: '/collab-hub' } } })}
-                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10"
-                data-testid="guest-sign-in-btn"
-              >
-                <SignIn className="w-4 h-4" /> Sign In
-              </button>
-              <button
-                onClick={() => navigate('/register', { state: { from: { pathname: '/collab-hub' } } })}
-                className="flex items-center gap-2 rounded-lg bg-[#7C4DFF] px-4 py-2.5 text-sm font-medium text-white hover:brightness-110"
-                data-testid="guest-register-btn"
-              >
-                <UserPlus className="w-4 h-4" /> Create Account
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
+                  data-testid="create-post-btn"
+                >
+                  <Plus className="w-4 h-4" /> Post Opportunity
+                </button>
+              ) : (
+                <div className="grid w-full grid-cols-2 gap-3 lg:w-auto">
+                  <button
+                    onClick={() => navigate('/login', { state: { from: { pathname: '/collab-hub' } } })}
+                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/[0.08]"
+                    data-testid="guest-sign-in-btn"
+                  >
+                    <SignIn className="w-4 h-4" /> Sign In
+                  </button>
+                  <button
+                    onClick={() => navigate('/register', { state: { from: { pathname: '/collab-hub' } } })}
+                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
+                    data-testid="guest-register-btn"
+                  >
+                    <UserPlus className="w-4 h-4" /> Create Account
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {!isAuthenticated && (
-          <div className="rounded-2xl border border-[#7C4DFF]/20 bg-gradient-to-br from-[#111111] to-[#0a0a0a] p-5">
-            <p className="text-sm font-semibold text-white">Browse the collaboration board without signing in.</p>
-            <p className="mt-1 text-sm text-gray-400">You can explore open opportunities now. Sign in when you want to post your own opportunity or send an invite.</p>
+          <div className="rounded-[24px] border border-[#7C4DFF]/20 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(10,10,10,0.98))] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
+            <p className="text-lg font-semibold leading-tight text-white">Browse the collaboration board without signing in.</p>
+            <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-gray-300">
+              You can explore open opportunities now. Sign in when you want to post your own opportunity or send an invite.
+            </p>
           </div>
         )}
 
-        <div className="flex w-fit gap-1 rounded-lg bg-[#111] p-1" data-testid="collab-tabs">
-          {tabs.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`rounded-md px-4 py-2 text-sm font-medium transition ${tab === t.key ? 'bg-[#7C4DFF] text-white' : 'text-gray-400 hover:text-white'}`}
-              data-testid={`tab-${t.key}`}
-            >
-              {t.label}
-              {t.count > 0 && (
-                <span className={`ml-1.5 text-xs ${tab === t.key ? 'text-white/70' : 'text-gray-600'}`}>({t.count})</span>
-              )}
-            </button>
-          ))}
+        <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]" data-testid="collab-tabs">
+          <div className="inline-flex min-w-full gap-1 rounded-2xl border border-white/10 bg-[#101012] p-1.5 sm:min-w-0">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`min-w-[110px] flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                  tab === t.key
+                    ? 'bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] text-white shadow-[0_10px_26px_rgba(124,77,255,0.28)]'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+                data-testid={`tab-${t.key}`}
+              >
+                {t.label}
+                {t.count > 0 && (
+                  <span className={`ml-1.5 text-xs ${tab === t.key ? 'text-white/75' : 'text-gray-600'}`}>({t.count})</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
         {tab === 'browse' && (
-          <div className="flex flex-wrap gap-3" data-testid="collab-filters">
+          <div className="grid grid-cols-2 gap-3" data-testid="collab-filters">
             <select
               value={filterRole}
               onChange={(e) => setFilterRole(e.target.value)}
-              className="rounded-lg border border-[#222] bg-[#111] px-3 py-2 text-sm text-white focus:border-[#7C4DFF] focus:outline-none"
+              className="min-h-[48px] rounded-2xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
               data-testid="filter-role"
             >
               <option value="" className="bg-black">All Roles</option>
@@ -283,7 +309,7 @@ export default function CollabHubPage() {
             <select
               value={filterGenre}
               onChange={(e) => setFilterGenre(e.target.value)}
-              className="rounded-lg border border-[#222] bg-[#111] px-3 py-2 text-sm text-white focus:border-[#7C4DFF] focus:outline-none"
+              className="min-h-[48px] rounded-2xl border border-white/10 bg-[#111] px-4 py-3 text-sm text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] focus:border-[#7C4DFF] focus:outline-none"
               data-testid="filter-genre"
             >
               <option value="" className="bg-black">All Genres</option>
@@ -297,7 +323,7 @@ export default function CollabHubPage() {
         ) : tab === 'browse' ? (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="posts-grid">
             {posts.length === 0 ? (
-              <div className="col-span-2 rounded-xl border border-[#222] bg-[#111] p-8 text-center">
+              <div className="col-span-2 rounded-[24px] border border-white/10 bg-[#101012] p-8 text-center shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
                 <MusicNote className="mx-auto mb-3 h-12 w-12 text-gray-600" />
                 <p className="text-gray-400">No collaboration posts yet.</p>
                 <p className="mt-1 text-sm text-gray-500">
@@ -308,44 +334,44 @@ export default function CollabHubPage() {
               const role = getRoleInfo(post.looking_for);
 
               return (
-                <div key={post.id} className="rounded-xl border border-[#222] bg-[#111] p-5 transition hover:border-[#7C4DFF]/30" data-testid={`post-${post.id}`}>
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#7C4DFF]/20 text-[#7C4DFF]">
+                <div key={post.id} className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,#151518_0%,#101012_100%)] p-5 shadow-[0_20px_45px_rgba(0,0,0,0.24)] transition hover:border-[#7C4DFF]/30" data-testid={`post-${post.id}`}>
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/15 text-[#A78BFA]">
                         {role.icon}
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{post.title}</p>
-                        <p className="text-xs text-gray-500">{post.artist_name}</p>
+                      <div className="min-w-0">
+                        <p className="truncate text-[22px] leading-none font-bold tracking-tight text-white sm:text-xl">{post.title}</p>
+                        <p className="mt-1 truncate text-sm text-gray-500">{post.artist_name}</p>
                       </div>
                     </div>
-                    <span className="rounded-full border border-[#E040FB]/30 bg-[#E040FB]/20 px-2 py-0.5 text-[10px] font-bold text-[#E040FB]">
+                    <span className="rounded-full border border-[#E040FB]/25 bg-[#E040FB]/12 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#E879F9]">
                       {role.label}
                     </span>
                   </div>
 
-                  {post.description && <p className="mb-3 line-clamp-2 text-sm text-gray-400">{post.description}</p>}
+                  {post.description && <p className="mb-4 line-clamp-3 text-[15px] leading-relaxed text-gray-300">{post.description}</p>}
 
-                  <div className="mb-3 flex flex-wrap gap-2">
+                  <div className="mb-4 flex flex-wrap gap-2">
                     {post.genre && (
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-gray-300">
+                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-gray-200">
                         {post.genre}
                       </span>
                     )}
                     {post.budget && (
-                      <span className="flex items-center gap-1 rounded-full border border-[#22C55E]/30 bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-medium text-[#22C55E]">
+                      <span className="flex items-center gap-1 rounded-full border border-[#22C55E]/25 bg-[#22C55E]/10 px-3 py-1 text-[11px] font-medium text-[#4ADE80]">
                         <CurrencyDollar className="h-3 w-3" /> {post.budget}
                       </span>
                     )}
                     {post.deadline && (
-                      <span className="flex items-center gap-1 rounded-full border border-[#FFD700]/30 bg-[#FFD700]/10 px-2 py-0.5 text-[10px] font-medium text-[#FFD700]">
+                      <span className="flex items-center gap-1 rounded-full border border-[#FFD700]/25 bg-[#FFD700]/10 px-3 py-1 text-[11px] font-medium text-[#FACC15]">
                         <Clock className="h-3 w-3" /> {post.deadline}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">{post.responses} response{post.responses !== 1 ? 's' : ''}</span>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-gray-500">{post.responses} response{post.responses !== 1 ? 's' : ''}</span>
                     <button
                       onClick={() => {
                         if (!isAuthenticated) {
@@ -355,10 +381,10 @@ export default function CollabHubPage() {
                         setInviteModal(post.id);
                         setInviteMsg('');
                       }}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#7C4DFF] px-3 py-1.5 text-xs font-medium text-white hover:brightness-110"
+                      className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(124,77,255,0.25)] transition hover:brightness-110 sm:w-auto"
                       data-testid={`invite-btn-${post.id}`}
                     >
-                      <PaperPlaneTilt className="h-3.5 w-3.5" /> {isAuthenticated ? 'Send Invite' : 'Sign In to Invite'}
+                      <PaperPlaneTilt className="h-4 w-4" /> {isAuthenticated ? 'Send Invite' : 'Sign In to Invite'}
                     </button>
                   </div>
                 </div>
@@ -368,12 +394,12 @@ export default function CollabHubPage() {
         ) : tab === 'my-posts' ? (
           <div className="space-y-3" data-testid="my-posts-list">
             {myPosts.length === 0 ? (
-              <div className="rounded-xl border border-[#222] bg-[#111] p-8 text-center">
+              <div className="rounded-[24px] border border-white/10 bg-[#101012] p-8 text-center">
                 <p className="text-gray-400">You have not posted any opportunities yet.</p>
               </div>
             ) : myPosts.map(post => (
-              <div key={post.id} className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#111] p-4" data-testid={`my-post-${post.id}`}>
-                <div className="flex-1">
+              <div key={post.id} className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#101012] p-4 sm:flex-row sm:items-center" data-testid={`my-post-${post.id}`}>
+                <div className="flex-1 min-w-0">
                   <p className="font-medium text-white">{post.title}</p>
                   <p className="text-xs text-gray-500">Looking for: {getRoleInfo(post.looking_for).label} &middot; {post.responses} responses &middot; {post.status}</p>
                 </div>
@@ -384,12 +410,14 @@ export default function CollabHubPage() {
                       ? 'border-blue-500/30 bg-blue-500/20 text-blue-400'
                       : 'border-gray-500/30 bg-gray-500/20 text-gray-400'
                 }`}>{post.status.toUpperCase()}</span>
-                {post.status === 'open' && (
-                  <button onClick={() => handleClosePost(post.id)} className="text-xs text-gray-500 hover:text-yellow-400">Close</button>
-                )}
-                <button onClick={() => handleDeletePost(post.id)} className="text-gray-500 hover:text-red-400">
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-3 sm:ml-auto">
+                  {post.status === 'open' && (
+                    <button onClick={() => handleClosePost(post.id)} className="text-xs text-gray-500 hover:text-yellow-400">Close</button>
+                  )}
+                  <button onClick={() => handleDeletePost(post.id)} className="text-gray-500 hover:text-red-400">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -402,11 +430,11 @@ export default function CollabHubPage() {
               ) : (
                 <div className="space-y-2">
                   {invites.received.map(inv => (
-                    <div key={inv.id} className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#111] p-4" data-testid={`invite-${inv.id}`}>
+                    <div key={inv.id} className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-[#101012] p-4 sm:flex-row sm:items-center" data-testid={`invite-${inv.id}`}>
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E040FB]/20">
                         <User className="h-5 w-5 text-[#E040FB]" />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm text-white"><strong>{inv.from_artist_name}</strong> wants to collaborate</p>
                         <p className="text-xs text-gray-500">On: "{inv.post_title}"</p>
                         {inv.message && <p className="mt-1 text-xs italic text-gray-400">"{inv.message}"</p>}
@@ -422,14 +450,14 @@ export default function CollabHubPage() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleInviteResponse(inv.id, 'accept')}
-                            className="rounded-lg bg-[#22C55E] px-3 py-1.5 text-xs font-medium text-white hover:brightness-110"
+                            className="rounded-xl bg-[#22C55E] px-3 py-2 text-xs font-medium text-white hover:brightness-110"
                             data-testid={`accept-${inv.id}`}
                           >
                             <Check className="mr-1 inline h-3 w-3" /> Accept
                           </button>
                           <button
                             onClick={() => handleInviteResponse(inv.id, 'decline')}
-                            className="rounded-lg bg-[#333] px-3 py-1.5 text-xs font-medium text-gray-300 hover:bg-[#444]"
+                            className="rounded-xl bg-[#333] px-3 py-2 text-xs font-medium text-gray-300 hover:bg-[#444]"
                             data-testid={`decline-${inv.id}`}
                           >
                             Decline
@@ -449,8 +477,8 @@ export default function CollabHubPage() {
               ) : (
                 <div className="space-y-2">
                   {invites.sent.map(inv => (
-                    <div key={inv.id} className="flex items-center gap-4 rounded-xl border border-[#222] bg-[#111] p-4" data-testid={`sent-${inv.id}`}>
-                      <div className="flex-1">
+                    <div key={inv.id} className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-[#101012] p-4 sm:flex-row sm:items-center" data-testid={`sent-${inv.id}`}>
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm text-white">Sent to <strong>{inv.to_artist_name}</strong></p>
                         <p className="text-xs text-gray-500">For: "{inv.post_title}"</p>
                       </div>
@@ -471,7 +499,7 @@ export default function CollabHubPage() {
 
         {showForm && isAuthenticated && (
           <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="create-post-modal">
-            <div className="mx-4 max-h-[85vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl border border-[#222] bg-[#111] p-6">
+            <div className="mx-4 max-h-[85vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,#151518_0%,#101012_100%)] p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">Post Collaboration Opportunity</h3>
                 <button onClick={() => setShowForm(false)} className="text-gray-500 hover:text-white"><X className="h-5 w-5" /></button>
@@ -490,7 +518,7 @@ export default function CollabHubPage() {
 
               <div>
                 <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF]">Looking For *</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {ROLES.map(r => (
                     <button
                       key={r.value}
@@ -506,7 +534,7 @@ export default function CollabHubPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF]">Genre</label>
                   <select className={inputCls} value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} data-testid="post-genre">
@@ -548,7 +576,7 @@ export default function CollabHubPage() {
 
               <div className="flex justify-end gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-400">Cancel</button>
-                <button onClick={handleCreate} className="rounded-lg bg-[#22C55E] px-6 py-2.5 text-sm font-medium text-white hover:brightness-110" data-testid="submit-post-btn">
+                <button onClick={handleCreate} className="rounded-xl bg-[#22C55E] px-6 py-2.5 text-sm font-medium text-white hover:brightness-110" data-testid="submit-post-btn">
                   Post Opportunity
                 </button>
               </div>
@@ -558,7 +586,7 @@ export default function CollabHubPage() {
 
         {inviteModal && isAuthenticated && (
           <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="invite-modal">
-            <div className="mx-4 w-full max-w-md space-y-4 rounded-2xl border border-[#222] bg-[#111] p-6">
+            <div className="mx-4 w-full max-w-md space-y-4 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,#151518_0%,#101012_100%)] p-5 sm:p-6">
               <h3 className="text-lg font-bold text-white">Send Collaboration Invite</h3>
               <div>
                 <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-[#7C4DFF]">Message (optional)</label>
@@ -573,7 +601,7 @@ export default function CollabHubPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button onClick={() => setInviteModal(null)} className="px-4 py-2 text-sm text-gray-400">Cancel</button>
-                <button onClick={() => handleInvite(inviteModal)} className="flex items-center gap-2 rounded-lg bg-[#7C4DFF] px-6 py-2.5 text-sm font-medium text-white hover:brightness-110" data-testid="send-invite-btn">
+                <button onClick={() => handleInvite(inviteModal)} className="flex items-center gap-2 rounded-xl bg-[#7C4DFF] px-6 py-2.5 text-sm font-medium text-white hover:brightness-110" data-testid="send-invite-btn">
                   <PaperPlaneTilt className="h-4 w-4" /> Send
                 </button>
               </div>

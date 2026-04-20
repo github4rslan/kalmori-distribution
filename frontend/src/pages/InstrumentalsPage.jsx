@@ -944,11 +944,11 @@ export default function InstrumentalsPage() {
         </div>
 
         <section className="px-4 pt-6 pb-10 sm:pt-8 sm:pb-12" data-testid="instrumentals-service-shortcuts">
-          <div className="rounded-[28px] border border-white/[0.06] bg-[radial-gradient(circle_at_top,rgba(124,77,255,0.14),transparent_42%),linear-gradient(180deg,#0f0f12_0%,#09090b_100%)] px-4 py-5 sm:px-6 sm:py-6">
+          <div className="rounded-[24px] sm:rounded-[28px] border border-white/[0.06] bg-[radial-gradient(circle_at_top,rgba(124,77,255,0.14),transparent_42%),linear-gradient(180deg,#0f0f12_0%,#09090b_100%)] px-4 py-5 sm:px-6 sm:py-6">
             <div className="max-w-2xl">
               <p className="text-[10px] sm:text-xs font-bold tracking-[0.32em] text-[#E040FB] uppercase mb-2">Need More Than A Beat?</p>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Keep the release moving with the right next step.</h2>
-              <p className="mt-2 text-sm sm:text-[15px] text-gray-400 leading-relaxed">
+              <h2 className="text-[28px] leading-[1.02] sm:text-2xl font-extrabold text-white tracking-tight max-w-[11ch] sm:max-w-none">Keep the release moving with the right next step.</h2>
+              <p className="mt-3 text-[15px] sm:text-[15px] text-gray-400 leading-relaxed max-w-[34ch] sm:max-w-none">
                 If you already found a sound you like, here are the next services artists usually need.
               </p>
             </div>
@@ -961,28 +961,28 @@ export default function InstrumentalsPage() {
                     key={card.id}
                     type="button"
                     onClick={() => navigate(card.path)}
-                    className={`group relative overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br ${card.gradient} p-[1px] text-left transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]`}
+                    className={`group relative overflow-hidden rounded-[20px] sm:rounded-[24px] border border-white/10 bg-gradient-to-br ${card.gradient} p-[1px] text-left transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]`}
                     style={{ boxShadow: `0 18px 44px ${card.glow}` }}
                     data-testid={`instrumentals-shortcut-${card.id}`}>
-                    <div className="relative h-full min-h-[172px] rounded-[23px] bg-[linear-gradient(180deg,rgba(14,14,18,0.92)_0%,rgba(8,8,12,0.98)_100%)] px-4 py-4 sm:px-5 sm:py-5">
+                    <div className="relative h-full min-h-[164px] sm:min-h-[172px] rounded-[19px] sm:rounded-[23px] bg-[linear-gradient(180deg,rgba(14,14,18,0.92)_0%,rgba(8,8,12,0.98)_100%)] px-4 py-4 sm:px-5 sm:py-5">
                       <div className="absolute inset-0 opacity-60 pointer-events-none bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(124,77,255,0.16),transparent_34%)]" />
                       <div className="relative flex h-full flex-col">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/10 backdrop-blur-md">
-                            <Icon className="w-6 h-6 text-white" weight="fill" />
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-[18px] sm:rounded-2xl flex items-center justify-center border border-white/10 bg-white/10 backdrop-blur-md">
+                            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" weight="fill" />
                           </div>
-                          <div className="w-11 h-11 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.06] text-white/90 transition-all duration-300 group-hover:bg-white group-hover:text-black">
-                            <ArrowRight className="w-5 h-5" weight="bold" />
+                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border border-white/10 bg-white/[0.06] text-white/90 transition-all duration-300 group-hover:bg-white group-hover:text-black">
+                            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" weight="bold" />
                           </div>
                         </div>
 
-                        <div className="mt-5">
+                        <div className="mt-4 sm:mt-5">
                           <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/60">{card.eyebrow}</p>
-                          <h3 className="mt-2 text-[24px] leading-none sm:text-[26px] font-extrabold text-white tracking-tight">{card.title}</h3>
-                          <p className="mt-3 text-sm text-gray-300 leading-relaxed max-w-[28ch]">{card.desc}</p>
+                          <h3 className="mt-2 text-[20px] leading-[1.02] sm:text-[26px] font-extrabold text-white tracking-tight max-w-[13ch] sm:max-w-none">{card.title}</h3>
+                          <p className="mt-3 text-[15px] sm:text-sm text-gray-300 leading-relaxed max-w-[26ch] sm:max-w-[28ch]">{card.desc}</p>
                         </div>
 
-                        <div className="mt-auto pt-5">
+                        <div className="mt-auto pt-4 sm:pt-5">
                           <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">
                             Open now
                             <ArrowRight className="w-3.5 h-3.5" weight="bold" />

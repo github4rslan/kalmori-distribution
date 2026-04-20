@@ -341,8 +341,11 @@ const PublicLayout = ({ children }) => {
 
       {/* Scroll to Top */}
       {showScrollTop && (
-        <button onClick={scrollToTop} className="fixed bottom-[116px] right-5 z-nav w-[50px] h-[50px] rounded-full flex items-center justify-center bg-[#7C4DFF] shadow-lg shadow-[#7C4DFF]/30" data-testid="scroll-to-top">
-          <ArrowUp className="w-6 h-6 text-white" weight="bold" />
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-5 right-3 z-nav flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[#7C4DFF] shadow-lg shadow-[#7C4DFF]/30 transition hover:brightness-110 sm:bottom-8 sm:right-4 sm:h-[48px] sm:w-[48px] lg:bottom-[116px] lg:right-5 lg:h-[50px] lg:w-[50px]"
+          data-testid="scroll-to-top">
+          <ArrowUp className="w-5 h-5 text-white sm:w-6 sm:h-6" weight="bold" />
         </button>
       )}
     </div>
