@@ -262,7 +262,7 @@ const DashboardLayout = ({ children }) => {
     { path: '/spotify-canvas', icon: <SpotifyLogo className="w-5 h-5" />, label: 'Spotify Canvas', feat: 'spotify_canvas' },
     { path: '/content-id', icon: <YoutubeLogo className="w-5 h-5" />, label: 'Content ID', feat: 'content_id' },
     { path: '/purchases', icon: <ShoppingBag className="w-5 h-5" />, label: 'My Purchases' },
-    { path: '/collaborations', icon: <UsersThree className="w-5 h-5" />, label: 'Collaborations', feat: 'collaborations' },
+    { path: '/collaborations', icon: <UsersThree className="w-5 h-5" />, label: 'Collaborations' },
     { path: '/messages', icon: <ChatCircle className="w-5 h-5" />, label: 'Messages' },
     { path: '/royalty-splits', icon: <CurrencyDollar className="w-5 h-5" />, label: 'Royalty Splits' },
     { path: '/presave-manager', icon: <Megaphone className="w-5 h-5" />, label: 'Pre-Save', feat: 'presave' },

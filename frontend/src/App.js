@@ -373,7 +373,7 @@ const AppRouter = () => {
         <Route path="/spotify-canvas" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('spotify_canvas')}><SpotifyCanvasPage /></FeatureRoute>} />
         <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
         <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
-        <Route path="/collaborations" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('collaborations')}><CollaborationsPage /></FeatureRoute>} />
+        <Route path="/collaborations" element={<ProtectedRoute><CollaborationsPage /></ProtectedRoute>} />
         <Route path="/collab-hub" element={<Navigate to="/collaborations" replace />} />
               <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
               <Route path="/royalty-splits" element={<ProtectedRoute><RoyaltySplitsPage /></ProtectedRoute>} />

@@ -19,6 +19,7 @@ const STATUS_STYLES = {
 
 export default function CollaborationsPage() {
   const { user } = useAuth();
+  const canManageCollaborations = (user?.plan || 'free') !== 'free';
   const [owned, setOwned] = useState([]);
   const [collaboratingOn, setCollaboratingOn] = useState([]);
   const [invitations, setInvitations] = useState([]);
@@ -103,12 +104,36 @@ export default function CollaborationsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Collaborations</h1>
-            <p className="text-gray-400 mt-1">Manage collaborators and royalty splits</p>
+            <p className="text-gray-400 mt-1">
+              {canManageCollaborations ? 'Manage collaborators and royalty splits' : 'Review your invitations and the releases you collaborate on'}
+            </p>
           </div>
-          <Button onClick={() => setShowInviteForm(!showInviteForm)} className="btn-animated rounded-full gap-2" data-testid="invite-collaborator-btn">
-            <UserPlus className="w-4 h-4" /> Invite
-          </Button>
+          {canManageCollaborations ? (
+            <Button onClick={() => setShowInviteForm(!showInviteForm)} className="btn-animated rounded-full gap-2" data-testid="invite-collaborator-btn">
+              <UserPlus className="w-4 h-4" /> Invite
+            </Button>
+          ) : (
+            <div className="rounded-full border border-[#FFD700]/20 bg-[#FFD700]/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-[#FFD700]">
+              Participate Only
+            </div>
+          )}
         </div>
+
+        {!canManageCollaborations && (
+          <div className="rounded-2xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/10 p-5" data-testid="collaborations-participation-note">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-[#7C4DFF]/15 p-2 text-[#C6B2FF]">
+                <Crown className="w-4 h-4" weight="fill" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">You can join collaborations on the Free plan.</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-300">
+                  Accept or decline invites and track releases you are part of. Upgrade to Rise or Pro to send invites, manage collaborators, and control royalty splits.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Pending Invitations */}
         {invitations.length > 0 && (
@@ -136,7 +161,7 @@ export default function CollaborationsPage() {
         )}
 
         {/* Invite Form */}
-        {showInviteForm && (
+        {canManageCollaborations && showInviteForm && (
           <form onSubmit={sendInvite} className="bg-[#111] border border-[#7C4DFF]/30 rounded-2xl p-6 space-y-4" data-testid="invite-form">
             <h2 className="text-lg font-bold flex items-center gap-2"><PaperPlaneTilt className="w-5 h-5 text-[#7C4DFF]" /> Send Collaboration Invite</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -188,7 +213,11 @@ export default function CollaborationsPage() {
           {Object.keys(groupedByRelease).length === 0 ? (
             <div className="card-kalmori p-8 text-center">
               <UsersThree className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">No collaborators yet. Invite artists to your releases!</p>
+              <p className="text-sm text-gray-400">
+                {canManageCollaborations
+                  ? 'No collaborators yet. Invite artists to your releases!'
+                  : 'No owned collaboration records yet. Upgrade when you are ready to invite collaborators to your releases.'}
+              </p>
             </div>
           ) : (
             Object.entries(groupedByRelease).map(([releaseId, { title, collabs }]) => {
@@ -225,9 +254,11 @@ export default function CollaborationsPage() {
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-mono text-[#E040FB] font-bold">{c.split_percentage}%</span>
                             <span className={`text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
-                            <button onClick={() => removeCollab(c.id)} className="text-gray-600 hover:text-[#F44336] transition-colors" data-testid={`remove-collab-${c.id}`}>
-                              <X className="w-4 h-4" />
-                            </button>
+                            {canManageCollaborations && (
+                              <button onClick={() => removeCollab(c.id)} className="text-gray-600 hover:text-[#F44336] transition-colors" data-testid={`remove-collab-${c.id}`}>
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

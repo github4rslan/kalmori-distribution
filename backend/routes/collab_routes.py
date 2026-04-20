@@ -6,7 +6,7 @@ from pydantic import BaseModel, EmailStr
 import uuid
 import logging
 
-from core import db, get_current_user
+from core import db, get_current_user, check_feature_access
 
 logger = logging.getLogger(__name__)
 collab_router = APIRouter(prefix="/api")
@@ -27,6 +27,7 @@ class SplitUpdate(BaseModel):
 @collab_router.post("/collaborations/invite")
 async def invite_collaborator(data: CollaborationInvite, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     release = await db.releases.find_one({"id": data.release_id, "artist_id": user["id"]}, {"_id": 0})
     if not release:
         raise HTTPException(status_code=404, detail="Release not found or not owned by you")
@@ -171,6 +172,7 @@ async def decline_invitation(collab_id: str, request: Request):
 @collab_router.put("/collaborations/{collab_id}/split")
 async def update_split(collab_id: str, data: SplitUpdate, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     collab = await db.collaborations.find_one({"id": collab_id}, {"_id": 0})
     if not collab:
         raise HTTPException(status_code=404, detail="Collaboration not found")
@@ -197,6 +199,8 @@ async def remove_collaborator(collab_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Collaboration not found")
     if collab["owner_id"] != user["id"] and collab.get("collaborator_email") != user["email"]:
         raise HTTPException(status_code=403, detail="Not authorized")
+    if collab["owner_id"] == user["id"]:
+        check_feature_access(user.get("plan", "free"), "collaborations")
     await db.collaborations.delete_one({"id": collab_id})
     return {"message": "Collaboration removed"}
 
