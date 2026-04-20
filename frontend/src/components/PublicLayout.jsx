@@ -46,6 +46,7 @@ const PublicLayout = ({ children }) => {
     '/register': 'Create Account',
     '/reset-password': 'Reset Password',
     '/request-beat': 'Request Beat',
+    '/cover-art-request': 'Cover Art Request',
     '/dashboard': 'Dashboard',
     '/releases': 'My Releases',
     '/releases/new': 'New Release',

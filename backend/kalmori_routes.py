@@ -371,6 +371,20 @@ class InstrumentalRequest(BaseModel):
     budget: Optional[str] = None
     additional_notes: Optional[str] = None
 
+class CoverArtRequest(BaseModel):
+    artist_name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    project_title: str
+    release_type: Optional[str] = None
+    visual_style: Optional[str] = None
+    color_direction: Optional[str] = None
+    reference_links: Optional[str] = None
+    deadline: Optional[str] = None
+    budget: Optional[str] = None
+    deliverables: List[str] = []
+    additional_notes: Optional[str] = None
+
 # ==================== TESTIMONIAL MODELS ====================
 
 class TestimonialCreate(BaseModel):
@@ -1292,6 +1306,74 @@ async def create_instrumental_request(req: InstrumentalRequest):
     </div></div></body></html>"""
     await send_email_notification(KALMORI_ADMIN_EMAIL, f"New Instrumental Request: {req.genre} - {req.license_type.upper()}", email_html)
     return {"message": "Request submitted successfully", "request_id": request_id}
+
+@kalmori_router.post("/orders/cover-art-request")
+async def create_cover_art_request(req: CoverArtRequest):
+    request_id = str(uuid.uuid4())
+    request_data = {
+        "id": request_id,
+        "artist_name": req.artist_name,
+        "email": req.email,
+        "phone": req.phone,
+        "project_title": req.project_title,
+        "release_type": req.release_type,
+        "visual_style": req.visual_style,
+        "color_direction": req.color_direction,
+        "reference_links": req.reference_links,
+        "deadline": req.deadline,
+        "budget": req.budget,
+        "deliverables": req.deliverables,
+        "additional_notes": req.additional_notes,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.cover_art_requests.insert_one(request_data)
+
+    deliverables_str = ", ".join(req.deliverables) if req.deliverables else "Not specified"
+    admin_email_html = f"""<html><body style="font-family:Arial;background:#1a1a1a;color:#fff;padding:40px;">
+    <div style="max-width:600px;margin:0 auto;background:#000;border-radius:16px;overflow:hidden;">
+    <div style="background:linear-gradient(90deg,#FF4D8D,#E040FB,#7C4DFF);padding:30px;text-align:center;">
+    <h1 style="color:white;margin:0;">NEW COVER ART REQUEST</h1></div>
+    <div style="padding:30px;">
+    <p><strong>Artist:</strong> {req.artist_name}</p>
+    <p><strong>Email:</strong> {req.email}</p>
+    <p><strong>Phone:</strong> {req.phone or 'Not provided'}</p>
+    <p><strong>Project Title:</strong> {req.project_title}</p>
+    <p><strong>Release Type:</strong> {req.release_type or 'Not specified'}</p>
+    <p><strong>Style Direction:</strong> {req.visual_style or 'Not specified'}</p>
+    <p><strong>Color Direction:</strong> {req.color_direction or 'Not specified'}</p>
+    <p><strong>Deadline:</strong> {req.deadline or 'Not specified'}</p>
+    <p><strong>Budget:</strong> {req.budget or 'Not specified'}</p>
+    <p><strong>Deliverables:</strong> {deliverables_str}</p>
+    <p><strong>Reference Links:</strong> {req.reference_links or 'None'}</p>
+    <p><strong>Additional Notes:</strong> {req.additional_notes or 'None'}</p>
+    </div></div></body></html>"""
+
+    confirmation_email_html = f"""<html><body style="font-family:Arial;background:#1a1a1a;color:#fff;padding:40px;">
+    <div style="max-width:600px;margin:0 auto;background:#000;border-radius:16px;overflow:hidden;">
+    <div style="background:linear-gradient(90deg,#FF4D8D,#E040FB,#7C4DFF);padding:30px;text-align:center;">
+    <h1 style="color:white;margin:0;">COVER ART REQUEST RECEIVED</h1></div>
+    <div style="padding:30px;">
+    <p>Hi {req.artist_name},</p>
+    <p>We received your cover art request for <strong>{req.project_title}</strong>.</p>
+    <p><strong>Release Type:</strong> {req.release_type or 'Not specified'}</p>
+    <p><strong>Deadline:</strong> {req.deadline or 'Not specified'}</p>
+    <p><strong>Deliverables:</strong> {deliverables_str}</p>
+    <p>Our team will review your brief and follow up by email.</p>
+    <p style="color:#aaa;margin-top:24px;">Request ID: {request_id}</p>
+    </div></div></body></html>"""
+
+    await send_email_notification(
+        KALMORI_ADMIN_EMAIL,
+        f"New Cover Art Request: {req.project_title} by {req.artist_name}",
+        admin_email_html,
+    )
+    await send_email_notification(
+        req.email,
+        f"We received your cover art request for {req.project_title}",
+        confirmation_email_html,
+    )
+    return {"message": "Cover art request submitted successfully", "request_id": request_id}
 
 # ==================== TESTIMONIALS ====================
 

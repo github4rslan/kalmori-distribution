@@ -388,8 +388,24 @@ export default function InstrumentalsPage() {
     return true;
   });
 
-  // While the catalog is still small, fall back to the full list instead of showing an empty state.
-  const visibleBeats = quickFilter !== 'all' && filteredBeats.length === 0 ? beats : filteredBeats;
+  const sortBeats = (items, mode) => {
+    const sorted = [...items];
+    if (mode === 'plays') return sorted.sort((a, b) => (b.plays || 0) - (a.plays || 0));
+    if (mode === 'price_low') return sorted.sort((a, b) => Number(a?.prices?.basic_lease || 0) - Number(b?.prices?.basic_lease || 0));
+    if (mode === 'price_high') return sorted.sort((a, b) => Number(b?.prices?.basic_lease || 0) - Number(a?.prices?.basic_lease || 0));
+    if (mode === 'bpm_low') return sorted.sort((a, b) => Number(a?.bpm || 0) - Number(b?.bpm || 0));
+    if (mode === 'bpm_high') return sorted.sort((a, b) => Number(b?.bpm || 0) - Number(a?.bpm || 0));
+    return sorted.sort((a, b) => {
+      const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      return bTime - aTime;
+    });
+  };
+
+  // While the catalog is still small, only "new" falls back to the full list; other filters should show true empty states.
+  const baseVisibleBeats = quickFilter === 'new' && filteredBeats.length === 0 ? beats : filteredBeats;
+  const effectiveSortBy = quickFilter === 'new' ? 'newest' : sortBy;
+  const visibleBeats = sortBeats(baseVisibleBeats, effectiveSortBy);
   const currentBeat = visibleBeats.find(b => b.id === currentBeatId) || beats.find(b => b.id === currentBeatId) || null;
   const featuredBeat = visibleBeats.length > 0
     ? [...visibleBeats].sort((a, b) => (b.plays || 0) - (a.plays || 0))[0]
@@ -422,7 +438,7 @@ export default function InstrumentalsPage() {
       eyebrow: 'Release Support',
       title: 'Need Cover Art?',
       desc: 'Get help packaging your next song with artwork and release-ready support.',
-      path: '/services',
+      path: '/cover-art-request',
       icon: Palette,
       gradient: 'from-[#FF4D8D] via-[#E040FB] to-[#7C4DFF]',
       glow: 'rgba(224,64,251,0.24)',

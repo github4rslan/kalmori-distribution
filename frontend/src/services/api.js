@@ -372,6 +372,11 @@ class ApiService {
     return response.data;
   }
 
+  async createCoverArtRequest(data) {
+    const response = await axios.post(`${BASE_URL}/api/orders/cover-art-request`, data);
+    return response.data;
+  }
+
   // Subscription Plans
   async getSubscriptionPlans() {
     const response = await axios.get(`${BASE_URL}/api/subscriptions/plans`);
