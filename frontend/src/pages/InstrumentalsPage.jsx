@@ -149,11 +149,6 @@ export default function InstrumentalsPage() {
   const { user } = useAuth();
 
   const handleServiceShortcut = (card) => {
-    if (card.id === 'collaborations' && !user) {
-      navigate('/login', { state: { from: { pathname: card.path } } });
-      return;
-    }
-
     navigate(card.path);
   };
 
@@ -434,11 +429,11 @@ export default function InstrumentalsPage() {
       glow: 'rgba(38,198,218,0.28)',
     },
     {
-      id: 'collaborations',
+      id: 'collab-hub',
       eyebrow: 'Find Collaborators',
       title: 'Collaboration Hub',
       desc: 'Meet vocalists, producers, mixers, and writers in one place.',
-      path: '/collaborations',
+      path: '/collab-hub',
       icon: Users,
       gradient: 'from-[#2196F3] via-[#5E72FF] to-[#7C4DFF]',
       glow: 'rgba(33,150,243,0.24)',

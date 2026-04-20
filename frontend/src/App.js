@@ -89,6 +89,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const SpotifyCanvasPage = lazy(() => import('./pages/SpotifyCanvasPage'));
 const ContentIdPage = lazy(() => import('./pages/ContentIdPage'));
 const MyPurchasesPage = lazy(() => import('./pages/MyPurchasesPage'));
+const CollabHubPage = lazy(() => import('./pages/CollabHubPage'));
 const CollaborationsPage = lazy(() => import('./pages/CollaborationsPage'));
 const PreSaveManagerPage = lazy(() => import('./pages/PreSavePage'));
 const PreSaveLandingPage = lazy(() => import('./pages/PreSavePage').then(m => ({ default: m.PreSaveLandingPage })));
@@ -374,7 +375,7 @@ const AppRouter = () => {
         <Route path="/content-id" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('content_id')}><ContentIdPage /></FeatureRoute>} />
         <Route path="/purchases" element={<ProtectedRoute><MyPurchasesPage /></ProtectedRoute>} />
         <Route path="/collaborations" element={<ProtectedRoute><CollaborationsPage /></ProtectedRoute>} />
-        <Route path="/collab-hub" element={<Navigate to="/collaborations" replace />} />
+        <Route path="/collab-hub" element={<CollabHubPage />} />
         <Route path="/messages" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('messaging')}><MessagesPage /></FeatureRoute>} />
         <Route path="/royalty-splits" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('royalty_splits')}><RoyaltySplitsPage /></FeatureRoute>} />
         <Route path="/presave-manager" element={<FeatureRoute requiredPlans={getRequiredPlansForFeature('presave')}><PreSaveManagerPage /></FeatureRoute>} />
