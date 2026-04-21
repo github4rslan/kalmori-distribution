@@ -164,7 +164,7 @@ const PublicLayout = ({ children }) => {
               <img
                 src={kalmoriWordmark}
                 alt="Kalmori"
-                className="pointer-events-auto w-[92px] sm:w-[125px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+                className="pointer-events-auto w-[150px] sm:w-[220px] h-auto object-contain drop-shadow-[0_0_10px_rgba(224,64,251,0.3)]"
               />
             </button>
           ) : (
