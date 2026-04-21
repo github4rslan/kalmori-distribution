@@ -118,7 +118,7 @@ const LoginPage = () => {
         </div>
 
         <div className="mt-4">
-          <Link to="/register" className="text-sm text-[#0095FF] hover:brightness-125 transition-colors" data-testid="signup-link">
+          <Link to="/register" state={location.state} className="text-sm text-[#0095FF] hover:brightness-125 transition-colors" data-testid="signup-link">
             I need an account
           </Link>
         </div>

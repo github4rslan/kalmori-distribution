@@ -882,6 +882,7 @@ class CollabPostCreate(BaseModel):
 @api_router.post("/collab-hub/posts")
 async def create_collab_post(data: CollabPostCreate, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     doc = {
         "id": f"collab_{uuid.uuid4().hex[:12]}",
         "user_id": user["id"],
@@ -921,12 +922,14 @@ async def list_collab_posts(request: Request, looking_for: str = None, genre: st
 @api_router.get("/collab-hub/my-posts")
 async def my_collab_posts(request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     posts = await db.collab_posts.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(50)
     return posts
 
 @api_router.put("/collab-hub/posts/{post_id}")
 async def update_collab_post(post_id: str, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     body = await request.json()
     allowed = {"title", "looking_for", "genre", "description", "budget", "deadline", "status"}
     updates = {k: v for k, v in body.items() if k in allowed}
@@ -939,6 +942,7 @@ async def update_collab_post(post_id: str, request: Request):
 @api_router.delete("/collab-hub/posts/{post_id}")
 async def delete_collab_post(post_id: str, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     result = await db.collab_posts.delete_one({"id": post_id, "user_id": user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -948,6 +952,7 @@ async def delete_collab_post(post_id: str, request: Request):
 @api_router.post("/collab-hub/invite")
 async def send_collab_invite(request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     body = await request.json()
     post_id = body.get("post_id", "")
     message = body.get("message", "")
@@ -989,6 +994,7 @@ async def send_collab_invite(request: Request):
 @api_router.get("/collab-hub/invites")
 async def get_collab_invites(request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     received = await db.collab_invites.find({"to_user_id": user["id"]}, {"_id": 0, "to_user_id": 0}).sort("created_at", -1).to_list(50)
     sent = await db.collab_invites.find({"from_user_id": user["id"]}, {"_id": 0, "from_user_id": 0}).sort("created_at", -1).to_list(50)
     return {"received": received, "sent": sent}
@@ -996,6 +1002,7 @@ async def get_collab_invites(request: Request):
 @api_router.put("/collab-hub/invites/{invite_id}")
 async def respond_to_invite(invite_id: str, request: Request):
     user = await get_current_user(request)
+    check_feature_access(user.get("plan", "free"), "collaborations")
     body = await request.json()
     action = body.get("action", "")  # "accept" or "decline"
     if action not in ("accept", "decline"):

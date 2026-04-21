@@ -52,6 +52,7 @@ export default function CollabHubPage() {
   useBodyScrollLock(showForm || Boolean(inviteModal));
 
   const isAuthenticated = Boolean(user);
+  const canUseHub = isAuthenticated && (user?.plan || 'free') !== 'free';
   const Layout = isAuthenticated ? DashboardLayout : PublicLayout;
   const token = localStorage.getItem('token') || localStorage.getItem('access_token') || '';
   const axiosConfig = {
@@ -79,7 +80,7 @@ export default function CollabHubPage() {
         headers: requestHeaders,
       });
 
-      const authedRequests = isAuthenticated
+      const authedRequests = canUseHub
         ? Promise.all([
             fetch(`${API}/api/collab-hub/my-posts`, {
               credentials: 'include',
@@ -110,7 +111,7 @@ export default function CollabHubPage() {
     } finally {
       setLoading(false);
     }
-  }, [filterGenre, filterRole, isAuthenticated, token]);
+  }, [canUseHub, filterGenre, filterRole, token]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -118,9 +119,9 @@ export default function CollabHubPage() {
   }, [authLoading, fetchAll]);
 
   useEffect(() => {
-    if (isAuthenticated || tab === 'browse') return;
+    if (canUseHub || tab === 'browse') return;
     setTab('browse');
-  }, [isAuthenticated, tab]);
+  }, [canUseHub, tab]);
 
   const promptForAuth = (path = '/register') => {
     toast('Sign in or create an account to continue.');
@@ -201,7 +202,7 @@ export default function CollabHubPage() {
   const inputCls = 'w-full rounded-xl border border-white/10 bg-[#09090b] px-4 py-3 text-white text-sm shadow-[0_8px_24px_rgba(0,0,0,0.18)] focus:outline-none focus:border-[#7C4DFF]';
   const tabs = [
     { key: 'browse', label: 'Browse', count: posts.length },
-    ...(isAuthenticated
+    ...(canUseHub
       ? [
           { key: 'my-posts', label: 'My Posts', count: myPosts.length },
           { key: 'invites', label: 'Invites', count: invites.received.filter(i => i.status === 'pending').length },
@@ -234,7 +235,7 @@ export default function CollabHubPage() {
                 </div>
               </div>
 
-              {isAuthenticated ? (
+              {canUseHub ? (
                 <button
                   onClick={() => setShowForm(true)}
                   className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#7C4DFF,#A855F7)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(124,77,255,0.35)] transition hover:brightness-110"
@@ -242,7 +243,7 @@ export default function CollabHubPage() {
                 >
                   <Plus className="w-4 h-4" /> Post Opportunity
                 </button>
-              ) : (
+              ) : !isAuthenticated ? (
                 <div className="grid w-full grid-cols-2 gap-3 lg:w-auto">
                   <button
                     onClick={() => navigate('/login', { state: { from: { pathname: '/collab-hub' } } })}
@@ -259,20 +260,30 @@ export default function CollabHubPage() {
                     <UserPlus className="w-4 h-4" /> Create Account
                   </button>
                 </div>
+              ) : (
+                <button
+                  onClick={() => navigate('/pricing')}
+                  className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#FFD700,#FFA500)] px-4 py-2.5 text-sm font-bold text-black shadow-[0_12px_30px_rgba(255,215,0,0.22)] transition hover:brightness-110"
+                  data-testid="upgrade-collab-hub-btn"
+                >
+                  Upgrade to Access
+                </button>
               )}
             </div>
           </div>
         </div>
 
-        {!isAuthenticated && (
-          <div className="rounded-[22px] sm:rounded-[24px] border border-[#7C4DFF]/20 bg-[linear-gradient(180deg,rgba(17,17,17,0.96),rgba(10,10,10,0.98))] p-4 sm:p-5 shadow-[0_20px_45px_rgba(0,0,0,0.22)]">
-            <p className="text-[17px] sm:text-lg font-semibold leading-tight text-white">Browse the collaboration board without signing in.</p>
+        {isAuthenticated && !canUseHub && (
+          <div className="rounded-[22px] sm:rounded-[24px] border border-[#FFD700]/20 bg-[linear-gradient(180deg,rgba(255,215,0,0.10),rgba(10,10,10,0.98))] p-4 sm:p-5 shadow-[0_20px_45px_rgba(0,0,0,0.22)]" data-testid="collab-hub-upgrade-note">
+            <p className="text-[17px] sm:text-lg font-semibold leading-tight text-white">Collab Hub is available on Rise and Pro.</p>
             <p className="mt-2 max-w-xl text-[14px] sm:text-[15px] leading-relaxed text-gray-300">
-              You can explore open opportunities now. Sign in when you want to post your own opportunity or send an invite.
+              Free accounts can participate in release collaboration invites, but posting and browsing Collab Hub opportunities requires an upgrade.
             </p>
           </div>
         )}
 
+        {canUseHub && (
+          <>
         <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none]" data-testid="collab-tabs">
           <div className="inline-flex min-w-full gap-1 rounded-2xl border border-white/10 bg-[#101012] p-1.5 sm:min-w-0">
             {tabs.map(t => (
@@ -607,6 +618,8 @@ export default function CollabHubPage() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </Layout>

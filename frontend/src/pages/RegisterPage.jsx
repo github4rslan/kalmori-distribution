@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash, CaretDown, Check, CheckCircle, WarningCircle, MusicNotes, ArrowRight, Plus, Gift } from '@phosphor-icons/react';
 import { toast } from 'sonner';
@@ -67,7 +67,9 @@ const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const returnPath = location.state?.from?.pathname;
 
   // Password validation
   const pwChecks = {
@@ -127,6 +129,10 @@ const RegisterPage = () => {
         } catch (e) { /* Referral completion is best-effort */ }
       }
       toast.success('Account created!');
+      if (returnPath) {
+        navigate(returnPath, { replace: true });
+        return;
+      }
       // If role was preselected via ?role= param, skip role selection
       if (searchParams.get('role') && ['artist', 'producer', 'label'].includes(searchParams.get('role'))) {
         navigate('/dashboard');
