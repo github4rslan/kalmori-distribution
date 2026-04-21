@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import DashboardLayout from '../components/DashboardLayout';
 import PublicLayout from '../components/PublicLayout';
 import { Plus, PaperPlaneTilt, Check, X, User, MusicNote, Microphone, Headphones, Waveform, Guitar, Faders, Clock, CurrencyDollar, SignIn, UserPlus, Sparkle } from '@phosphor-icons/react';
 import { toast } from 'sonner';
@@ -53,7 +52,6 @@ export default function CollabHubPage() {
 
   const isAuthenticated = Boolean(user);
   const canUseHub = isAuthenticated && (user?.plan || 'free') !== 'free';
-  const Layout = isAuthenticated ? DashboardLayout : PublicLayout;
   const token = localStorage.getItem('token') || localStorage.getItem('access_token') || '';
   const axiosConfig = {
     withCredentials: true,
@@ -211,7 +209,7 @@ export default function CollabHubPage() {
   ];
 
   return (
-    <Layout>
+    <PublicLayout>
       <div className="mx-auto max-w-5xl space-y-4 px-3 pb-4 pt-3 sm:space-y-6 sm:px-4 sm:pb-6 sm:pt-4 lg:px-6" data-testid="collab-hub-page">
         <div className="overflow-hidden rounded-[24px] sm:rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(124,77,255,0.24),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(224,64,251,0.14),transparent_28%),linear-gradient(180deg,#101014_0%,#09090b_100%)] shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
           <div className="px-3.5 py-4 sm:px-6 sm:py-6">
@@ -622,6 +620,6 @@ export default function CollabHubPage() {
           </>
         )}
       </div>
-    </Layout>
+    </PublicLayout>
   );
 }
