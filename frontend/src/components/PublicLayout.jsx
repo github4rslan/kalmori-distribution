@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import useScrollReveal from '../hooks/useScrollReveal';
+import kalmoriWordmark from '../assets/kalmori-wordmark.png';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
   Megaphone, FileText, ChartLine, Speedometer, ChartBar, CurrencyDollar, Wallet as WalletIcon,
@@ -159,9 +160,12 @@ const PublicLayout = ({ children }) => {
 
           {/* KALMORI logo / Page title centered */}
           {isHomePage ? (
-            <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex flex-col items-center" style={{ pointerEvents: 'none' }}>
-              <span className="text-[24px] font-extrabold tracking-[4px] logo-animated-purple pointer-events-auto">KALMORI</span>
-              <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF] pointer-events-auto" />
+            <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex justify-center" style={{ pointerEvents: 'none' }}>
+              <img
+                src={kalmoriWordmark}
+                alt="Kalmori"
+                className="pointer-events-auto w-[145px] sm:w-[190px] h-auto object-contain drop-shadow-[0_0_12px_rgba(224,64,251,0.35)]"
+              />
             </button>
           ) : (
             <span className="absolute left-0 right-0 text-center text-white text-[16px] font-bold pointer-events-none">{getPageTitle()}</span>
