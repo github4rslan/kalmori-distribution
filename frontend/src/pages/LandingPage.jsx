@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PublicLayout from '../components/PublicLayout';
 import GlobalFooter from '../components/GlobalFooter';
 import { DynamicPageRenderer } from '../components/DynamicPageRenderer';
-import { ArrowRight, Check, SpotifyLogo, AppleLogo, YoutubeLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord, PaperPlaneTilt } from '@phosphor-icons/react';
+import { ArrowRight, Check, SpotifyLogo, TiktokLogo, InstagramLogo, TwitterLogo, Envelope, MusicNote, MusicNotes, Playlist, Rocket, CheckCircle, Headset, Globe, CurrencyDollar, ShieldCheck, Star, Play, Pause, Lightning, ChartLineUp, Brain, Users, Trophy, Target, ShareNetwork, ChatCircleDots, FileText, Waveform, HandCoins, Palette, QrCode, Copy, Headphones, Sliders, UploadSimple, VinylRecord, PaperPlaneTilt } from '@phosphor-icons/react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import { getUserRole } from '../utils/role';
@@ -111,16 +111,6 @@ const AnimatedButton = ({ children, onClick, className = '' }) => (
     {children}
   </button>
 );
-
-// Platform data
-const platforms = [
-  { name: 'Spotify', icon: <SpotifyLogo className="w-10 h-10" weight="fill" />, color: '#1DB954' },
-  { name: 'Apple Music', icon: <AppleLogo className="w-10 h-10" weight="fill" />, color: '#FC3C44' },
-  { name: 'YouTube', icon: <YoutubeLogo className="w-10 h-10" weight="fill" />, color: '#FF0000' },
-  { name: 'TikTok', icon: <TiktokLogo className="w-10 h-10" weight="fill" />, color: '#00F2EA' },
-  { name: 'Amazon', icon: <MusicNote className="w-10 h-10" weight="fill" />, color: '#00A8E1' },
-  { name: 'Deezer', icon: <MusicNote className="w-10 h-10" weight="fill" />, color: '#FEAA2D' },
-];
 
 // Promotion channels
 const promoChannels = [
@@ -418,20 +408,6 @@ const LandingPage = () => {
                 </div>
                 <button onClick={() => navigate('/register')} className="w-full py-4 rounded-xl bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white text-sm font-black tracking-[2px] hover:brightness-110 transition-all" data-testid="free-plan-signup-btn">
                   GET STARTED FREE
-                </button>
-              </div>
-              {/* Platform logos below card */}
-              <div className="grid grid-cols-3 gap-3 mt-6">
-                {platforms.map((p, i) => (
-                  <div key={i} className="bg-[#111] rounded-xl py-4 px-3 flex flex-col items-center gap-2 border border-white/5 hover:border-white/20 transition-all group" data-testid={`platform-${p.name.toLowerCase().replace(' ', '-')}`}>
-                    <div style={{ color: p.color }} className="group-hover:scale-110 transition-transform">{p.icon}</div>
-                    <span className="text-xs font-semibold text-white">{p.name}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="text-center mt-4">
-                <button onClick={() => navigate('/stores')} className="text-[#E040FB] text-xs font-bold tracking-wider inline-flex items-center gap-2 hover:gap-3 transition-all" data-testid="view-all-stores-btn">
-                  VIEW ALL 150+ STORES <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
             </div>
