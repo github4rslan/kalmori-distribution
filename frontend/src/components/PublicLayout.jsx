@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import useScrollReveal from '../hooks/useScrollReveal';
-import kalmoriWordmark from '../assets/kalmori-wordmark.png';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.jpg';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
   Megaphone, FileText, ChartLine, Speedometer, ChartBar, CurrencyDollar, Wallet as WalletIcon,
@@ -162,7 +162,7 @@ const PublicLayout = ({ children }) => {
           {isHomePage ? (
             <button onClick={() => navigate('/')} className="absolute left-0 right-0 flex justify-center" style={{ pointerEvents: 'none' }}>
               <img
-                src={kalmoriWordmark}
+                src={kalmoriFrontpageLogo}
                 alt="Kalmori"
                 className="pointer-events-auto w-[105px] sm:w-[155px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
               />
