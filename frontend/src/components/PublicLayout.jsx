@@ -4,6 +4,7 @@ import { useAuth } from '../App';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import useScrollReveal from '../hooks/useScrollReveal';
 import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
+import kalmoriDashboardLogo from '../assets/kalmori-dashboard-logo.png';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
   Megaphone, FileText, ChartLine, Speedometer, ChartBar, CurrencyDollar, Wallet as WalletIcon,
@@ -207,11 +208,11 @@ const PublicLayout = ({ children }) => {
             <div className="flex items-center justify-between px-5 pt-[50px] pb-2">
               <div className="flex flex-col">
                 <img
-                  src={kalmoriFrontpageLogo}
+                  src={kalmoriDashboardLogo}
                   alt="Kalmori"
-                  className="w-[132px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+                  className="w-[145px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
                 />
-                <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF]" />
+                <div className="w-10 h-[3px] rounded-sm mt-2 bg-[#7C4DFF]" />
               </div>
               <button onClick={closeMenu} className="p-1"><X className="w-6 h-6 text-white" /></button>
             </div>
