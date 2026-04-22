@@ -294,7 +294,7 @@ const DashboardLayout = ({ children }) => {
                 alt="Kalmori"
                 className="w-[145px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
               />
-              <div className="gradient-underline mt-1" />
+              <div className="gradient-underline mt-2" />
             </Link>
             <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
           </div>
