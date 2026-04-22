@@ -207,142 +207,184 @@ export default function FanAnalyticsPage() {
 
   if (!data) return <DashboardLayout><p className="text-gray-400">Failed to load fan analytics.</p></DashboardLayout>;
 
-  const totalStreams = data.platform_engagement.reduce((s, p) => s + p.streams, 0);
+  const listenerGrowth = data.listener_growth || [];
+  const topCountries = data.top_countries || [];
+  const platformEngagement = data.platform_engagement || [];
+  const peakHours = data.peak_hours || [];
+  const totalStreams = platformEngagement.reduce((s, p) => s + p.streams, 0);
+  const hasListenerGrowth = listenerGrowth.some(point => point.listeners > 0);
+  const hasCountries = topCountries.length > 0;
+  const hasPlatformEngagement = platformEngagement.some(platform => platform.streams > 0);
+  const hasPeakHours = peakHours.some(hour => hour.count > 0);
 
   return (
     <DashboardLayout>
-      <div className="space-y-8" data-testid="fan-analytics-page">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Fan Analytics</h1>
-          <p className="text-gray-400 mt-1">Understand your audience — where they listen, when, and on which platforms</p>
+      <div className="mx-auto w-full max-w-7xl space-y-5 sm:space-y-7" data-testid="fan-analytics-page">
+        <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(124,77,255,0.24),transparent_32%),linear-gradient(135deg,rgba(17,17,17,0.98),rgba(6,6,10,0.98))] px-5 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.28)] sm:px-7 sm:py-8">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E040FB]/70 to-transparent" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.24em] text-[#E040FB]">Audience Intelligence</p>
+              <h1 className="text-[2rem] font-black leading-[0.98] text-white sm:text-5xl">Fan Analytics</h1>
+              <p className="mt-3 max-w-2xl text-[15px] leading-6 text-gray-300 sm:text-base">
+                Understand where your audience listens, when they are most active, and which platforms are building momentum.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/30 p-2 text-center sm:min-w-[22rem]">
+              <MiniMetric label="Streams" value={totalStreams.toLocaleString()} />
+              <MiniMetric label="Markets" value={topCountries.length} />
+              <MiniMetric label="Campaigns" value={data.total_campaigns || 0} />
+            </div>
+          </div>
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
           <StatCard icon={<Users className="w-5 h-5 text-[#7C4DFF]" />} value={data.total_subscribers} label="Pre-Save Subs" color="#7C4DFF" />
-          <StatCard icon={<Globe className="w-5 h-5 text-[#E040FB]" />} value={data.top_countries?.length || 0} label="Countries" color="#E040FB" />
+          <StatCard icon={<Globe className="w-5 h-5 text-[#E040FB]" />} value={topCountries.length || 0} label="Countries" color="#E040FB" />
           <StatCard icon={<MusicNote className="w-5 h-5 text-[#1DB954]" />} value={totalStreams.toLocaleString()} label="Total Streams" color="#1DB954" />
           <StatCard icon={<TrendUp className="w-5 h-5 text-[#FFD700]" />} value={data.total_campaigns} label="Campaigns" color="#FFD700" />
         </div>
 
         {/* Listener Growth Chart */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-            <ChartLineUp className="w-5 h-5 text-[#7C4DFF]" /> Listener Growth (30 Days)
-          </h2>
-          <div className="h-56">
+        <div className="rounded-[1.5rem] border border-white/10 bg-[#111] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h2 className="flex items-center gap-2 text-base font-bold text-white">
+              <ChartLineUp className="w-5 h-5 text-[#7C4DFF]" /> Listener Growth
+            </h2>
+            <span className="rounded-full bg-[#7C4DFF]/10 px-3 py-1 text-[11px] font-medium text-[#B99CFF]">30 days</span>
+          </div>
+          {hasListenerGrowth ? (
+          <div className="h-56 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.listener_growth}>
+              <AreaChart data={listenerGrowth} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
                 <defs>
                   <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7C4DFF" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#7C4DFF" stopOpacity={0.35} />
                     <stop offset="95%" stopColor="#7C4DFF" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="date" tick={{ fill: '#666', fontSize: 10 }} tickFormatter={v => v.slice(5)} />
-                <YAxis tick={{ fill: '#666', fontSize: 10 }} />
+                <XAxis dataKey="date" tick={{ fill: '#777', fontSize: 10 }} tickLine={false} axisLine={{ stroke: '#2a2a2a' }} tickFormatter={v => v.slice(5)} />
+                <YAxis tick={{ fill: '#777', fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="listeners" stroke="#7C4DFF" fill="url(#growthGrad)" strokeWidth={2} />
+                <Area type="monotone" dataKey="listeners" stroke="#7C4DFF" fill="url(#growthGrad)" strokeWidth={3} dot={false} activeDot={{ r: 4, fill: '#E040FB' }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          ) : (
+            <EmptyAnalyticsState icon={<ChartLineUp className="w-8 h-8" />} title="No listener growth yet" text="Growth will appear here as fans stream and subscribe." />
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
           {/* Top Countries */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-            <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+          <div className="rounded-[1.5rem] border border-white/10 bg-[#111] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-white">
               <Globe className="w-5 h-5 text-[#E040FB]" /> Top Listener Countries
             </h2>
-            <div className="space-y-3">
-              {data.top_countries?.slice(0, 8).map((c) => (
+            <p className="mb-5 text-xs text-gray-500">Markets by stream share</p>
+            {hasCountries ? (
+            <div className="space-y-4">
+              {topCountries.slice(0, 8).map((c) => (
                 <div key={c.country} className="flex items-center gap-3" data-testid={`country-${c.country}`}>
-                  <span className="text-lg w-8">{COUNTRY_FLAGS[c.country] || ''}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-white font-medium">{COUNTRY_NAMES[c.country] || c.country}</span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.04] text-lg">{COUNTRY_FLAGS[c.country] || ''}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-medium text-white">{COUNTRY_NAMES[c.country] || c.country}</span>
                       <span className="text-xs text-gray-400">{c.percentage}%</span>
                     </div>
-                    <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB]" style={{ width: `${c.percentage}%` }} />
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.05]">
+                      <div className="h-full rounded-full bg-gradient-to-r from-[#7C4DFF] to-[#E040FB]" style={{ width: `${Math.min(c.percentage, 100)}%` }} />
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 font-mono w-16 text-right">{c.streams.toLocaleString()}</span>
+                  <span className="w-14 flex-shrink-0 text-right font-mono text-[11px] text-gray-500 sm:w-16">{c.streams.toLocaleString()}</span>
                 </div>
               ))}
             </div>
+            ) : (
+              <EmptyAnalyticsState icon={<Globe className="w-8 h-8" />} title="No country data yet" text="Country breakdown appears once listener locations are available." />
+            )}
           </div>
 
           {/* Platform Engagement */}
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-            <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+          <div className="rounded-[1.5rem] border border-white/10 bg-[#111] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-white">
               <MusicNote className="w-5 h-5 text-[#1DB954]" /> Platform Engagement
             </h2>
-            <div className="flex items-center gap-6">
-              <div className="w-40 h-40 flex-shrink-0">
+            <p className="mb-5 text-xs text-gray-500">Streams by destination</p>
+            {hasPlatformEngagement ? (
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+              <div className="mx-auto h-44 w-44 flex-shrink-0 sm:mx-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={data.platform_engagement.slice(0, 6)} dataKey="streams" innerRadius={35} outerRadius={70} paddingAngle={2}>
-                      {data.platform_engagement.slice(0, 6).map((p, i) => (
+                    <Pie data={platformEngagement.slice(0, 6)} dataKey="streams" innerRadius={42} outerRadius={76} paddingAngle={2}>
+                      {platformEngagement.slice(0, 6).map((p, i) => (
                         <Cell key={i} fill={p.color} />
                       ))}
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex-1 space-y-2">
-                {data.platform_engagement?.slice(0, 6).map(p => (
-                  <div key={p.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                    <span className="text-xs text-gray-300 flex-1">{p.name}</span>
-                    <span className="text-xs text-gray-500 font-mono">{p.percentage}%</span>
+              <div className="grid flex-1 grid-cols-1 gap-2">
+                {platformEngagement.slice(0, 6).map(p => (
+                  <div key={p.name} className="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2">
+                    <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ backgroundColor: p.color }} />
+                    <span className="min-w-0 flex-1 truncate text-xs text-gray-300">{p.name}</span>
+                    <span className="font-mono text-xs text-gray-500">{p.percentage}%</span>
                   </div>
                 ))}
               </div>
             </div>
+            ) : (
+              <EmptyAnalyticsState icon={<MusicNote className="w-8 h-8" />} title="No platform data yet" text="Platform engagement will populate after stream activity is imported." />
+            )}
           </div>
         </div>
 
         {/* Peak Listening Hours */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+        <div className="rounded-[1.5rem] border border-white/10 bg-[#111] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.22)] sm:p-6">
+          <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-white">
             <Clock className="w-5 h-5 text-[#FFD700]" /> Peak Listening Hours (UTC)
           </h2>
-          <div className="h-40">
+          <p className="mb-5 text-xs text-gray-500">Best times to release new music and run campaigns</p>
+          {hasPeakHours ? (
+          <div className="h-48 sm:h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.peak_hours}>
-                <XAxis dataKey="hour" tick={{ fill: '#666', fontSize: 10 }} tickFormatter={v => `${v}:00`} />
-                <YAxis tick={{ fill: '#666', fontSize: 10 }} />
+              <BarChart data={peakHours} margin={{ top: 12, right: 8, left: -18, bottom: 0 }}>
+                <XAxis dataKey="hour" tick={{ fill: '#777', fontSize: 10 }} tickLine={false} axisLine={{ stroke: '#2a2a2a' }} tickFormatter={v => `${v}:00`} />
+                <YAxis tick={{ fill: '#777', fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#FFD700" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="#FFD700" radius={[7, 7, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">Best times to release new music and run campaigns</p>
+          ) : (
+            <EmptyAnalyticsState icon={<Clock className="w-8 h-8" />} title="No hourly trend yet" text="Peak listening windows will appear after more stream events are available." />
+          )}
         </div>
 
         {/* AI Smart Insights Section */}
-        <div className="bg-gradient-to-br from-[#0a1628] to-[#111] border border-[#E040FB]/20 rounded-2xl p-6" data-testid="smart-insights-section">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] flex items-center justify-center">
+        <div className="overflow-hidden rounded-[1.5rem] border border-[#E040FB]/25 bg-[radial-gradient(circle_at_top_left,rgba(224,64,251,0.18),transparent_34%),linear-gradient(135deg,#0a1628,#0e0e12)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)] sm:p-6" data-testid="smart-insights-section">
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7C4DFF] to-[#E040FB] shadow-lg shadow-[#E040FB]/20">
                 <Lightning className="w-5 h-5 text-white" weight="fill" />
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">Smart Insights</h2>
-                <p className="text-xs text-gray-400">AI-powered growth coaching based on your streaming trends</p>
+              <div className="min-w-0">
+                <h2 className="text-xl font-black leading-tight text-white sm:text-2xl">Smart Insights</h2>
+                <p className="mt-1 max-w-xl text-sm leading-5 text-gray-300">AI-powered growth coaching based on your streaming trends.</p>
+                {lastAnalyzed && (
+                  <p className="mt-2 text-[11px] text-gray-500">
+                    Last analyzed {new Date(lastAnalyzed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {lastAnalyzed && (
-                <span className="text-[10px] text-gray-500 hidden sm:block">
-                  Last analyzed {new Date(lastAnalyzed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-              )}
+            <div className="flex items-center">
               <button
                 onClick={generateSmartInsights}
                 disabled={insightsLoading}
-                className="px-4 py-2 bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-50"
+                className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#7C4DFF]/20 transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
                 data-testid="analyze-trends-btn"
               >
                 {insightsLoading ? (
@@ -355,20 +397,17 @@ export default function FanAnalyticsPage() {
           </div>
 
           {smartInsights.length === 0 && !insightsLoading && (
-            <div className="text-center py-8">
-              <Lightning className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-500">No insights yet. Click "Analyze Trends" to get AI-powered recommendations.</p>
-            </div>
+            <EmptyAnalyticsState icon={<Lightning className="w-8 h-8" />} title="No insights yet" text="Analyze trends to generate focused recommendations from your latest fan data." />
           )}
 
           {smartInsights.length > 0 && (
-            <div className="space-y-3" data-testid="insights-list">
-              {smartInsights.slice(0, 5).map((insight, i) => (
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2" data-testid="insights-list">
+              {smartInsights.slice(0, 6).map((insight, i) => (
                 <SmartInsightCard key={insight.id || i} insight={insight} />
               ))}
-              {smartInsights.length > 5 && (
-                <p className="text-xs text-gray-500 text-center pt-1">
-                  + {smartInsights.length - 5} more insights in your notification bell
+              {smartInsights.length > 6 && (
+                <p className="text-center text-xs text-gray-500 lg:col-span-2">
+                  + {smartInsights.length - 6} more insights in your notification bell
                 </p>
               )}
             </div>
@@ -376,21 +415,21 @@ export default function FanAnalyticsPage() {
         </div>
 
         {/* Weekly Digest Email Section */}
-        <div className="bg-[#111] border border-white/10 rounded-2xl p-6" data-testid="weekly-digest-section">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#FFD700]/15 flex items-center justify-center">
+        <div className="rounded-[1.5rem] border border-white/10 bg-[#111] p-5 sm:p-6" data-testid="weekly-digest-section">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#FFD700]/15">
                 <EnvelopeSimple className="w-5 h-5 text-[#FFD700]" weight="fill" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white">Weekly Digest Email</h2>
-                <p className="text-xs text-gray-400">Get your performance summary delivered to your inbox every Monday</p>
+                <h2 className="text-base font-bold text-white sm:text-lg">Weekly Digest Email</h2>
+                <p className="mt-1 max-w-xl text-sm leading-5 text-gray-400">Get your performance summary delivered to your inbox every Monday.</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 onClick={previewDigest}
-                className="px-3 py-2 border border-white/10 text-gray-400 text-sm rounded-lg hover:text-white hover:border-white/20 transition-colors flex items-center gap-1.5"
+                className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-sm text-gray-300 transition-colors hover:border-white/20 hover:text-white"
                 data-testid="preview-digest-btn"
               >
                 <Eye className="w-4 h-4" /> Preview
@@ -398,7 +437,7 @@ export default function FanAnalyticsPage() {
               <button
                 onClick={sendTestDigest}
                 disabled={digestSending}
-                className="px-4 py-2 bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-sm font-medium rounded-lg hover:bg-[#FFD700]/20 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-[#FFD700]/30 bg-[#FFD700]/10 px-4 py-2 text-sm font-medium text-[#FFD700] transition-colors hover:bg-[#FFD700]/20 disabled:opacity-50"
                 data-testid="send-digest-btn"
               >
                 {digestSending ? (
@@ -409,8 +448,8 @@ export default function FanAnalyticsPage() {
               </button>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-3">
-            Includes: stream counts, growth trends, top markets, top platforms, AI insights, and release updates.
+          <p className="mt-4 text-xs leading-5 text-gray-500">
+            Includes stream counts, growth trends, top markets, top platforms, AI insights, and release updates.
             Manage this in <a href="/settings" className="text-[#7C4DFF] hover:underline">Settings &gt; Notifications</a>.
           </p>
         </div>
@@ -450,21 +489,21 @@ export default function FanAnalyticsPage() {
         )}
 
         {/* AI Release Strategy Section */}
-        <div className="bg-gradient-to-br from-[#1a0a2e] to-[#111] border border-[#7C4DFF]/30 rounded-2xl p-6" data-testid="ai-strategy-section">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#7C4DFF]/20 flex items-center justify-center">
+        <div className="overflow-hidden rounded-[1.5rem] border border-[#7C4DFF]/30 bg-[radial-gradient(circle_at_top_left,rgba(124,77,255,0.2),transparent_34%),linear-gradient(135deg,#1a0a2e,#0f0f12)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)] sm:p-6" data-testid="ai-strategy-section">
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#7C4DFF]/20">
                 <Lightning className="w-5 h-5 text-[#7C4DFF]" weight="fill" />
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">AI Release Strategy</h2>
-                <p className="text-xs text-gray-400">Get personalized release recommendations powered by your fan data</p>
+              <div className="min-w-0">
+                <h2 className="text-xl font-black leading-tight text-white sm:text-2xl">AI Release Strategy</h2>
+                <p className="mt-1 max-w-xl text-sm leading-5 text-gray-300">Get personalized release recommendations powered by your fan data.</p>
               </div>
             </div>
             {savedStrategies.length > 0 && (
               <button
                 onClick={() => { setShowSaved(!showSaved); setCompareMode(false); setCompareA(null); setCompareB(null); }}
-                className="flex items-center gap-1.5 text-sm text-[#7C4DFF] hover:text-[#E040FB] transition-colors"
+                className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-[#7C4DFF]/25 bg-[#7C4DFF]/10 px-3 py-2 text-sm font-semibold text-[#B99CFF] transition-colors hover:text-[#E040FB]"
                 data-testid="toggle-saved-btn"
               >
                 <BookmarkSimple className="w-4 h-4" weight="fill" />
@@ -477,13 +516,13 @@ export default function FanAnalyticsPage() {
           {/* Generate Form */}
           {!strategy && !showSaved && (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">Upcoming Release Title (optional)</label>
                   <input
                     type="text" value={releaseTitle} onChange={e => setReleaseTitle(e.target.value)}
                     placeholder="e.g. My New Single"
-                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:border-[#7C4DFF]/50 focus:outline-none transition-colors"
+                    className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white placeholder-gray-600 transition-colors focus:border-[#7C4DFF]/50 focus:outline-none"
                     data-testid="strategy-release-title"
                   />
                 </div>
@@ -492,14 +531,14 @@ export default function FanAnalyticsPage() {
                   <input
                     type="text" value={genre} onChange={e => setGenre(e.target.value)}
                     placeholder="e.g. Hip-Hop, R&B"
-                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:border-[#7C4DFF]/50 focus:outline-none transition-colors"
+                    className="w-full rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-3 text-sm text-white placeholder-gray-600 transition-colors focus:border-[#7C4DFF]/50 focus:outline-none"
                     data-testid="strategy-genre"
                   />
                 </div>
               </div>
               <button
                 onClick={generateStrategy} disabled={strategyLoading}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7C4DFF] to-[#E040FB] px-6 py-3 font-bold text-white shadow-lg shadow-[#7C4DFF]/20 transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
                 data-testid="generate-strategy-btn"
               >
                 {strategyLoading ? (
@@ -563,47 +602,47 @@ function AIStrategyResults({ strategy, onReset, onSave, saving, onExport }) {
       <StrategyContent s={s} priorityColor={priorityColor} />
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-center">
         {!showSaveInput ? (
           <button
             onClick={() => setShowSaveInput(true)}
-            className="px-4 py-2 bg-[#7C4DFF]/10 border border-[#7C4DFF]/30 text-[#7C4DFF] rounded-lg text-sm font-medium hover:bg-[#7C4DFF]/20 transition-colors flex items-center gap-2"
+            className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl border border-[#7C4DFF]/30 bg-[#7C4DFF]/10 px-4 py-2 text-sm font-semibold text-[#B99CFF] transition-colors hover:bg-[#7C4DFF]/20 sm:w-auto"
             data-testid="save-strategy-btn"
           >
             <FloppyDisk className="w-4 h-4" /> Save Strategy
           </button>
         ) : (
-          <div className="flex items-center gap-2 flex-1 sm:flex-none" data-testid="save-strategy-form">
+          <div className="grid w-full grid-cols-[1fr_auto] gap-2 sm:flex sm:w-auto sm:flex-none sm:items-center" data-testid="save-strategy-form">
             <input
               type="text" value={label} onChange={e => setLabel(e.target.value)}
               placeholder="Label (e.g. Hip-Hop Q2 Plan)"
-              className="bg-[#0a0a0a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#7C4DFF]/50 focus:outline-none w-52"
+              className="min-h-[42px] min-w-0 rounded-xl border border-white/10 bg-[#0a0a0a] px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-[#7C4DFF]/50 focus:outline-none sm:w-64"
               data-testid="save-strategy-label"
             />
             <button
               onClick={() => { onSave(label); setShowSaveInput(false); setLabel(''); }}
               disabled={saving}
-              className="px-4 py-2 bg-[#7C4DFF] text-white rounded-lg text-sm font-medium hover:bg-[#7C4DFF]/80 transition-colors flex items-center gap-1 disabled:opacity-50"
+              className="inline-flex min-h-[42px] items-center justify-center gap-1 rounded-xl bg-[#7C4DFF] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#7C4DFF]/80 disabled:opacity-50"
               data-testid="confirm-save-btn"
             >
               {saving ? <SpinnerGap className="w-4 h-4 animate-spin" /> : <FloppyDisk className="w-4 h-4" />}
               Save
             </button>
-            <button onClick={() => setShowSaveInput(false)} className="text-gray-500 hover:text-gray-300">
+            <button onClick={() => setShowSaveInput(false)} className="col-span-2 inline-flex min-h-[38px] items-center justify-center rounded-xl border border-white/10 text-gray-500 hover:text-gray-300 sm:col-span-1 sm:min-h-0 sm:border-0">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
         <button
           onClick={onReset}
-          className="text-sm text-gray-400 hover:text-[#E040FB] transition-colors flex items-center gap-1"
+          className="inline-flex min-h-[42px] w-full items-center justify-center gap-1 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-400 transition-colors hover:text-[#E040FB] sm:w-auto sm:border-0 sm:px-2"
           data-testid="regenerate-strategy-btn"
         >
           <Lightning className="w-4 h-4" /> New Strategy
         </button>
         <button
           onClick={onExport}
-          className="px-4 py-2 bg-[#E040FB]/10 border border-[#E040FB]/30 text-[#E040FB] rounded-lg text-sm font-medium hover:bg-[#E040FB]/20 transition-colors flex items-center gap-2"
+          className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl border border-[#E040FB]/30 bg-[#E040FB]/10 px-4 py-2 text-sm font-semibold text-[#E040FB] transition-colors hover:bg-[#E040FB]/20 sm:w-auto"
           data-testid="export-pdf-btn"
         >
           <FilePdf className="w-4 h-4" /> Export PDF
@@ -621,12 +660,12 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
 
   return (
     <div className="space-y-4" data-testid="saved-strategies-panel">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-gray-400">{strategies.length} saved {strategies.length === 1 ? 'strategy' : 'strategies'}</p>
         {strategies.length >= 2 && (
           <button
             onClick={() => { setCompareMode(!compareMode); setCompareA(null); setCompareB(null); }}
-            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg transition-colors ${compareMode ? 'bg-[#E040FB]/20 text-[#E040FB] border border-[#E040FB]/30' : 'text-gray-400 hover:text-white border border-white/10 hover:border-white/20'}`}
+            className={`inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${compareMode ? 'bg-[#E040FB]/20 text-[#E040FB] border border-[#E040FB]/30' : 'text-gray-400 hover:text-white border border-white/10 hover:border-white/20'}`}
             data-testid="compare-toggle-btn"
           >
             <ArrowsLeftRight className="w-4 h-4" />
@@ -642,7 +681,7 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
       )}
 
       {/* Strategy Cards */}
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+      <div className="max-h-[min(30rem,70vh)] space-y-3 overflow-y-auto pr-1">
         {strategies.map(strat => {
           const isSelectedA = compareA?.id === strat.id;
           const isSelectedB = compareB?.id === strat.id;
@@ -650,12 +689,12 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
           return (
             <div
               key={strat.id}
-              className={`bg-[#0a0a0a] border rounded-xl p-4 transition-colors ${isSelected ? 'border-[#E040FB]/50 bg-[#E040FB]/5' : 'border-white/10 hover:border-white/20'}`}
+              className={`rounded-2xl border bg-[#0a0a0a] p-4 transition-colors ${isSelected ? 'border-[#E040FB]/50 bg-[#E040FB]/5' : 'border-white/10 hover:border-white/20'}`}
               data-testid={`saved-strategy-${strat.id}`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="mb-1 flex min-w-0 items-center gap-2">
                     <h4 className="text-sm font-semibold text-white truncate">{strat.label}</h4>
                     {isSelectedA && <span className="text-[10px] bg-[#7C4DFF] text-white px-1.5 py-0.5 rounded">A</span>}
                     {isSelectedB && <span className="text-[10px] bg-[#E040FB] text-white px-1.5 py-0.5 rounded">B</span>}
@@ -674,11 +713,11 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center gap-1 self-end sm:self-auto">
                   {compareMode && (
                     <button
                       onClick={() => selectForCompare(strat)}
-                      className={`p-1.5 rounded-lg transition-colors ${isSelected ? 'text-[#E040FB]' : 'text-gray-500 hover:text-white'}`}
+                      className={`rounded-lg p-2 transition-colors ${isSelected ? 'text-[#E040FB]' : 'text-gray-500 hover:text-white'}`}
                       data-testid={`compare-select-${strat.id}`}
                     >
                       <ArrowsLeftRight className="w-4 h-4" />
@@ -686,7 +725,7 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
                   )}
                   <button
                     onClick={() => onExport(strat)}
-                    className="p-1.5 text-gray-600 hover:text-[#E040FB] rounded-lg transition-colors"
+                    className="rounded-lg p-2 text-gray-600 transition-colors hover:text-[#E040FB]"
                     data-testid={`export-strategy-${strat.id}`}
                     title="Export as PDF"
                   >
@@ -694,7 +733,7 @@ function SavedStrategiesPanel({ strategies, onDelete, onExport, compareMode, set
                   </button>
                   <button
                     onClick={() => onDelete(strat.id)}
-                    className="p-1.5 text-gray-600 hover:text-red-400 rounded-lg transition-colors"
+                    className="rounded-lg p-2 text-gray-600 transition-colors hover:text-red-400"
                     data-testid={`delete-strategy-${strat.id}`}
                   >
                     <Trash className="w-4 h-4" />
@@ -728,23 +767,23 @@ function CompareView({ a, b }) {
   };
 
   return (
-    <div className="mt-4 space-y-4" data-testid="compare-view">
+    <div className="mt-4 space-y-4 overflow-hidden rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4" data-testid="compare-view">
       <div className="flex items-center gap-2 text-sm font-semibold text-white">
         <ArrowsLeftRight className="w-5 h-5 text-[#E040FB]" />
         Strategy Comparison
       </div>
 
       {/* Header */}
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div className="text-gray-500 font-medium" />
-        <div className="bg-[#7C4DFF]/10 border border-[#7C4DFF]/20 rounded-lg p-2 text-center">
-          <span className="text-[#7C4DFF] font-semibold">A: </span>
-          <span className="text-gray-300 truncate">{a.label}</span>
+      <div className="grid grid-cols-[0.7fr_1fr_1fr] gap-2 text-xs">
+        <div className="font-medium text-gray-500" />
+        <div className="rounded-xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/10 p-2 text-center">
+          <span className="font-semibold text-[#7C4DFF]">A: </span>
+          <span className="break-words text-gray-300">{a.label}</span>
           <p className="text-gray-600 mt-0.5">{new Date(a.created_at).toLocaleDateString()}</p>
         </div>
-        <div className="bg-[#E040FB]/10 border border-[#E040FB]/20 rounded-lg p-2 text-center">
-          <span className="text-[#E040FB] font-semibold">B: </span>
-          <span className="text-gray-300 truncate">{b.label}</span>
+        <div className="rounded-xl border border-[#E040FB]/20 bg-[#E040FB]/10 p-2 text-center">
+          <span className="font-semibold text-[#E040FB]">B: </span>
+          <span className="break-words text-gray-300">{b.label}</span>
           <p className="text-gray-600 mt-0.5">{new Date(b.created_at).toLocaleDateString()}</p>
         </div>
       </div>
@@ -788,13 +827,13 @@ function CompareView({ a, b }) {
       />
 
       {/* Platform Priorities */}
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+      <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
         <h4 className="text-xs font-semibold text-gray-400 mb-3">Platform Priorities</h4>
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-[0.7fr_1fr_1fr] gap-2 text-xs">
           <div />
           <div className="space-y-1">
             {(a.strategy?.target_platforms || []).map((p, i) => (
-              <div key={i} className="flex items-center gap-1">
+              <div key={i} className="flex flex-col gap-0.5">
                 <span className={priorityColor(p.priority)}>{p.priority}</span>
                 <span className="text-gray-300">{p.platform}</span>
               </div>
@@ -802,7 +841,7 @@ function CompareView({ a, b }) {
           </div>
           <div className="space-y-1">
             {(b.strategy?.target_platforms || []).map((p, i) => (
-              <div key={i} className="flex items-center gap-1">
+              <div key={i} className="flex flex-col gap-0.5">
                 <span className={priorityColor(p.priority)}>{p.priority}</span>
                 <span className="text-gray-300">{p.platform}</span>
               </div>
@@ -812,9 +851,9 @@ function CompareView({ a, b }) {
       </div>
 
       {/* Timeline Comparison */}
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+      <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
         <h4 className="text-xs font-semibold text-gray-400 mb-3">Pre-Release Timeline Steps</h4>
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-[0.7fr_1fr_1fr] gap-2 text-xs">
           <div />
           <div className="text-center">
             <span className="text-[#7C4DFF] font-bold">{a.strategy?.pre_release_timeline?.length || 0}</span>
@@ -832,29 +871,48 @@ function CompareView({ a, b }) {
 
 function CompareRow({ label, valA, valB, diff }) {
   return (
-    <div className="grid grid-cols-3 gap-2 text-xs items-center" data-testid={`compare-row-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+    <div className="grid grid-cols-[0.7fr_1fr_1fr] items-center gap-2 text-xs" data-testid={`compare-row-${label.toLowerCase().replace(/\s+/g, '-')}`}>
       <span className="text-gray-500 font-medium">{label}</span>
-      <span className={`text-center font-semibold ${diff(valA, valB)}`}>{valA}</span>
-      <span className={`text-center font-semibold ${diff(valA, valB)}`}>{valB}</span>
+      <span className={`break-words text-center font-semibold ${diff(valA, valB)}`}>{valA}</span>
+      <span className={`break-words text-center font-semibold ${diff(valA, valB)}`}>{valB}</span>
     </div>
   );
 }
 
 /* ===================== SHARED COMPONENTS ===================== */
+function MiniMetric({ label, value }) {
+  return (
+    <div className="rounded-xl bg-white/[0.04] px-2 py-3">
+      <p className="truncate font-mono text-lg font-black text-white sm:text-xl">{value}</p>
+      <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-[0.12em] text-gray-500">{label}</p>
+    </div>
+  );
+}
+
+function EmptyAnalyticsState({ icon, title, text }) {
+  return (
+    <div className="flex min-h-[9rem] flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-8 text-center">
+      <div className="mb-3 text-gray-600">{icon}</div>
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="mt-1 max-w-xs text-xs leading-5 text-gray-500">{text}</p>
+    </div>
+  );
+}
+
 function DataSummaryBar({ summary }) {
   return (
-    <div className="flex flex-wrap gap-3 text-xs">
+    <div className="flex flex-wrap gap-2 text-xs">
       {summary.total_streams > 0 && (
-        <span className="bg-[#7C4DFF]/10 text-[#7C4DFF] px-3 py-1 rounded-full">{summary.total_streams.toLocaleString()} streams analyzed</span>
+        <span className="rounded-full border border-[#7C4DFF]/15 bg-[#7C4DFF]/10 px-3 py-1.5 text-[#B99CFF]">{summary.total_streams.toLocaleString()} streams analyzed</span>
       )}
       {summary.top_platform && (
-        <span className="bg-[#1DB954]/10 text-[#1DB954] px-3 py-1 rounded-full">Top: {summary.top_platform}</span>
+        <span className="rounded-full border border-[#1DB954]/15 bg-[#1DB954]/10 px-3 py-1.5 text-[#1DB954]">Top: {summary.top_platform}</span>
       )}
       {summary.top_country && (
-        <span className="bg-[#E040FB]/10 text-[#E040FB] px-3 py-1 rounded-full">Top Market: {summary.top_country}</span>
+        <span className="rounded-full border border-[#E040FB]/15 bg-[#E040FB]/10 px-3 py-1.5 text-[#E040FB]">Top Market: {summary.top_country}</span>
       )}
       {summary.peak_hour !== null && summary.peak_hour !== undefined && (
-        <span className="bg-[#FFD700]/10 text-[#FFD700] px-3 py-1 rounded-full">Peak: {summary.peak_hour}:00 UTC</span>
+        <span className="rounded-full border border-[#FFD700]/15 bg-[#FFD700]/10 px-3 py-1.5 text-[#FFD700]">Peak: {summary.peak_hour}:00 UTC</span>
       )}
     </div>
   );
@@ -864,17 +922,17 @@ function StrategyContent({ s, priorityColor }) {
   return (
     <>
       {/* Optimal Release Timing */}
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-5">
+      <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-3">
           <CalendarBlank className="w-5 h-5 text-[#7C4DFF]" />
           <h3 className="font-semibold text-white">Optimal Release Window</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
-          <div className="bg-[#7C4DFF]/5 border border-[#7C4DFF]/20 rounded-lg p-3">
+          <div className="rounded-xl border border-[#7C4DFF]/20 bg-[#7C4DFF]/5 p-3">
             <p className="text-xs text-gray-400">Best Day</p>
             <p className="text-lg font-bold text-[#7C4DFF]" data-testid="optimal-day">{s.optimal_release_day}</p>
           </div>
-          <div className="bg-[#E040FB]/5 border border-[#E040FB]/20 rounded-lg p-3">
+          <div className="rounded-xl border border-[#E040FB]/20 bg-[#E040FB]/5 p-3">
             <p className="text-xs text-gray-400">Best Time</p>
             <p className="text-lg font-bold text-[#E040FB]" data-testid="optimal-time">{s.optimal_release_time}</p>
           </div>
@@ -884,14 +942,14 @@ function StrategyContent({ s, priorityColor }) {
 
       {/* Target Platforms */}
       {s.target_platforms?.length > 0 && (
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-5">
+        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-5 h-5 text-[#1DB954]" />
             <h3 className="font-semibold text-white">Platform Strategy</h3>
           </div>
           <div className="space-y-3">
             {s.target_platforms.map((p, i) => (
-              <div key={i} className="flex items-start gap-3 bg-[#111] border border-white/5 rounded-lg p-3" data-testid={`platform-strategy-${i}`}>
+              <div key={i} className="flex flex-col gap-2 rounded-xl border border-white/5 bg-[#111] p-3 sm:flex-row sm:items-start" data-testid={`platform-strategy-${i}`}>
                 <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full mt-0.5 ${priorityColor(p.priority)}`}>{p.priority}</span>
                 <div>
                   <p className="text-sm font-semibold text-white">{p.platform}</p>
@@ -905,7 +963,7 @@ function StrategyContent({ s, priorityColor }) {
 
       {/* Geographic Strategy */}
       {s.geographic_strategy?.length > 0 && (
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-5">
+        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
             <MapPin className="w-5 h-5 text-[#E040FB]" />
             <h3 className="font-semibold text-white">Geographic Targeting</h3>
@@ -926,7 +984,7 @@ function StrategyContent({ s, priorityColor }) {
 
       {/* Pre-Release Timeline */}
       {s.pre_release_timeline?.length > 0 && (
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-5">
+        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
             <Rocket className="w-5 h-5 text-[#FFD700]" />
             <h3 className="font-semibold text-white">Pre-Release Timeline</h3>
@@ -954,7 +1012,7 @@ function StrategyContent({ s, priorityColor }) {
 
       {/* Promotion Tips */}
       {s.promotion_tips?.length > 0 && (
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-5">
+        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-5 h-5 text-[#FFD700]" weight="fill" />
             <h3 className="font-semibold text-white">Promotion Tips</h3>
@@ -973,13 +1031,13 @@ function StrategyContent({ s, priorityColor }) {
       {/* Estimated Range + Confidence */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {s.estimated_first_week_range && (
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
             <p className="text-xs text-gray-400 mb-1">Estimated First Week</p>
             <p className="text-base font-bold text-white" data-testid="estimated-range">{s.estimated_first_week_range}</p>
           </div>
         )}
         {s.confidence_note && (
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-xl p-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-4">
             <p className="text-xs text-gray-400 mb-1">Confidence Note</p>
             <p className="text-xs text-gray-300" data-testid="confidence-note">{s.confidence_note}</p>
           </div>
@@ -991,14 +1049,14 @@ function StrategyContent({ s, priorityColor }) {
 
 function StatCard({ icon, value, label, color }) {
   return (
-    <div className="bg-[#111] border border-white/10 rounded-2xl p-5">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
+    <div className="min-h-[7.25rem] rounded-[1.25rem] border border-white/10 bg-[#111] p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition-colors hover:border-white/15 sm:min-h-0 sm:p-5">
+      <div className="flex h-full flex-col justify-between gap-3 sm:flex-row sm:items-center sm:justify-start">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}20` }}>
           {icon}
         </div>
-        <div>
-          <p className="text-2xl font-bold font-mono">{value}</p>
-          <p className="text-sm text-gray-400">{label}</p>
+        <div className="min-w-0">
+          <p className="truncate font-mono text-2xl font-black leading-none text-white">{value}</p>
+          <p className="mt-1 text-sm leading-5 text-gray-400">{label}</p>
         </div>
       </div>
     </div>
@@ -1019,27 +1077,27 @@ function SmartInsightCard({ insight }) {
 
   return (
     <div
-      className={`bg-[#0a0a0a] border border-white/10 rounded-xl p-4 border-l-4 ${priorityBorder} hover:bg-white/[0.02] transition-colors`}
+      className={`rounded-2xl border border-l-4 border-white/10 bg-[#0a0a0a]/90 p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)] transition-colors hover:bg-white/[0.03] sm:p-5 ${priorityBorder}`}
       data-testid={`insight-card-${insight.id || ''}`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ color: cat.color, backgroundColor: `${cat.color}15` }}>
               {cat.label}
             </span>
             {insight.metric_value && (
               <span className="text-[10px] font-bold text-[#FFD700] bg-[#FFD700]/10 px-2 py-0.5 rounded-full">{insight.metric_value}</span>
             )}
-            <span className={`text-[10px] font-bold uppercase ${insight.priority === 'high' ? 'text-green-400' : insight.priority === 'medium' ? 'text-yellow-400' : 'text-gray-500'}`}>
+            <span className={`rounded-full bg-white/[0.04] px-2 py-0.5 text-[10px] font-bold uppercase ${insight.priority === 'high' ? 'text-green-400' : insight.priority === 'medium' ? 'text-yellow-400' : 'text-gray-500'}`}>
               {insight.priority}
             </span>
           </div>
-          <p className="text-sm text-white leading-snug">{insight.message}</p>
+          <p className="break-words text-sm font-semibold leading-6 text-white">{insight.message}</p>
           {insight.action_suggestion && (
-            <p className="text-xs text-[#7C4DFF] mt-1.5 flex items-center gap-1">
+            <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-[#B99CFF]">
               <ArrowRight className="w-3 h-3 flex-shrink-0" />
-              {insight.action_suggestion}
+              <span className="break-words">{insight.action_suggestion}</span>
             </p>
           )}
         </div>
