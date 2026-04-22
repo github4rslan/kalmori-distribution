@@ -9,7 +9,7 @@ import { API } from '../App';
 import { isFeatureLocked } from './featureAccess';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import { getUserRole } from '../utils/role';
-import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
+import kalmoriDashboardLogo from '../assets/kalmori-dashboard-logo.png';
 
 const NOTIFICATION_ROUTES = {
   'new_submission': '/admin/submissions',
@@ -290,9 +290,9 @@ const DashboardLayout = ({ children }) => {
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Link to="/dashboard" className="flex flex-col items-start">
               <img
-                src={kalmoriFrontpageLogo}
+                src={kalmoriDashboardLogo}
                 alt="Kalmori"
-                className="w-[128px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+                className="w-[145px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
               />
               <div className="gradient-underline mt-1" />
             </Link>
