@@ -70,6 +70,9 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - server.py reduced from 3550 to 2258 lines
 - Iteration 72: 100% pass rate (32 backend, 14 frontend)
 
+## Workflow Memory
+- Work directly on `main`; after user-approved frontend changes, run the frontend build check, commit the focused change, and push to `origin main` so Vercel deploys it.
+
 ## Remaining Backlog
 - P1: Apple Music Analytics API OAuth integration (pending user credentials)
 - P2: YouTube Music / other DSP integrations
