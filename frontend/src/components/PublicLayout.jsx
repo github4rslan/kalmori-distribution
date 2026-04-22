@@ -206,7 +206,11 @@ const PublicLayout = ({ children }) => {
             {/* Menu Header */}
             <div className="flex items-center justify-between px-5 pt-[50px] pb-2">
               <div className="flex flex-col">
-                <span className="text-[22px] font-extrabold tracking-[3px] text-[#E040FB]" style={{ textShadow: '0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3)' }}>KALMORI</span>
+                <img
+                  src={kalmoriFrontpageLogo}
+                  alt="Kalmori"
+                  className="w-[132px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+                />
                 <div className="w-10 h-[3px] rounded-sm mt-1 bg-[#7C4DFF]" />
               </div>
               <button onClick={closeMenu} className="p-1"><X className="w-6 h-6 text-white" /></button>

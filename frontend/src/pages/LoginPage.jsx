@@ -4,6 +4,7 @@ import { useAuth } from '../App';
 import { GoogleLogo, Eye, EyeSlash } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { getSafeErrorDetail } from '../utils/error';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -50,21 +51,15 @@ const LoginPage = () => {
           background-size: 300% 100%;
           animation: shimmer-blue 3s ease-in-out infinite;
         }
-        .logo-animated-blue {
-          background: linear-gradient(90deg, #0095FF, #7468F8, #0095FF, #7468F8);
-          background-size: 300% 100%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: shimmer-blue 3s ease-in-out infinite;
-        }
       `}</style>
 
       <div className="relative z-10 w-full max-w-[420px] mx-auto px-6 py-12 text-center">
         <Link to="/" className="inline-block mb-10">
-          <span className="text-3xl font-black tracking-[6px] logo-animated-blue">
-            KALMORI
-          </span>
+          <img
+            src={kalmoriFrontpageLogo}
+            alt="Kalmori"
+            className="w-[220px] h-auto object-contain drop-shadow-[0_0_10px_rgba(0,149,255,0.25)]"
+          />
         </Link>
 
         {error && (

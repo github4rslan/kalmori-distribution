@@ -1,17 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { InstagramLogo, TwitterLogo, TiktokLogo, YoutubeLogo } from '@phosphor-icons/react';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const GlobalFooter = () => (
   <footer className="py-10 px-6 bg-black border-t border-[#222] text-center" data-testid="global-footer">
-    <style>{`
-      @keyframes footer-logo-cycle {
-        0%, 100% { color: #7C4DFF; text-shadow: 0 0 10px rgba(124,77,255,0.5), 0 0 20px rgba(124,77,255,0.3); }
-        33% { color: #E040FB; text-shadow: 0 0 10px rgba(224,64,251,0.5), 0 0 20px rgba(224,64,251,0.3); }
-        66% { color: #FF4081; text-shadow: 0 0 10px rgba(255,64,129,0.5), 0 0 20px rgba(255,64,129,0.3); }
-      }
-    `}</style>
-    <p className="text-[22px] font-extrabold tracking-[3px] mb-2" style={{ animation: 'footer-logo-cycle 6s ease-in-out infinite' }}>KALMORI</p>
+    <img
+      src={kalmoriFrontpageLogo}
+      alt="Kalmori"
+      className="mx-auto mb-2 w-[130px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+    />
     <p className="text-sm text-gray-400 mb-6">Your Music, Your Way</p>
     <div className="flex flex-wrap justify-center gap-6 mb-6">
       <Link to="/about" className="text-sm text-gray-400 hover:text-white transition-colors">About</Link>

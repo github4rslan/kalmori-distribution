@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../App';
-import { GoogleLogo, Eye, EyeSlash, CaretDown, Check, CheckCircle, WarningCircle, MusicNotes, ArrowRight, Plus, Gift } from '@phosphor-icons/react';
+import { GoogleLogo, Eye, EyeSlash, CaretDown, Check, CheckCircle, WarningCircle, ArrowRight, Plus, Gift } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { getSafeErrorDetail } from '../utils/error';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const COUNTRIES = [
   'United States', 'United Kingdom', 'Canada', 'Australia', 'Nigeria', 'Ghana', 'South Africa',
@@ -166,14 +167,6 @@ const RegisterPage = () => {
           background-size: 300% 100%;
           animation: shimmer-blue 3s ease-in-out infinite;
         }
-        .logo-animated-blue {
-          background: linear-gradient(90deg, #0095FF, #7468F8, #0095FF, #7468F8);
-          background-size: 300% 100%;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          animation: shimmer-blue 3s ease-in-out infinite;
-        }
       `}</style>
 
       <div className="relative z-10 w-full max-w-lg mx-auto px-4 py-10">
@@ -190,8 +183,11 @@ const RegisterPage = () => {
         {step === 1 && (
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <MusicNotes className="w-6 h-6 text-[#0095FF]" weight="fill" />
-              <span className="text-sm font-black tracking-[4px] logo-animated-blue">KALMORI</span>
+              <img
+                src={kalmoriFrontpageLogo}
+                alt="Kalmori"
+                className="w-[102px] h-auto object-contain drop-shadow-[0_0_8px_rgba(0,149,255,0.25)]"
+              />
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-1">Sign up for free.</h1>
             <p className="text-gray-300 text-lg mb-8">Create your Kalmori account.</p>
@@ -296,8 +292,11 @@ const RegisterPage = () => {
           <div className="text-center">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <MusicNotes className="w-5 h-5 text-[#0095FF]" weight="fill" />
-                <span className="text-xs font-black tracking-[4px] logo-animated-blue">KALMORI</span>
+                <img
+                  src={kalmoriFrontpageLogo}
+                  alt="Kalmori"
+                  className="w-[88px] h-auto object-contain drop-shadow-[0_0_8px_rgba(0,149,255,0.25)]"
+                />
               </div>
               <button onClick={() => { setStep(1); setError(''); }} className="text-sm text-gray-400 hover:text-white transition-colors" data-testid="back-to-step1">
                 Back

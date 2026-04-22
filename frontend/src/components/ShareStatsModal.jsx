@@ -4,6 +4,7 @@ import { API } from '../App';
 import { X, ShareNetwork, Copy, Check, Trophy, MusicNotes, Globe, CurrencyDollar, SpotifyLogo } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const PLATFORM_COLORS = { Spotify: '#1DB954', 'Apple Music': '#FC3C44', 'YouTube Music': '#FF0000', 'Amazon Music': '#FF9900', TikTok: '#010101', Tidal: '#00FFFF' };
 
@@ -65,7 +66,11 @@ export default function ShareStatsModal({ onClose }) {
           <div className="p-6 pb-0">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-[#7C4DFF] font-bold tracking-[3px]">KALMORI</p>
+                <img
+                  src={kalmoriFrontpageLogo}
+                  alt="Kalmori"
+                  className="w-[82px] h-auto object-contain drop-shadow-[0_0_8px_rgba(124,77,255,0.25)]"
+                />
                 <h2 className="text-2xl font-bold text-white mt-1">{data.artist_name}</h2>
               </div>
               {latestMilestone && (

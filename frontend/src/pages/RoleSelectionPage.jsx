@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, useAuth } from '../App';
-import { MusicNotes, Microphone, VinylRecord, Headphones } from '@phosphor-icons/react';
+import { Microphone, VinylRecord, Headphones } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const RoleSelectionPage = () => {
   const navigate = useNavigate();
@@ -36,8 +37,11 @@ const RoleSelectionPage = () => {
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <MusicNotes className="w-8 h-8 text-[#E040FB]" weight="fill" />
-            <span className="text-xl font-black tracking-[4px] text-white">KALMORI</span>
+            <img
+              src={kalmoriFrontpageLogo}
+              alt="Kalmori"
+              className="w-[145px] h-auto object-contain drop-shadow-[0_0_8px_rgba(224,64,251,0.25)]"
+            />
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#FFD700] leading-tight mb-3">
             How will you use Kalmori?

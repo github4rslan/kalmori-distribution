@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { House, Users, ClipboardText, ChartBar, Gear, SignOut, List, X, ArrowLeft, ShieldCheck, Bell, MusicNote, FileArrowUp, PaperPlaneTilt, Megaphone, Envelope, Tag, Gift, ChartLineUp, FileText, Wallet, PaintBrush, ClockCounterClockwise, Crown } from '@phosphor-icons/react';
 import axios from 'axios';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const getAdminTitle = (pathname) => {
   if (pathname === '/admin') return 'Overview';
@@ -74,7 +75,11 @@ const AdminLayout = ({ children }) => {
               <ShieldCheck className="w-6 h-6 text-[#E53935]" />
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-[2px] text-[#E53935]">ADMIN</span>
-                <span className="text-[10px] text-gray-500 tracking-wider">KALMORI</span>
+                <img
+                  src={kalmoriFrontpageLogo}
+                  alt="Kalmori"
+                  className="mt-0.5 w-[54px] h-auto object-contain opacity-70"
+                />
               </div>
             </Link>
             <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>

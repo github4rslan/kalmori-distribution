@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, SpotifyLogo, AppleLogo, InstagramLogo, TwitterLogo, MusicNotes, Disc, Play, Pause, ShareNetwork, CheckCircle, Copy, Users, QrCode, X, DownloadSimple } from '@phosphor-icons/react';
 import { API, BACKEND_URL } from '../App';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -393,9 +394,12 @@ const ArtistProfilePage = () => {
 
       {/* Powered by KALMORI */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="fixed top-4 left-1/2 -translate-x-1/2 z-toast">
-        <Link to="/" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-full" data-testid="kalmori-badge">
-          <MusicNotes className="w-3.5 h-3.5" weight="fill" style={{ color: tc }} />
-          <span className="text-[10px] font-bold tracking-[0.15em] text-white/60 uppercase">Kalmori</span>
+        <Link to="/" className="flex items-center px-3 py-1.5 bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-full" data-testid="kalmori-badge">
+          <img
+            src={kalmoriFrontpageLogo}
+            alt="Kalmori"
+            className="w-[58px] h-auto object-contain opacity-80"
+          />
         </Link>
       </motion.div>
 
