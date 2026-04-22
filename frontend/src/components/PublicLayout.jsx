@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
 import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import useScrollReveal from '../hooks/useScrollReveal';
-import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.jpg';
+import kalmoriFrontpageLogo from '../assets/kalmori-frontpage-logo.png';
 import {
   List, X, ArrowUp, User, ShoppingCart, House, Disc, CloudArrowUp, MusicNotes, PlusCircle,
   Megaphone, FileText, ChartLine, Speedometer, ChartBar, CurrencyDollar, Wallet as WalletIcon,
