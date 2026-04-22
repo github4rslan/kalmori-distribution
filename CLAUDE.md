@@ -385,7 +385,7 @@ When something breaks, check in this exact order:
 - Commit to `main` only — never create feature branches
 - Never include "Claude", "AI", or "generated" in commit messages
 - Keep commits focused — one logical change per commit
-- After user-approved frontend changes, run the build check, commit the focused change, and push to `origin main` so Vercel deploys it
+- After every user-approved change, run the relevant checks, commit the focused change, and push to `origin main` so Render/Vercel can deploy it
 
 ### Backend
 - Always run Python syntax check after editing `.py` files

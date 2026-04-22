@@ -71,7 +71,7 @@ Build a TuneCore clone / high-volume digital content aggregator and B2B e-commer
 - Iteration 72: 100% pass rate (32 backend, 14 frontend)
 
 ## Workflow Memory
-- Work directly on `main`; after user-approved frontend changes, run the frontend build check, commit the focused change, and push to `origin main` so Vercel deploys it.
+- Work directly on `main`; after every user-approved change, run the relevant checks, commit the focused change, and push to `origin main` so Render/Vercel can deploy it.
 
 ## Remaining Backlog
 - P1: Apple Music Analytics API OAuth integration (pending user credentials)
