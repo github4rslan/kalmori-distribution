@@ -68,9 +68,9 @@ const AdminLayout = ({ children }) => {
     <div className="min-h-screen bg-black text-white flex">
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-nav lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`fixed lg:static inset-y-0 left-0 z-nav w-[86vw] max-w-[18rem] lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} h-screen`}>
+      <aside className={`fixed lg:static top-0 bottom-0 left-0 z-nav h-[100dvh] w-[86vw] max-w-[18rem] lg:h-screen lg:w-64 bg-[#0a0a0a] border-r border-white/10 transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="h-full flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <div className="px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] border-b border-white/10 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-[#E53935]" />
               <div className="flex flex-col">
